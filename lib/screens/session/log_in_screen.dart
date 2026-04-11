@@ -1,0 +1,183 @@
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:pawner_app/core/app_colors.dart';
+import 'package:pawner_app/screens/session/register_screen.dart';
+
+class LogInScreen extends StatefulWidget {
+  const LogInScreen({super.key});
+
+  @override
+  State<LogInScreen> createState() => _LogInScreenState();
+}
+
+class _LogInScreenState extends State<LogInScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        foregroundColor: AppColors.primary,
+        backgroundColor: AppColors.secondary,
+        centerTitle: true,
+        toolbarHeight: 40,
+        title: Text("PAWNER", style: TextStyle(fontSize: 20, fontWeight: .w600)),
+        leading: IconButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          icon: Icon(Icons.arrow_back_ios),
+        ),
+      ),
+      backgroundColor: AppColors.lightSecondary,
+      body: ListView(
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                SizedBox(height: 40),
+                // =============== LOGO ==============
+                Image.asset("assets/images/logo-azul-tick.png", width: 180),
+                SizedBox(height: 50),
+                Column(
+                  children: [
+                    // =============== USER ==============
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        top: 20,
+                        left: 40,
+                        right: 40,
+                      ),
+                      child: TextField(
+                        maxLines: 1,
+                        decoration: InputDecoration(
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 0,
+                            horizontal: 8,
+                          ),
+                          hint: Text(
+                            "Usuario / E-Mail",
+                            textAlign: TextAlign.start,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.dark,
+                              fontSize: 18,
+                            ),
+                          ),
+                          prefixIcon: Icon(Icons.person),
+                          fillColor: AppColors.primary,
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // =============== PASSWORD ==============
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        top: 20,
+                        left: 40,
+                        right: 40,
+                      ),
+                      child: TextField(
+                        maxLines: 1,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 0,
+                            horizontal: 8,
+                          ),
+                          hint: Text(
+                            "Contraseña",
+                            textAlign: TextAlign.start,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.dark,
+                              fontSize: 18,
+                            ),
+                          ),
+                          prefixIcon: Icon(Icons.password),
+                          fillColor: AppColors.primary,
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // =============== SIN CONTRASEÑA ==============
+                    Container(
+                      margin: .only(left: 50, top: 5),
+                      width: double.infinity,
+                      child: Align(
+                        alignment: .topLeft,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(color: AppColors.dark),
+                            ),
+                          ),
+                          child: RichText(
+                            text: TextSpan(
+                              text: "No recuerdo la contraseña",
+                              style: TextStyle(
+                                color: AppColors.dark,
+                                fontWeight: .w400,
+                                fontSize: 15,
+                              ),
+                              recognizer: TapGestureRecognizer()..onTap = () {},
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 125),
+                    // =============== BOTÓN ==============
+                    ElevatedButton(
+                      onPressed: () {},
+                      style: ButtonStyle(
+                        backgroundColor: .all(AppColors.secondary),
+                        foregroundColor: .all(AppColors.primary),
+                        shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                      ),
+                      child: Text(
+                        "Iniciar Sesión",
+                        style: TextStyle(fontWeight: .w600, fontSize: 18),
+                      ),
+                    ),
+
+                    SizedBox(height: 5),
+                    // =============== REGISTRARSE ==============
+                    RichText(
+                      text: TextSpan(
+                        style: TextStyle(color: AppColors.dark, fontSize: 15),
+                        children: <TextSpan>[
+                          TextSpan(text: "¿No tienes cuenta? "),
+                          TextSpan(
+                            text: "Regístrate",
+                            style: TextStyle(
+                              color: AppColors.secondary,
+                              fontWeight: .w700,
+                            ),
+                            recognizer: TapGestureRecognizer()..onTap = () {
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterScreen()));
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

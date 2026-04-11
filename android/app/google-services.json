@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "369644024711",
+    "project_id": "pawner-mga",
+    "storage_bucket": "pawner-mga.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:369644024711:android:a6416cd0aa34fb40c9d922",
+        "android_client_info": {
+          "package_name": "com.ayursl.pawner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJsDzEXJ_xzqlqYnI0S2M42z_9Od-0EWo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:369644024711:android:44b8e7b3e55890ccc9d922",
+        "android_client_info": {
+          "package_name": "com.example.pawner_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJsDzEXJ_xzqlqYnI0S2M42z_9Od-0EWo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
