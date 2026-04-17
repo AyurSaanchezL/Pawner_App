@@ -3,7 +3,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:pawner_app/core/firebase_pawner_controller.dart';
 import 'package:pawner_app/firebase_options.dart';
-import 'package:pawner_app/screens/familia/crear_familia.dart';
+import 'package:pawner_app/screens/first_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,7 +25,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(fontFamily: 'Nunito'),
-      home: CrearFamiliaLayout(),
+      home: FirstScreen(),
     );
   }
 }
