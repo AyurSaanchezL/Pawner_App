@@ -3,8 +3,10 @@ import 'dart:developer';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:pawner_app/core/app_colors.dart';
-import 'package:pawner_app/core/auth_service.dart';
-import 'package:pawner_app/core/firebase_pawner_controller.dart';
+import 'package:pawner_app/core/model/usuario.dart';
+import 'package:pawner_app/services/auth_service.dart';
+import 'package:pawner_app/services/crash_manager.dart';
+import 'package:pawner_app/services/firestore_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,20 +16,28 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  String? username;
-  String? correo;
-  String? password;
+  String username = "";
   TextEditingController controllerUsername = TextEditingController();
   TextEditingController controllerCorreo = TextEditingController();
   TextEditingController controllerPassword = TextEditingController();
 
-  void _registrarse() async {
+  Future<void> _registrarse() async {
+    username = controllerUsername.text;
     try {
-      await authService.value.createAccount(
+      UserCredential credential = await authService.value.createAccount(
         email: controllerCorreo.text,
         password: controllerPassword.text,
       );
-      popPage();
+
+      String realUID = credential.user!.uid;
+
+      await FirestoreService().addUsuario(
+        Usuario("", username, controllerCorreo.text, 'zorro', null, null),
+        realUID,
+      );
+      if (mounted) {
+        popPage();
+      }
     } on FirebaseAuthException catch (e) {
       log(e.message!);
       await firebaseController.reportCrash(e, e.stackTrace);
