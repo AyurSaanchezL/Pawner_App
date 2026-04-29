@@ -6,3 +6,5 @@ class Constants {
     fontWeight: .w600,
   );
 }
+
+enum UserRol { admin, miembro }

@@ -63,7 +63,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '369644024711',
     projectId: 'pawner-mga',
     storageBucket: 'pawner-mga.firebasestorage.app',
-    iosBundleId: 'com.example.pawnerApp',
+    iosBundleId: 'es.pawner.app',
   );
-
 }

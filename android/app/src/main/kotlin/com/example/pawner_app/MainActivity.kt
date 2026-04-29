@@ -1,4 +1,4 @@
-package com.example.pawner_app
+package es.pawner.app
 
 import io.flutter.embedding.android.FlutterActivity
 

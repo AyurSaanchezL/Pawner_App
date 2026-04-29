@@ -8,7 +8,7 @@
 PRODUCT_NAME = pawner_app
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.pawnerApp
+PRODUCT_BUNDLE_IDENTIFIER = es.pawner.app
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 es.pawner. All rights reserved.

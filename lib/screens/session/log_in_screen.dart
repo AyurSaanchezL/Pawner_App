@@ -1,7 +1,14 @@
+import 'dart:developer';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:pawner_app/core/app_colors.dart';
+import 'package:pawner_app/core/model/usuario.dart';
 import 'package:pawner_app/screens/session/register_screen.dart';
+import 'package:pawner_app/screens/usuario/perfil_screen.dart';
+import 'package:pawner_app/services/auth_service.dart';
+import 'package:pawner_app/services/crash_manager.dart';
 
 class LogInScreen extends StatefulWidget {
   const LogInScreen({super.key});
@@ -9,6 +16,9 @@ class LogInScreen extends StatefulWidget {
   @override
   State<LogInScreen> createState() => _LogInScreenState();
 }
+
+TextEditingController controllerEmail = TextEditingController();
+TextEditingController controllerPassword = TextEditingController();
 
 class _LogInScreenState extends State<LogInScreen> {
   @override
@@ -19,7 +29,10 @@ class _LogInScreenState extends State<LogInScreen> {
         backgroundColor: AppColors.secondary,
         centerTitle: true,
         toolbarHeight: 40,
-        title: Text("PAWNER", style: TextStyle(fontSize: 20, fontWeight: .w600)),
+        title: Text(
+          "PAWNER",
+          style: TextStyle(fontSize: 20, fontWeight: .w600),
+        ),
         leading: IconButton(
           onPressed: () {
             Navigator.of(context).pop();
@@ -50,13 +63,14 @@ class _LogInScreenState extends State<LogInScreen> {
                       ),
                       child: TextField(
                         maxLines: 1,
+                        controller: controllerEmail,
                         decoration: InputDecoration(
                           contentPadding: EdgeInsets.symmetric(
                             vertical: 0,
                             horizontal: 8,
                           ),
                           hint: Text(
-                            "Usuario / E-Mail",
+                            "E-Mail",
                             textAlign: TextAlign.start,
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
@@ -83,6 +97,7 @@ class _LogInScreenState extends State<LogInScreen> {
                         right: 40,
                       ),
                       child: TextField(
+                        controller: controllerPassword,
                         maxLines: 1,
                         obscureText: true,
                         decoration: InputDecoration(
@@ -139,11 +154,17 @@ class _LogInScreenState extends State<LogInScreen> {
                     SizedBox(height: 125),
                     // =============== BOTÓN ==============
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        _iniciarSesion(context);
+                      },
                       style: ButtonStyle(
                         backgroundColor: .all(AppColors.secondary),
                         foregroundColor: .all(AppColors.primary),
-                        shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                        shape: WidgetStatePropertyAll(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
                       ),
                       child: Text(
                         "Iniciar Sesión",
@@ -164,9 +185,15 @@ class _LogInScreenState extends State<LogInScreen> {
                               color: AppColors.secondary,
                               fontWeight: .w700,
                             ),
-                            recognizer: TapGestureRecognizer()..onTap = () {
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterScreen()));
-                            },
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => RegisterScreen(),
+                                  ),
+                                );
+                              },
                           ),
                         ],
                       ),
@@ -179,5 +206,27 @@ class _LogInScreenState extends State<LogInScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _iniciarSesion(BuildContext inContext) async {
+    try {
+      await AuthService().signIn(
+        email: controllerEmail.text,
+        password: controllerPassword.text,
+      );
+      Usuario usuarioLogueado = await AuthService().getCurrentUser();
+
+      if (context.mounted) {
+        Navigator.pushReplacement(
+          inContext,
+          MaterialPageRoute(
+            builder: (context) => PerfilUsuarioScreen(u: usuarioLogueado),
+          ),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      log(e.message!);
+      await firebaseController.reportCrash(e, e.stackTrace);
+    }
   }
 }
