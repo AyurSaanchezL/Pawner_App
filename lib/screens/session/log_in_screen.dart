@@ -4,9 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:pawner_app/core/app_colors.dart';
-import 'package:pawner_app/core/model/usuario.dart';
 import 'package:pawner_app/screens/session/register_screen.dart';
-import 'package:pawner_app/screens/usuario/perfil_screen.dart';
+import 'package:pawner_app/screens/usuario/dashboard_screen.dart';
 import 'package:pawner_app/services/auth_service.dart';
 import 'package:pawner_app/services/crash_manager.dart';
 
@@ -214,13 +213,12 @@ class _LogInScreenState extends State<LogInScreen> {
         email: controllerEmail.text,
         password: controllerPassword.text,
       );
-      Usuario usuarioLogueado = await AuthService().getCurrentUser();
 
       if (context.mounted) {
         Navigator.pushReplacement(
           inContext,
           MaterialPageRoute(
-            builder: (context) => PerfilUsuarioScreen(u: usuarioLogueado),
+            builder: (context) => const DashboardScreen(),
           ),
         );
       }
