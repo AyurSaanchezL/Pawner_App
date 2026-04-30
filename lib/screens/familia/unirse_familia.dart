@@ -32,7 +32,7 @@ class _UnirseFamiliaLayoutState extends State<UnirseFamiliaLayout> {
 
     try {
       Usuario usuarioActual = await authService.value.getCurrentUser();
-      
+
       // Llamamos al servicio para unirnos
       String? error = await FirestoreService().unirseAFamilia(codigo, usuarioActual);
 
@@ -49,7 +49,7 @@ class _UnirseFamiliaLayoutState extends State<UnirseFamiliaLayout> {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const DashboardScreen()),
-            (route) => false,
+                (route) => false,
           );
         }
       }
@@ -104,24 +104,24 @@ class _UnirseFamiliaLayoutState extends State<UnirseFamiliaLayout> {
             ),
             Padding(
               padding: const EdgeInsets.only(top: 30),
-              child: _isLoading 
-                ? const CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: _unirseAFamilia,
-                    style: ButtonStyle(
-                      backgroundColor: const WidgetStatePropertyAll(AppColors.primary),
-                      shape: const WidgetStatePropertyAll(CircleBorder(eccentricity: 0)),
-                      maximumSize: const WidgetStatePropertyAll(Size(200, 200)),
-                    ),
-                    child: const Padding(
-                      padding: EdgeInsets.all(20.0),
-                      child: Icon(
-                        Icons.arrow_forward_ios,
-                        size: 100,
-                        color: AppColors.secondary,
-                      ),
-                    ),
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                onPressed: _unirseAFamilia,
+                style: ButtonStyle(
+                  backgroundColor: const WidgetStatePropertyAll(AppColors.primary),
+                  shape: const WidgetStatePropertyAll(CircleBorder(eccentricity: 0)),
+                  maximumSize: const WidgetStatePropertyAll(Size(200, 200)),
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: Icon(
+                    Icons.arrow_forward_ios,
+                    size: 100,
+                    color: AppColors.secondary,
                   ),
+                ),
+              ),
             ),
           ],
         ),

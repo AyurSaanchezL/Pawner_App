@@ -6,10 +6,27 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:pawner_app/core/constants.dart';
 import 'package:pawner_app/core/model/usuario.dart';
 import 'package:pawner_app/core/model/familia.dart';
+import 'package:pawner_app/core/model/mascota.dart';
 import 'package:pawner_app/firebase_options.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  // CREAR MASCOTA
+  Future<void> crearMascota(Mascota mascota) async {
+    // 1. Creamos la referencia en la subcolección dentro de la familia correspondiente
+    final docMascota = _db
+        .collection('Familias')
+        .doc(mascota.familiaID)
+        .collection('Mascotas')
+        .doc();
+    
+    // 2. Actualizamos el objeto mascota con ese ID real generado
+    mascota.mascotaID = docMascota.id; 
+
+    // 3. Enviamos el mapa
+    await docMascota.set(mascota.toJson());
+  }
 
   static Future<void> conectarFirebase() async {
     await Firebase.initializeApp(
@@ -49,12 +66,6 @@ class FirestoreService {
       'familiaID': docFamilia.id,
     });
 
-    // 3. Añadir al admin a la subcolección miembros
-    batch.set(docFamilia.collection('Miembros').doc(usuarioActual.usuarioID), {
-      'nombre': usuarioActual.nombre,
-      'rol': UserRol.admin.name,
-    });
-
     await batch.commit();
   }
 
@@ -78,14 +89,6 @@ class FirestoreService {
       'rol': UserRol.miembro.name,
       'familiaID': familiaID,
     });
-
-    // 3. Añadir a la subcolección miembros
-    batch.set(
-        _db.collection('Familias').doc(familiaID).collection('Miembros').doc(usuarioActual.usuarioID),
-        {
-          'nombre': usuarioActual.nombre,
-          'rol': UserRol.miembro.name,
-        });
 
     await batch.commit();
     return null; // Éxito
