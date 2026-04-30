@@ -8,22 +8,22 @@ import 'package:pawner_app/screens/usuario/dashboard_screen.dart';
 import 'package:pawner_app/services/auth_service.dart';
 import 'package:pawner_app/services/firestore_service.dart';
 
-class CrearFamiliaLayout extends StatefulWidget {
-  const CrearFamiliaLayout({super.key});
+class UnirseFamiliaLayout extends StatefulWidget {
+  const UnirseFamiliaLayout({super.key});
 
   @override
-  State<CrearFamiliaLayout> createState() => _CrearFamiliaLayoutState();
+  State<UnirseFamiliaLayout> createState() => _UnirseFamiliaLayoutState();
 }
 
-class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
+class _UnirseFamiliaLayoutState extends State<UnirseFamiliaLayout> {
   final TextEditingController _controller = TextEditingController();
   bool _isLoading = false;
 
-  Future<void> _crearFamilia() async {
-    final nombre = _controller.text.trim();
-    if (nombre.isEmpty) {
+  Future<void> _unirseAFamilia() async {
+    final codigo = _controller.text.trim();
+    if (codigo.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Introduce un nombre para tu familia")),
+        const SnackBar(content: Text("Introduce el código de invitación")),
       );
       return;
     }
@@ -31,28 +31,30 @@ class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
     setState(() => _isLoading = true);
 
     try {
-      // 1. Obtenemos el usuario logueado actualmente
       Usuario usuarioActual = await authService.value.getCurrentUser();
-
-      // 2. Llamamos al servicio para crear la familia y actualizar el usuario
-      await FirestoreService().crearFamilia(nombre, usuarioActual);
+      
+      // Llamamos al servicio para unirnos
+      String? error = await FirestoreService().unirseAFamilia(codigo, usuarioActual);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("¡Familia creada con éxito!"),
-            backgroundColor: Colors.green,
-          ),
-        );
-        // 3. Navegamos al Dashboard limpiando el stack
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
-          (route) => false,
-        );
+        if (error != null) {
+          // Si el servicio devuelve un mensaje, es que el código no existe
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error), backgroundColor: Colors.orange),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("¡Te has unido a la familia!"), backgroundColor: Colors.green),
+          );
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const DashboardScreen()),
+            (route) => false,
+          );
+        }
       }
     } catch (e) {
-      log("Error en creación: $e");
+      log("Error al unirse: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
@@ -73,7 +75,7 @@ class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              "Nombre de familia",
+              "Código de familia",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
             Container(
@@ -88,9 +90,9 @@ class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
                     vertical: 0,
                     horizontal: 8,
                   ),
-                  hintText: "Pawtas largas",
+                  hintText: "Ej: XF45-GP12",
                   hintStyle: Constants.inputStyle,
-                  prefixIcon: const Icon(Icons.pets),
+                  prefixIcon: const Icon(Icons.vpn_key),
                   fillColor: AppColors.primary,
                   filled: true,
                   border: OutlineInputBorder(
@@ -105,15 +107,19 @@ class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
               child: _isLoading 
                 ? const CircularProgressIndicator()
                 : ElevatedButton(
-                    onPressed: _crearFamilia,
+                    onPressed: _unirseAFamilia,
                     style: ButtonStyle(
                       backgroundColor: const WidgetStatePropertyAll(AppColors.primary),
                       shape: const WidgetStatePropertyAll(CircleBorder(eccentricity: 0)),
                       maximumSize: const WidgetStatePropertyAll(Size(200, 200)),
                     ),
-                    child: Image.asset(
-                      "assets/images/logo-blanco-circulo.png",
-                      width: 200,
+                    child: const Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Icon(
+                        Icons.arrow_forward_ios,
+                        size: 100,
+                        color: AppColors.secondary,
+                      ),
                     ),
                   ),
             ),

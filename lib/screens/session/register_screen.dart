@@ -7,6 +7,8 @@ import 'package:pawner_app/core/model/usuario.dart';
 import 'package:pawner_app/services/auth_service.dart';
 import 'package:pawner_app/services/crash_manager.dart';
 import 'package:pawner_app/services/firestore_service.dart';
+import 'package:pawner_app/screens/familia/elegir_familia.dart';
+
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -36,7 +38,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
         realUID,
       );
       if (mounted) {
-        popPage();
+       // popPage();
+       // Mostrar SnackBar de bienvenida
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Te has registrado. ¡Bienvenido!"),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
+
+        // Navegar a la pantalla de elegir familia
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const ElegirFamiliaLayout()),
+          (route) => false, // Esto limpia el stack de navegación
+        );
       }
     } on FirebaseAuthException catch (e) {
       log(e.message!);

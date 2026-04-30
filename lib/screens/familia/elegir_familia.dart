@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pawner_app/core/app_colors.dart';
+import 'package:pawner_app/screens/familia/crear_familia.dart';
+import 'package:pawner_app/screens/familia/unirse_familia.dart';
 
 class ElegirFamiliaLayout extends StatelessWidget {
   const ElegirFamiliaLayout({super.key});
@@ -20,8 +22,8 @@ class ElegirFamiliaLayout extends StatelessWidget {
             Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _familyButton("UNIRSE", "Unirse a familia"),
-                _familyButton("CREAR", "Crear familia"),
+                _familyButton(context, "UNIRSE", "Unirse a familia"),
+                _familyButton(context, "CREAR", "Crear familia"),
               ],
             ),
           ],
@@ -30,7 +32,7 @@ class ElegirFamiliaLayout extends StatelessWidget {
     );
   }
 
-  Widget _familyButton(String action, String text) {
+  Widget _familyButton(BuildContext context, String action, String text) {
     Color color = AppColors.secondary;
     Color textColor = AppColors.primary;
     if (action.startsWith("U")) {
@@ -40,22 +42,33 @@ class ElegirFamiliaLayout extends StatelessWidget {
 
     return ElevatedButton(
       onPressed: () {
-        
+        if (action == "CREAR") {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CrearFamiliaLayout()),
+          );
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const UnirseFamiliaLayout()),
+          );
+        }
       },
       style: ButtonStyle(
         backgroundColor: WidgetStateProperty.all(color.withAlpha(245)),
         foregroundColor: WidgetStateProperty.all(AppColors.primary),
-        fixedSize: WidgetStatePropertyAll(Size(235, 150)),
+        fixedSize: const WidgetStatePropertyAll(Size(235, 150)),
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(
-            borderRadius: BorderRadiusGeometry.circular(10),
+            borderRadius: BorderRadius.circular(10),
           ),
         ),
-        elevation: WidgetStatePropertyAll(6),
+        elevation: const WidgetStatePropertyAll(6),
       ),
       child: Text(
         text,
-        style: TextStyle(fontSize: 20, fontWeight: .w800, color: textColor),
+        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: textColor),
       ),
     );
   }
