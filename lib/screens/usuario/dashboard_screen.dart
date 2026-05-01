@@ -7,8 +7,11 @@ import 'package:pawner_app/screens/usuario/ajustes_screen.dart'; // For settings
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pawner_app/services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import '../../core/model/usuario.dart' show Usuario;
+
+
+import 'package:pawner_app/core/model/familia.dart';
+import 'package:pawner_app/core/components/invitation_share_sheet.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -124,16 +127,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
       // Floating Action Button (migrated from original DashboardScreen)
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.secondary,
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const NuevaMascotaScreen()),
-          );
-        },
-        child: const Icon(Icons.add, color: AppColors.primary),
-      ),
     );
   }
   // --- App Bar ---
@@ -183,6 +176,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  void _showInvitationSheet() async {
+    final u = FirebaseAuth.instance.currentUser;
+    if (u == null) return;
+
+    final FirestoreService fs = FirestoreService();
+    final usuario = await fs.getCurrentUser(u);
+    final familia = await fs.getFamilia(usuario.familiaID ?? "");
+
+    if (familia != null && mounted) {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => InvitationShareSheet(codigoInvitacion: familia.codigoInvitacion),
+      );
+    }
+  }
+
   Widget _buildAppBarActions() {
     return Container(
       margin: const EdgeInsets.only(right: 16.0),
@@ -194,9 +205,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.pets, color: _darkBlue, size: 24),
-          const SizedBox(width: 10),
+          GestureDetector(
+            onTap: _showInvitationSheet,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: _darkBlue.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(LucideIcons.userPlus, color: _darkBlue, size: 18),
+                  const SizedBox(width: 5),
+                  Text(
+                    'Invitar',
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: _darkBlue,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
           IconButton(
+            constraints: const BoxConstraints(),
+            padding: EdgeInsets.zero,
             icon: Icon(LucideIcons.settings, color: _darkBlue, size: 24),
             onPressed: () {
               Navigator.push(
@@ -205,7 +243,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               );
             },
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           const CircleAvatar(
             radius: 18,
             backgroundColor: Colors.grey, // Placeholder for profile image

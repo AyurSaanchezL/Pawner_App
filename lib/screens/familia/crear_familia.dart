@@ -1,8 +1,7 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/app_colors.dart';
-import 'package:pawner_app/core/constants.dart';
 import 'package:pawner_app/core/model/usuario.dart';
 import 'package:pawner_app/screens/usuario/dashboard_screen.dart';
 import 'package:pawner_app/services/auth_service.dart';
@@ -31,20 +30,13 @@ class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
     setState(() => _isLoading = true);
 
     try {
-      // 1. Obtenemos el usuario logueado actualmente
       Usuario usuarioActual = await authService.value.getCurrentUser();
-
-      // 2. Llamamos al servicio para crear la familia y actualizar el usuario
       await FirestoreService().crearFamilia(nombre, usuarioActual);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("¡Familia creada con éxito!"),
-            backgroundColor: Colors.green,
-          ),
+          const SnackBar(content: Text("¡Familia creada con éxito!"), backgroundColor: Colors.green),
         );
-        // 3. Navegamos al Dashboard limpiando el stack
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const DashboardScreen()),
@@ -66,56 +58,93 @@ class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.lightSecondary,
-      body: SizedBox(
-        width: double.infinity,
+      backgroundColor: AppColors.homeScreenBackground,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(LucideIcons.arrowLeft, color: AppColors.dark),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 30),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const SizedBox(height: 20),
+            const Icon(Icons.pets_rounded, size: 80, color: AppColors.accent),
+            const SizedBox(height: 20),
             const Text(
-              "Nombre de familia",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-            ),
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 300,
-              child: TextField(
-                controller: _controller,
-                style: Constants.inputStyle,
-                maxLines: 1,
-                decoration: InputDecoration(
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 0,
-                    horizontal: 8,
-                  ),
-                  hintText: "Pawtas largas",
-                  hintStyle: Constants.inputStyle,
-                  prefixIcon: const Icon(Icons.pets),
-                  fillColor: AppColors.primary,
-                  filled: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
+              "Crear tu Familia",
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: AppColors.accent,
+                fontFamily: 'Nunito',
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(top: 30),
-              child: _isLoading 
-                ? const CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: _crearFamilia,
-                    style: ButtonStyle(
-                      backgroundColor: const WidgetStatePropertyAll(AppColors.primary),
-                      shape: const WidgetStatePropertyAll(CircleBorder(eccentricity: 0)),
-                      maximumSize: const WidgetStatePropertyAll(Size(200, 200)),
-                    ),
-                    child: Image.asset(
-                      "assets/images/logo-blanco-circulo.png",
-                      width: 200,
+            const SizedBox(height: 10),
+            const Text(
+              "Dale un nombre especial a tu grupo para empezar a gestionar a tus mascotas juntos.",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: AppColors.dark, fontFamily: 'Nunito'),
+            ),
+            const SizedBox(height: 40),
+            Container(
+              padding: const EdgeInsets.all(25),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _controller,
+                    style: const TextStyle(fontSize: 18, color: AppColors.dark),
+                    decoration: InputDecoration(
+                      hintText: "Ej: Familia Pawsome",
+                      prefixIcon: const Icon(LucideIcons.pencil, color: AppColors.accent),
+                      fillColor: AppColors.primary,
+                      filled: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: const BorderSide(color: AppColors.secondary, width: 1),
+                      ),
                     ),
                   ),
+                  const SizedBox(height: 30),
+                  _isLoading
+                      ? const CircularProgressIndicator(color: AppColors.accent)
+                      : ElevatedButton(
+                          onPressed: _crearFamilia,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.complementary,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(double.infinity, 60),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                         //     side: const BorderSide(color: AppColors.secondary, width: 1),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: const Text(
+                            "CREAR FAMILIA",
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                ],
+              ),
             ),
           ],
         ),

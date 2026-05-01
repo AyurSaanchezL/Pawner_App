@@ -5,6 +5,7 @@ import 'package:pawner_app/core/components/chat_bubble_clipper.dart';
 import 'package:pawner_app/core/model/usuario.dart';
 import 'package:pawner_app/screens/usuario/perfil_screen.dart';
 import 'package:pawner_app/services/auth_service.dart';
+import 'package:pawner_app/screens/familia/detalle_familia_screen.dart';
 
 class AjustesScreen extends StatelessWidget {
   const AjustesScreen({super.key});
@@ -53,9 +54,25 @@ class AjustesScreen extends StatelessWidget {
                         _buildBubble(
                           text: "Familia",
                           color: _orangeBubble,
-                          icon: LucideIcons.home,
+                          icon: LucideIcons.users,
                           isRightTail: true,
                           iconColor: Colors.orange,
+                          onTap: () async {
+                            Usuario usuario = await authService.value.getCurrentUser();
+                            if (context.mounted) {
+                              if (usuario.familiaID != null && usuario.familiaID!.isNotEmpty) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => DetalleFamiliaScreen(familiaID: usuario.familiaID!),
+                                  ),
+                                );
+                              } else {
+                                // Si por algún motivo llegara aquí sin familia
+                                log("El usuario no tiene familia");
+                              }
+                            }
+                          },
                         ),
                         const SizedBox(height: 25),
                         _buildBubble(

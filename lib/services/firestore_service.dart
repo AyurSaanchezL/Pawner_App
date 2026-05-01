@@ -131,4 +131,101 @@ class FirestoreService {
     final docUsuario = _db.collection('Usuarios').doc(u.usuarioID);
     await docUsuario.delete();
   }
+
+  // --- NUEVOS MÉTODOS PARA DETALLE DE FAMILIA ---
+
+  // Obtener una familia por ID
+  Future<Familia?> getFamilia(String familiaID) async {
+    final doc = await _db.collection('Familias').doc(familiaID).get();
+    if (!doc.exists) return null;
+    return Familia.fromJson(doc.data()!, doc.id);
+  }
+
+  // Stream de mascotas de una familia
+  Stream<List<Mascota>> streamMascotas(String familiaID) {
+    return _db
+        .collection('Familias')
+        .doc(familiaID)
+        .collection('Mascotas')
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => Mascota.fromJson(doc.data(), doc.id))
+            .toList());
+  }
+
+  // Stream de miembros (usuarios) de una familia
+  Stream<List<Usuario>> streamMiembros(String familiaID) {
+    return _db
+        .collection('Usuarios')
+        .where('familiaID', isEqualTo: familiaID)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => Usuario.fromJson(doc.data(), doc.id))
+            .toList());
+  }
+
+  // Abandonar una familia con lógica robusta
+  Future<void> abandonarFamilia(Usuario usuario) async {
+    final String? familiaID = usuario.familiaID;
+    if (familiaID == null) return;
+
+    WriteBatch batch = _db.batch();
+
+    if (usuario.rol == UserRol.admin) {
+      // 1. Buscar otros miembros de la familia
+      final miembrosQuery = await _db
+          .collection('Usuarios')
+          .where('familiaID', isEqualTo: familiaID)
+          .get();
+
+      final otrosMiembros = miembrosQuery.docs
+          .where((doc) => doc.id != usuario.usuarioID)
+          .toList();
+
+      if (otrosMiembros.isNotEmpty) {
+        // ESCENARIO A: Hay más personas -> Promover al primero que encontremos
+        final nuevoAdminDoc = otrosMiembros.first;
+
+        // Actualizar el rol del nuevo admin
+        batch.update(nuevoAdminDoc.reference, {'rol': UserRol.admin.name});
+
+        // Actualizar la referencia de admin en el documento de la Familia
+        batch.update(_db.collection('Familias').doc(familiaID), {
+          'adminID': nuevoAdminDoc.id
+        });
+      } else {
+        // ESCENARIO B: Es el único -> Borrado total (Familia + Mascotas)
+
+        // 1. Borrar subcolección de mascotas
+        final mascotasQuery = await _db
+            .collection('Familias')
+            .doc(familiaID)
+            .collection('Mascotas')
+            .get();
+
+        for (var doc in mascotasQuery.docs) {
+          batch.delete(doc.reference);
+        }
+
+        // 2. Borrar documento de la familia
+        batch.delete(_db.collection('Familias').doc(familiaID));
+      }
+    }
+
+    // En todos los casos, el usuario actual se desvincula
+    batch.update(_db.collection('Usuarios').doc(usuario.usuarioID), {
+      'familiaID': null,
+      'rol': null,
+    });
+
+    await batch.commit();
+  }
+
+  // Regenerar el código de invitación de una familia
+  Future<void> regenerarCodigoFamilia(String familiaID) async {
+    final nuevoCodigo = generarCodigoInvitacion();
+    await _db.collection('Familias').doc(familiaID).update({
+      'codigoInvitacion': nuevoCodigo,
+    });
+  }
 }
