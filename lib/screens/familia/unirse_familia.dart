@@ -78,14 +78,14 @@ class _UnirseFamiliaLayoutState extends State<UnirseFamiliaLayout> {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            const Icon(LucideIcons.users, size: 80, color: AppColors.homeScreenLavender),
+            const Icon(LucideIcons.users, size: 80, color: AppColors.secondary),
             const SizedBox(height: 20),
             const Text(
               "Unirse a una Familia",
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: AppColors.homeScreenLavender,
+                color: AppColors.secondary,
                 fontFamily: 'Nunito',
               ),
             ),
@@ -119,7 +119,7 @@ class _UnirseFamiliaLayoutState extends State<UnirseFamiliaLayout> {
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 10,
-                      color: AppColors.secondary,
+                      color: AppColors.accent,
                     ),
                     decoration: InputDecoration(
                       hintText: "000000",
@@ -143,8 +143,8 @@ class _UnirseFamiliaLayoutState extends State<UnirseFamiliaLayout> {
                       : ElevatedButton(
                           onPressed: _unirseAFamilia,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.lightSecondary,
-                            foregroundColor: AppColors.dark,
+                            backgroundColor: AppColors.secondary,
+                            foregroundColor: Colors.white,
                             minimumSize: const Size(double.infinity, 60),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15),
