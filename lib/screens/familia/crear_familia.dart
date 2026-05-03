@@ -35,7 +35,10 @@ class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("¡Familia creada con éxito!"), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text("¡Familia creada con éxito!"),
+            backgroundColor: Colors.green,
+          ),
         );
         Navigator.pushAndRemoveUntil(
           context,
@@ -58,7 +61,7 @@ class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.homeScreenBackground,
+      backgroundColor: AppColors.primary,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -87,7 +90,11 @@ class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
             const Text(
               "Dale un nombre especial a tu grupo para empezar a gestionar a tus mascotas juntos.",
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: AppColors.dark, fontFamily: 'Nunito'),
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.dark,
+                fontFamily: 'Nunito',
+              ),
             ),
             const SizedBox(height: 40),
             Container(
@@ -110,7 +117,10 @@ class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
                     style: const TextStyle(fontSize: 18, color: AppColors.dark),
                     decoration: InputDecoration(
                       hintText: "Ej: Familia Pawsome",
-                      prefixIcon: const Icon(LucideIcons.pencil, color: AppColors.accent),
+                      prefixIcon: const Icon(
+                        LucideIcons.pencil,
+                        color: AppColors.accent,
+                      ),
                       fillColor: AppColors.primary,
                       filled: true,
                       border: OutlineInputBorder(
@@ -119,7 +129,10 @@ class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
-                        borderSide: const BorderSide(color: AppColors.secondary, width: 1),
+                        borderSide: const BorderSide(
+                          color: AppColors.secondary,
+                          width: 1,
+                        ),
                       ),
                     ),
                   ),
@@ -134,13 +147,16 @@ class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
                             minimumSize: const Size(double.infinity, 60),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15),
-                         //     side: const BorderSide(color: AppColors.secondary, width: 1),
+                              //     side: const BorderSide(color: AppColors.secondary, width: 1),
                             ),
                             elevation: 0,
                           ),
                           child: const Text(
                             "CREAR FAMILIA",
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                 ],

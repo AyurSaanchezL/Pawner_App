@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/app_colors.dart';
-import 'package:pawner_app/core/constants.dart'; // Assuming Constants might have styles or enums
+import 'package:pawner_app/screens/first_screen.dart';
 import 'package:pawner_app/screens/usuario/nueva_mascota_screen.dart'; // Keep this for the FAB logic if needed
 import 'package:pawner_app/screens/usuario/ajustes_screen.dart'; // For settings navigation
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,8 +9,6 @@ import 'package:pawner_app/services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/model/usuario.dart' show Usuario;
 
-
-import 'package:pawner_app/core/model/familia.dart';
 import 'package:pawner_app/core/components/invitation_share_sheet.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -23,9 +21,18 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   // Placeholder data for pets
   final List<Map<String, dynamic>> _petsPlaceholder = [
-    {'name': 'Buddy', 'image': 'assets/images/fotos_perfil/zorro.png'}, // Placeholder image path
-    {'name': 'Luna', 'image': 'assets/images/fotos_perfil/gato1.png'}, // Placeholder image path
-    {'name': 'Max', 'image': 'assets/images/fotos_perfil/conejo1.png'}, // Placeholder image path
+    {
+      'name': 'Buddy',
+      'image': 'assets/images/fotos_perfil/zorro.png',
+    }, // Placeholder image path
+    {
+      'name': 'Luna',
+      'image': 'assets/images/fotos_perfil/ciervo.png',
+    }, // Placeholder image path
+    {
+      'name': 'Max',
+      'image': 'assets/images/fotos_perfil/conejo.png',
+    }, // Placeholder image path
   ];
 
   // Placeholder data for reminders
@@ -36,35 +43,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
     {'date': '28/10/25', 'name': 'Cita Anual Perro 1'},
   ];
 
-  // Custom colors TODO cambiar de lugar a App Colors
-  final Color _scaffoldBackgroundColor = const Color(0xFFFFFDF0); // Creamy white
-  final Color _darkBlue = AppColors.secondary; // Dark blue
-  final Color _lightLavender = const Color(0xFFC5B4E3); // Light lavender
-  final Color _pastelOrange = const Color(0xFFFFCC80); // Pastel orange/peach
-  final Color _textColorPrimary = Colors.black87;
-  final Color _textColorSecondary = Colors.black54;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _scaffoldBackgroundColor,
+      backgroundColor: AppColors.primary,
       appBar: _buildCustomAppBar(),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 20.0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Mascota Section
-                  _buildSectionHeader('Mascotas', _darkBlue),
+                  _buildSectionHeader('Mascotas', AppColors.darkBlue),
                   const SizedBox(height: 15),
                   Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: _lightLavender,
+                      color: AppColors.lightSecondary,
                       borderRadius: BorderRadius.circular(25),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 20),
@@ -73,7 +75,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
-                          ..._petsPlaceholder.map((pet) => _buildPetPlaceholder(pet['name'], pet['image'])).toList(),
+                          ..._petsPlaceholder.map(
+                            (pet) =>
+                                _buildPetPlaceholder(pet['name'], pet['image']),
+                          ),
                           const SizedBox(width: 15),
                           _buildNewPetButton(),
                         ],
@@ -83,11 +88,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 30),
 
                   // Recordatorios Section
-                  _buildSectionHeader('Próximos recordatorios', _darkBlue, showListIcon: true),
+                  _buildSectionHeader(
+                    'Próximos recordatorios',
+                    AppColors.darkBlue,
+                    showListIcon: true,
+                  ),
                   const SizedBox(height: 15),
                   ListView.builder(
                     shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(), // Prevent nested scrolling issues
+                    physics:
+                        const NeverScrollableScrollPhysics(), // Prevent nested scrolling issues
                     itemCount: _remindersPlaceholder.length,
                     itemBuilder: (context, index) {
                       return _buildReminderCard(_remindersPlaceholder[index]);
@@ -102,12 +112,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       // Footer
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(bottom: 20.0), // Adjust padding as needed
+        padding: const EdgeInsets.only(
+          bottom: 20.0,
+        ), // Adjust padding as needed
         child: FutureBuilder<String>(
           future: obtenerNombreFamilia(), // Call the async function here
           builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Text('Loading family name...'); // Placeholder while loading
+              return const Text(
+                'Cargando nombre de la familia...',
+              ); // Placeholder while loading
             } else if (snapshot.hasError) {
               return Text('Error: ${snapshot.error}'); // Show error if any
             } else {
@@ -116,10 +130,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 snapshot.data ?? "Sin nombre",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontFamily: 'Nunito',
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: _textColorPrimary,
+                  color: AppColors.textColorPrimary,
                 ),
               );
             }
@@ -129,6 +142,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // Floating Action Button (migrated from original DashboardScreen)
     );
   }
+
   // --- App Bar ---
   PreferredSizeWidget _buildCustomAppBar() {
     return AppBar(
@@ -137,15 +151,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.black),
         onPressed: () {
-          // TODO: Implement navigation logic for back button
-          Navigator.pop(context); // Example: navigate back
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => FirstScreen()),
+          );
         },
       ),
       title: _buildLogoTitle(),
       titleSpacing: 0, // Adjust spacing if needed
-      actions: [
-        _buildAppBarActions(),
-      ],
+      actions: [_buildAppBarActions()],
     );
   }
 
@@ -157,19 +171,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Text(
           'Pawner',
           style: TextStyle(
-            fontFamily: 'Nunito',
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: _textColorPrimary,
+            color: AppColors.textColorPrimary,
           ),
         ),
         Text(
           'WE <3 MASCOTAS',
           style: TextStyle(
-            fontFamily: 'Nunito',
             fontSize: 12,
             fontWeight: FontWeight.normal,
-            color: _textColorSecondary,
+            color: AppColors.textColorSecondary,
           ),
         ),
       ],
@@ -189,7 +201,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         context: context,
         backgroundColor: Colors.transparent,
         isScrollControlled: true,
-        builder: (context) => InvitationShareSheet(codigoInvitacion: familia.codigoInvitacion),
+        builder: (context) =>
+            InvitationShareSheet(codigoInvitacion: familia.codigoInvitacion),
       );
     }
   }
@@ -212,19 +225,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
               decoration: BoxDecoration(
                 color: AppColors.primary,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: _darkBlue.withOpacity(0.3)),
+                border: Border.all(color: AppColors.darkBlue.withAlpha(75)),
               ),
               child: Row(
                 children: [
-                  Icon(LucideIcons.userPlus, color: _darkBlue, size: 18),
+                  Icon(
+                    LucideIcons.userPlus,
+                    color: AppColors.darkBlue,
+                    size: 18,
+                  ),
                   const SizedBox(width: 5),
                   Text(
                     'Invitar',
                     style: TextStyle(
-                      fontFamily: 'Nunito',
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: _darkBlue,
+                      color: AppColors.darkBlue,
                     ),
                   ),
                 ],
@@ -235,9 +251,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             constraints: const BoxConstraints(),
             padding: EdgeInsets.zero,
-            icon: Icon(LucideIcons.settings, color: _darkBlue, size: 24),
+            icon: Icon(
+              LucideIcons.settings,
+              color: AppColors.darkBlue,
+              size: 24,
+            ),
             onPressed: () {
-              Navigator.push(
+              Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => const AjustesScreen()),
               );
@@ -255,21 +275,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // --- Section Widgets ---
-  Widget _buildSectionHeader(String title, Color color, {bool showListIcon = false}) {
+  Widget _buildSectionHeader(
+    String title,
+    Color color, {
+    bool showListIcon = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           title,
           style: TextStyle(
-            fontFamily: 'Nunito',
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: color,
           ),
         ),
-        if (showListIcon)
-          Icon(LucideIcons.list, color: color),
+        if (showListIcon) Icon(LucideIcons.list, color: color),
       ],
     );
   }
@@ -285,13 +307,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             height: 70,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white, // Background for the circle image placeholder
+              color:
+                  Colors.white, // Background for the circle image placeholder
               // Consider using Image.asset(imagePath, fit: BoxFit.cover) if images are available
               image: DecorationImage(
                 image: AssetImage(imagePath), // Placeholder image
                 fit: BoxFit.cover,
               ),
-              border: Border.all(color: _darkBlue, width: 2),
+              border: Border.all(color: AppColors.darkBlue, width: 2),
             ),
             // child: ClipOval( // If using placeholder image directly inside container
             //   child: Image.asset(imagePath, fit: BoxFit.cover),
@@ -301,10 +324,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Text(
             name,
             style: TextStyle(
-              fontFamily: 'Nunito',
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: _textColorPrimary,
+              color: AppColors.textColorPrimary,
             ),
           ),
         ],
@@ -320,7 +342,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           MaterialPageRoute(builder: (context) => const NuevaMascotaScreen()),
         );
       },
-      child: Container(
+      child: SizedBox(
         width: 80, // Slightly larger to accommodate text below
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -346,10 +368,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               "Nuevo integrante",
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'Nunito',
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: _textColorPrimary,
+                color: AppColors.textColorPrimary,
               ),
             ),
           ],
@@ -360,11 +381,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildReminderCard(Map<String, dynamic> reminder) {
     return Card(
-      color: _pastelOrange,
+      color: AppColors.accent,
       margin: const EdgeInsets.only(bottom: 15.0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(25.0),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25.0)),
       elevation: 4,
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -375,10 +394,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Text(
                 reminder['date'],
                 style: TextStyle(
-                  fontFamily: 'Nunito',
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: _textColorPrimary,
+                  color: AppColors.textColorPrimary,
                 ),
               ),
             ),
@@ -387,10 +405,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Text(
                 reminder['name'],
                 style: TextStyle(
-                  fontFamily: 'Nunito',
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: _textColorPrimary,
+                  color: AppColors.textColorPrimary,
                 ),
               ),
             ),
@@ -405,9 +422,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 // Fue hecho de manera rapida para el ejemplo, solo obtiene el nombre de la familia del usuario actual
 Future<String> obtenerNombreFamilia() async {
   final u = FirebaseAuth.instance.currentUser;
-  final FirestoreService _fs = FirestoreService();
-  Usuario usuario = await _fs.getCurrentUser(u!);
-  var famDoc = await FirebaseFirestore.instance.collection('Familias').doc(usuario.familiaID).get();
+  final FirestoreService fs = FirestoreService();
+  Usuario usuario = await fs.getCurrentUser(u!);
+  var famDoc = await FirebaseFirestore.instance
+      .collection('Familias')
+      .doc(usuario.familiaID)
+      .get();
 
   return famDoc.data()?['nombre'] ?? "Sin nombre";
 }

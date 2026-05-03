@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -20,9 +21,9 @@ class FirestoreService {
         .doc(mascota.familiaID)
         .collection('Mascotas')
         .doc();
-    
+
     // 2. Actualizamos el objeto mascota con ese ID real generado
-    mascota.mascotaID = docMascota.id; 
+    mascota.mascotaID = docMascota.id;
 
     // 3. Enviamos el mapa
     await docMascota.set(mascota.toJson());
@@ -37,8 +38,12 @@ class FirestoreService {
   // Generador de código aleatorio (6 caracteres alfanuméricos)
   String generarCodigoInvitacion() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    return String.fromCharCodes(Iterable.generate(
-        6, (_) => chars.codeUnitAt(Random().nextInt(chars.length))));
+    return String.fromCharCodes(
+      Iterable.generate(
+        6,
+        (_) => chars.codeUnitAt(Random().nextInt(chars.length)),
+      ),
+    );
   }
 
   // CREAR FAMILIA
@@ -108,7 +113,10 @@ class FirestoreService {
   }
 
   // READ
-  Stream<List<Usuario>> readUsuarios() => _db.collection('Usuarios').snapshots().map(
+  Stream<List<Usuario>> readUsuarios() => _db
+      .collection('Usuarios')
+      .snapshots()
+      .map(
         (snapshot) => snapshot.docs
             .map((doc) => Usuario.fromJson(doc.data(), doc.id))
             .toList(),
@@ -117,6 +125,7 @@ class FirestoreService {
   // UPDATE
   Future<void> updateUsuario(Usuario u) async {
     final docUsuario = _db.collection('Usuarios').doc(u.usuarioID);
+    dev.log(u.toJson(u.usuarioID).toString());
     await docUsuario.update(u.toJson(u.usuarioID));
   }
 
@@ -148,9 +157,11 @@ class FirestoreService {
         .doc(familiaID)
         .collection('Mascotas')
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Mascota.fromJson(doc.data(), doc.id))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => Mascota.fromJson(doc.data(), doc.id))
+              .toList(),
+        );
   }
 
   // Stream de miembros (usuarios) de una familia
@@ -159,9 +170,11 @@ class FirestoreService {
         .collection('Usuarios')
         .where('familiaID', isEqualTo: familiaID)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Usuario.fromJson(doc.data(), doc.id))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => Usuario.fromJson(doc.data(), doc.id))
+              .toList(),
+        );
   }
 
   // Abandonar una familia con lógica robusta
@@ -191,7 +204,7 @@ class FirestoreService {
 
         // Actualizar la referencia de admin en el documento de la Familia
         batch.update(_db.collection('Familias').doc(familiaID), {
-          'adminID': nuevoAdminDoc.id
+          'adminID': nuevoAdminDoc.id,
         });
       } else {
         // ESCENARIO B: Es el único -> Borrado total (Familia + Mascotas)

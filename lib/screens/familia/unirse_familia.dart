@@ -31,7 +31,10 @@ class _UnirseFamiliaLayoutState extends State<UnirseFamiliaLayout> {
 
     try {
       Usuario usuarioActual = await authService.value.getCurrentUser();
-      String? error = await FirestoreService().unirseAFamilia(codigo, usuarioActual);
+      String? error = await FirestoreService().unirseAFamilia(
+        codigo,
+        usuarioActual,
+      );
 
       if (mounted) {
         if (error != null) {
@@ -40,7 +43,10 @@ class _UnirseFamiliaLayoutState extends State<UnirseFamiliaLayout> {
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("¡Te has unido a la familia!"), backgroundColor: Colors.green),
+            const SnackBar(
+              content: Text("¡Te has unido a la familia!"),
+              backgroundColor: Colors.green,
+            ),
           );
           Navigator.pushAndRemoveUntil(
             context,
@@ -64,7 +70,7 @@ class _UnirseFamiliaLayoutState extends State<UnirseFamiliaLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.homeScreenBackground,
+      backgroundColor: AppColors.primary,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -93,7 +99,11 @@ class _UnirseFamiliaLayoutState extends State<UnirseFamiliaLayout> {
             const Text(
               "Introduce el código de 6 dígitos para conectarte con tus seres queridos y sus mascotas.",
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: AppColors.dark, fontFamily: 'Nunito'),
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.dark,
+                fontFamily: 'Nunito',
+              ),
             ),
             const SizedBox(height: 40),
             Container(
@@ -123,7 +133,10 @@ class _UnirseFamiliaLayoutState extends State<UnirseFamiliaLayout> {
                     ),
                     decoration: InputDecoration(
                       hintText: "000000",
-                      hintStyle: TextStyle(color: Colors.grey[300], letterSpacing: 10),
+                      hintStyle: TextStyle(
+                        color: Colors.grey[300],
+                        letterSpacing: 10,
+                      ),
                       counterText: "",
                       fillColor: AppColors.primary,
                       filled: true,
@@ -133,13 +146,18 @@ class _UnirseFamiliaLayoutState extends State<UnirseFamiliaLayout> {
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
-                        borderSide: const BorderSide(color: AppColors.secondary, width: 1),
+                        borderSide: const BorderSide(
+                          color: AppColors.secondary,
+                          width: 1,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 30),
                   _isLoading
-                      ? const CircularProgressIndicator(color: AppColors.secondary)
+                      ? const CircularProgressIndicator(
+                          color: AppColors.secondary,
+                        )
                       : ElevatedButton(
                           onPressed: _unirseAFamilia,
                           style: ElevatedButton.styleFrom(
@@ -148,13 +166,16 @@ class _UnirseFamiliaLayoutState extends State<UnirseFamiliaLayout> {
                             minimumSize: const Size(double.infinity, 60),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15),
-                             // side: const BorderSide(color: AppColors.secondary, width: 1),
+                              // side: const BorderSide(color: AppColors.secondary, width: 1),
                             ),
                             elevation: 0,
                           ),
                           child: const Text(
                             "UNIRSE",
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                 ],
