@@ -7,22 +7,22 @@ import 'package:pawner_app/screens/usuario/dashboard_screen.dart';
 import 'package:pawner_app/services/auth_service.dart';
 import 'package:pawner_app/services/firestore_service.dart';
 
-class CrearFamiliaLayout extends StatefulWidget {
-  const CrearFamiliaLayout({super.key});
+class UnirseFamiliaLayout extends StatefulWidget {
+  const UnirseFamiliaLayout({super.key});
 
   @override
-  State<CrearFamiliaLayout> createState() => _CrearFamiliaLayoutState();
+  State<UnirseFamiliaLayout> createState() => _UnirseFamiliaLayoutState();
 }
 
-class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
+class _UnirseFamiliaLayoutState extends State<UnirseFamiliaLayout> {
   final TextEditingController _controller = TextEditingController();
   bool _isLoading = false;
 
-  Future<void> _crearFamilia() async {
-    final nombre = _controller.text.trim();
-    if (nombre.isEmpty) {
+  Future<void> _unirseAFamilia() async {
+    final codigo = _controller.text.trim().toUpperCase();
+    if (codigo.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Introduce un nombre para tu familia")),
+        const SnackBar(content: Text("Introduce el código de invitación")),
       );
       return;
     }
@@ -31,20 +31,26 @@ class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
 
     try {
       Usuario usuarioActual = await authService.value.getCurrentUser();
-      await FirestoreService().crearFamilia(nombre, usuarioActual);
+      String? error = await FirestoreService().unirseAFamilia(codigo, usuarioActual);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("¡Familia creada con éxito!"), backgroundColor: Colors.green),
-        );
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
-          (route) => false,
-        );
+        if (error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error), backgroundColor: Colors.orange),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("¡Te has unido a la familia!"), backgroundColor: Colors.green),
+          );
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const DashboardScreen()),
+            (route) => false,
+          );
+        }
       }
     } catch (e) {
-      log("Error en creación: $e");
+      log("Error al unirse: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
@@ -72,20 +78,20 @@ class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            const Icon(Icons.pets_rounded, size: 80, color: AppColors.accent),
+            const Icon(LucideIcons.users, size: 80, color: AppColors.secondary),
             const SizedBox(height: 20),
             const Text(
-              "Crear tu Familia",
+              "Unirse a una Familia",
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: AppColors.accent,
+                color: AppColors.secondary,
                 fontFamily: 'Nunito',
               ),
             ),
             const SizedBox(height: 10),
             const Text(
-              "Dale un nombre especial a tu grupo para empezar a gestionar a tus mascotas juntos.",
+              "Introduce el código de 6 dígitos para conectarte con tus seres queridos y sus mascotas.",
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16, color: AppColors.dark, fontFamily: 'Nunito'),
             ),
@@ -107,10 +113,18 @@ class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
                 children: [
                   TextField(
                     controller: _controller,
-                    style: const TextStyle(fontSize: 18, color: AppColors.dark),
+                    textAlign: TextAlign.center,
+                    maxLength: 6,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 10,
+                      color: AppColors.accent,
+                    ),
                     decoration: InputDecoration(
-                      hintText: "Ej: Familia Pawsome",
-                      prefixIcon: const Icon(LucideIcons.pencil, color: AppColors.accent),
+                      hintText: "000000",
+                      hintStyle: TextStyle(color: Colors.grey[300], letterSpacing: 10),
+                      counterText: "",
                       fillColor: AppColors.primary,
                       filled: true,
                       border: OutlineInputBorder(
@@ -125,21 +139,21 @@ class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
                   ),
                   const SizedBox(height: 30),
                   _isLoading
-                      ? const CircularProgressIndicator(color: AppColors.accent)
+                      ? const CircularProgressIndicator(color: AppColors.secondary)
                       : ElevatedButton(
-                          onPressed: _crearFamilia,
+                          onPressed: _unirseAFamilia,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.complementary,
+                            backgroundColor: AppColors.secondary,
                             foregroundColor: Colors.white,
                             minimumSize: const Size(double.infinity, 60),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15),
-                         //     side: const BorderSide(color: AppColors.secondary, width: 1),
+                             // side: const BorderSide(color: AppColors.secondary, width: 1),
                             ),
                             elevation: 0,
                           ),
                           child: const Text(
-                            "CREAR FAMILIA",
+                            "UNIRSE",
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                         ),

@@ -1,0 +1,465 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:pawner_app/core/app_colors.dart';
+import 'package:pawner_app/core/model/familia.dart';
+import 'package:pawner_app/core/model/mascota.dart';
+import 'package:pawner_app/core/model/usuario.dart';
+import 'package:pawner_app/services/firestore_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:pawner_app/screens/familia/elegir_familia.dart';
+import 'package:pawner_app/core/constants.dart';
+import 'package:share_plus/share_plus.dart';
+
+class DetalleFamiliaScreen extends StatefulWidget {
+  final String familiaID;
+
+  const DetalleFamiliaScreen({super.key, required this.familiaID});
+
+  @override
+  State<DetalleFamiliaScreen> createState() => _DetalleFamiliaScreenState();
+}
+
+class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
+  final FirestoreService _fs = FirestoreService();
+  final User? _currentUser = FirebaseAuth.instance.currentUser;
+  bool _isCopied = false;
+
+  Future<void> _salirDeFamilia() async {
+    if (_currentUser == null) return;
+
+    Usuario usuario = await _fs.getCurrentUser(_currentUser!);
+
+    bool? confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Salir de la familia?'),
+        content: Text(usuario.rol == UserRol.admin
+            ? 'Eres el administrador. Si sales y no hay más miembros, la familia se eliminará permanentemente. Si hay más miembros, uno será nombrado administrador.'
+            : 'Dejarás de tener acceso a los datos de esta familia.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar', style: TextStyle(color: AppColors.dark)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Salir', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar == true) {
+      await _fs.abandonarFamilia(usuario);
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const ElegirFamiliaLayout()),
+          (route) => false,
+        );
+      }
+    }
+  }
+
+  void _copyToClipboard(String code) {
+    Clipboard.setData(ClipboardData(text: code));
+    setState(() => _isCopied = true);
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _isCopied = false);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Código copiado'),
+        backgroundColor: AppColors.secondary,
+        duration: Duration(seconds: 1),
+      ),
+    );
+  }
+
+  Future<void> _regenerarCodigo() async {
+    bool? confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Regenerar código?'),
+        content: const Text(
+            'El código actual dejará de funcionar para nuevos miembros. ¿Estás seguro?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Regenerar',
+                style: TextStyle(color: AppColors.complementary)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar == true) {
+      await _fs.regenerarCodigoFamilia(widget.familiaID);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Código regenerado con éxito'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.primary,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(LucideIcons.arrowLeft, color: AppColors.dark),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _salirDeFamilia,
+            child: const Text(
+              'Salir de la familia',
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+        ],
+      ),
+      body: FutureBuilder<Usuario>(
+        future: _fs.getCurrentUser(_currentUser!),
+        builder: (context, userSnapshot) {
+          if (!userSnapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final usuarioActual = userSnapshot.data!;
+
+          return StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('Familias')
+                .doc(widget.familiaID)
+                .snapshots(),
+            builder: (context, familySnapshot) {
+              if (familySnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (!familySnapshot.hasData || !familySnapshot.data!.exists) {
+                return const Center(child: Text("No se encontró la familia"));
+              }
+
+              final familiaData =
+                  familySnapshot.data!.data() as Map<String, dynamic>;
+              final familia =
+                  Familia.fromJson(familiaData, familySnapshot.data!.id);
+
+              return SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      familia.nombre,
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.secondary,
+                        fontFamily: 'Nunito',
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildInvitationCodeCard(familia, usuarioActual),
+                    const SizedBox(height: 30),
+                    const Text(
+                      'Nuestras Mascotas',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.dark,
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    _buildMascotasGrid(),
+                    const SizedBox(height: 40),
+                    const Text(
+                      'Integrantes',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.dark,
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    _buildIntegrantesList(),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildInvitationCodeCard(Familia familia, Usuario usuario) {
+    bool isAdmin = usuario.rol == UserRol.admin;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Código de Invitación',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[600],
+                  fontFamily: 'Nunito',
+                ),
+              ),
+              if (isAdmin)
+                IconButton(
+                  onPressed: _regenerarCodigo,
+                  icon: const Icon(LucideIcons.refreshCw,
+                      size: 18, color: AppColors.complementary),
+                  tooltip: 'Regenerar código',
+                  constraints: const BoxConstraints(),
+                  padding: EdgeInsets.zero,
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Text(
+                    familia.codigoInvitacion,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                      color: AppColors.secondary,
+                      fontFamily: 'Nunito',
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              _buildActionButton(
+                icon: _isCopied ? Icons.check : LucideIcons.copy,
+                color: _isCopied ? Colors.green : AppColors.secondary,
+                onTap: () => _copyToClipboard(familia.codigoInvitacion),
+              ),
+              const SizedBox(width: 8),
+              _buildActionButton(
+                icon: LucideIcons.share2,
+                color: AppColors.secondary,
+                onTap: () {
+                  final String message = 
+                      '¡Únete a mi familia en Pawner! Usa este código para ver a nuestras mascotas: ${familia.codigoInvitacion}';
+                  Share.share(message);
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(
+      {required IconData icon, required Color color, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Icon(icon, color: color, size: 22),
+      ),
+    );
+  }
+
+  Widget _buildMascotasGrid() {
+    return StreamBuilder<List<Mascota>>(
+      stream: _fs.streamMascotas(widget.familiaID),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox(
+              height: 100, child: Center(child: CircularProgressIndicator()));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.accent.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Text("Aún no hay mascotas en esta familia.",
+                textAlign: TextAlign.center),
+          );
+        }
+
+        final mascotas = snapshot.data!;
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 15,
+            mainAxisSpacing: 15,
+            childAspectRatio: 0.85,
+          ),
+          itemCount: mascotas.length,
+          itemBuilder: (context, index) {
+            final mascota = mascotas[index];
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: AppColors.lightSecondary,
+                    backgroundImage: mascota.fotoUrl.isNotEmpty
+                        ? (mascota.fotoUrl.contains('assets')
+                            ? AssetImage(mascota.fotoUrl) as ImageProvider
+                            : NetworkImage(mascota.fotoUrl))
+                        : null,
+                    child: mascota.fotoUrl.isEmpty
+                        ? const Icon(Icons.pets,
+                            color: AppColors.secondary, size: 30)
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    mascota.nombre,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: AppColors.secondary,
+                    ),
+                  ),
+                  Text(
+                    mascota.genero,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildIntegrantesList() {
+    return StreamBuilder<List<Usuario>>(
+      stream: _fs.streamMiembros(widget.familiaID),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox(
+              height: 80, child: Center(child: CircularProgressIndicator()));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Text("No hay integrantes registrados.");
+        }
+
+        final miembros = snapshot.data!;
+
+        return SizedBox(
+          height: 100,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: miembros.length,
+            itemBuilder: (context, index) {
+              final miembro = miembros[index];
+              return Padding(
+                padding: const EdgeInsets.only(right: 20),
+                child: Column(
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: AppColors.accent,
+                      backgroundImage: miembro.fotoUrl.isNotEmpty
+                          ? (miembro.fotoUrl.contains('assets') ||
+                                  !miembro.fotoUrl.startsWith('http')
+                              ? AssetImage(
+                                      "assets/images/fotos_perfil/${miembro.fotoUrl}.png")
+                                  as ImageProvider
+                              : NetworkImage(miembro.fotoUrl))
+                          : null,
+                      child: miembro.fotoUrl.isEmpty
+                          ? const Icon(LucideIcons.user, color: Colors.white)
+                          : null,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      miembro.nombre,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.dark,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
