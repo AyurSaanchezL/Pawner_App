@@ -1,7 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/core/constants.dart'; // Assuming Constants might have styles or enums
+import 'package:pawner_app/core/model/mascota.dart';
 import 'package:pawner_app/screens/usuario/nueva_mascota_screen.dart'; // Keep this for the FAB logic if needed
 import 'package:pawner_app/screens/usuario/ajustes_screen.dart'; // For settings navigation
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -21,12 +24,55 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  // Placeholder data for pets
-  final List<Map<String, dynamic>> _petsPlaceholder = [
-    {'name': 'Buddy', 'image': 'assets/images/fotos_perfil/zorro.png'}, // Placeholder image path
-    {'name': 'Luna', 'image': 'assets/images/fotos_perfil/gato1.png'}, // Placeholder image path
-    {'name': 'Max', 'image': 'assets/images/fotos_perfil/conejo1.png'}, // Placeholder image path
+  Usuario? _usuarioActual;
+  Stream<List<Mascota>>? _mascotasStream;
+
+  final List<String> _randomPetAssets = [
+    'assets/images/fotos_perfil/buho.png',
+    'assets/images/fotos_perfil/cheeta.png',
+    'assets/images/fotos_perfil/ciervo.png',
+    'assets/images/fotos_perfil/conejo.png',
+    'assets/images/fotos_perfil/elefante.png',
+    'assets/images/fotos_perfil/flamenco.png',
+    'assets/images/fotos_perfil/jabali.png',
+    'assets/images/fotos_perfil/jirafa.png',
+    'assets/images/fotos_perfil/koala.png',
+    'assets/images/fotos_perfil/lemur.png',
+    'assets/images/fotos_perfil/lobo.png',
+    'assets/images/fotos_perfil/mapache.png',
+    'assets/images/fotos_perfil/nutria.png',
+    'assets/images/fotos_perfil/oso.png',
+    'assets/images/fotos_perfil/panda.png',
+    'assets/images/fotos_perfil/tejon.png',
+    'assets/images/fotos_perfil/tucan.png',
+    'assets/images/fotos_perfil/zorro.png',
   ];
+
+  String _getRandomAsset() {
+    return _randomPetAssets[Random().nextInt(_randomPetAssets.length)];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    final u = FirebaseAuth.instance.currentUser;
+    if (u != null) {
+      final fs = FirestoreService();
+      final usuario = await fs.getCurrentUser(u);
+      if (mounted) {
+        setState(() {
+          _usuarioActual = usuario;
+          if (usuario.familiaID != null && usuario.familiaID!.isNotEmpty) {
+            _mascotasStream = fs.streamMascotas(usuario.familiaID!);
+          }
+        });
+      }
+    }
+  }
 
   // Placeholder data for reminders
   final List<Map<String, dynamic>> _remindersPlaceholder = [
@@ -73,7 +119,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
-                          ..._petsPlaceholder.map((pet) => _buildPetPlaceholder(pet['name'], pet['image'])).toList(),
+                          if (_mascotasStream != null)
+                            StreamBuilder<List<Mascota>>(
+                              stream: _mascotasStream,
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) {
+                                  final mascotas = snapshot.data!;
+                                  if (mascotas.isEmpty) {
+                                    return _buildEmptyPetsPlaceholder();
+                                  }
+                                  return Row(
+                                    children: mascotas.map((mascota) => _buildPetItem(mascota)).toList(),
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
+                            )
+                          else
+                            _buildEmptyPetsPlaceholder(),
                           const SizedBox(width: 15),
                           _buildNewPetButton(),
                         ],
@@ -107,9 +170,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           future: obtenerNombreFamilia(), // Call the async function here
           builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Text('Loading family name...'); // Placeholder while loading
+              return const Text('Loading family name...', textAlign: TextAlign.center); // Placeholder while loading
             } else if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}'); // Show error if any
+              return Text('Error: ${snapshot.error}', textAlign: TextAlign.center); // Show error if any
             } else {
               // Display the family name once loaded
               return Text(
@@ -274,7 +337,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildPetPlaceholder(String name, String imagePath) {
+  Widget _buildEmptyPetsPlaceholder() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 10.0),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(LucideIcons.dog, color: _darkBlue.withOpacity(0.5), size: 40),
+          const SizedBox(width: 15),
+          Text(
+            "¡Añade a tus mascotas!",
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: _darkBlue.withOpacity(0.7),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPetItem(Mascota mascota) {
     return Padding(
       padding: const EdgeInsets.only(right: 15.0),
       child: Column(
@@ -285,21 +370,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
             height: 70,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white, // Background for the circle image placeholder
-              // Consider using Image.asset(imagePath, fit: BoxFit.cover) if images are available
+              color: Colors.white,
               image: DecorationImage(
-                image: AssetImage(imagePath), // Placeholder image
+                image: mascota.fotoUrl.isNotEmpty 
+                    ? NetworkImage(mascota.fotoUrl) as ImageProvider
+                    : AssetImage(_getRandomAsset()),
                 fit: BoxFit.cover,
               ),
               border: Border.all(color: _darkBlue, width: 2),
             ),
-            // child: ClipOval( // If using placeholder image directly inside container
-            //   child: Image.asset(imagePath, fit: BoxFit.cover),
-            // ),
           ),
           const SizedBox(height: 8),
           Text(
-            name,
+            mascota.nombre,
             style: TextStyle(
               fontFamily: 'Nunito',
               fontSize: 14,
