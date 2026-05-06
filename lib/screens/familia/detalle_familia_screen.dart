@@ -9,6 +9,7 @@ import 'package:pawner_app/services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pawner_app/screens/familia/elegir_familia.dart';
+import 'package:pawner_app/screens/mascota/detalle_mascota.dart';
 import 'package:pawner_app/core/constants.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -211,7 +212,7 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
                       ),
                     ),
                     const SizedBox(height: 15),
-                    _buildIntegrantesList(),
+                    _buildIntegrantesList(usuarioActual),
                     const SizedBox(height: 40),
                   ],
                 ),
@@ -373,51 +374,61 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
           itemCount: mascotas.length,
           itemBuilder: (context, index) {
             final mascota = mascotas[index];
-            return Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PetProfileScreen(mascota: mascota),
                   ),
-                ],
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: AppColors.lightSecondary,
-                    backgroundImage: mascota.fotoUrl.isNotEmpty
-                        ? (mascota.fotoUrl.contains('assets')
-                              ? AssetImage(mascota.fotoUrl) as ImageProvider
-                              : NetworkImage(mascota.fotoUrl))
-                        : null,
-                    child: mascota.fotoUrl.isEmpty
-                        ? const Icon(
-                            Icons.pets,
-                            color: AppColors.secondary,
-                            size: 30,
-                          )
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    mascota.nombre,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: AppColors.secondary,
+                );
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
                     ),
-                  ),
-                  Text(
-                    mascota.genero,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                ],
+                  ],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundColor: AppColors.lightSecondary,
+                      backgroundImage: mascota.fotoUrl.isNotEmpty
+                          ? (mascota.fotoUrl.contains('assets')
+                                ? AssetImage(mascota.fotoUrl) as ImageProvider
+                                : NetworkImage(mascota.fotoUrl))
+                          : null,
+                      child: mascota.fotoUrl.isEmpty
+                          ? const Icon(
+                              Icons.pets,
+                              color: AppColors.secondary,
+                              size: 30,
+                            )
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      mascota.nombre,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: AppColors.secondary,
+                      ),
+                    ),
+                    Text(
+                      mascota.genero,
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -426,7 +437,44 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
     );
   }
 
-  Widget _buildIntegrantesList() {
+  Future<void> _confirmarEliminarMiembro(Usuario miembro) async {
+    bool? confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Eliminar miembro?'),
+        content: Text(
+          '¿Estás seguro de que quieres eliminar a ${miembro.nombre} de la familia?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: AppColors.dark),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar == true) {
+      await _fs.eliminarMiembroFamilia(miembro.usuarioID);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${miembro.nombre} ha sido eliminado de la familia'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildIntegrantesList(Usuario usuarioActual) {
     return StreamBuilder<List<Usuario>>(
       stream: _fs.streamMiembros(widget.familiaID),
       builder: (context, snapshot) {
@@ -449,36 +497,44 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
             itemCount: miembros.length,
             itemBuilder: (context, index) {
               final miembro = miembros[index];
-              return Padding(
-                padding: const EdgeInsets.only(right: 20),
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: AppColors.accent,
-                      backgroundImage: miembro.fotoUrl.isNotEmpty
-                          ? (miembro.fotoUrl.contains('assets') ||
-                                    !miembro.fotoUrl.startsWith('http')
-                                ? AssetImage(
-                                        "assets/images/fotos_perfil/${miembro.fotoUrl}.png",
-                                      )
-                                      as ImageProvider
-                                : NetworkImage(miembro.fotoUrl))
-                          : null,
-                      child: miembro.fotoUrl.isEmpty
-                          ? const Icon(LucideIcons.user, color: Colors.white)
-                          : null,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      miembro.nombre,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.dark,
+              final bool isAdmin = usuarioActual.rol == UserRol.admin;
+              final bool isNotMe = miembro.usuarioID != usuarioActual.usuarioID;
+
+              return GestureDetector(
+                onTap: (isAdmin && isNotMe)
+                    ? () => _confirmarEliminarMiembro(miembro)
+                    : null,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 20),
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundColor: AppColors.accent,
+                        backgroundImage: miembro.fotoUrl.isNotEmpty
+                            ? (miembro.fotoUrl.contains('assets') ||
+                                      !miembro.fotoUrl.startsWith('http')
+                                  ? AssetImage(
+                                          "assets/images/fotos_perfil/${miembro.fotoUrl}.png",
+                                        )
+                                        as ImageProvider
+                                  : NetworkImage(miembro.fotoUrl))
+                            : null,
+                        child: miembro.fotoUrl.isEmpty
+                            ? const Icon(LucideIcons.user, color: Colors.white)
+                            : null,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      Text(
+                        miembro.nombre,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.dark,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },

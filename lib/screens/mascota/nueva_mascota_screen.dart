@@ -1,12 +1,14 @@
 import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/core/constants.dart';
 import 'package:pawner_app/core/model/mascota.dart';
 import 'package:pawner_app/core/model/usuario.dart';
 import 'package:pawner_app/services/auth_service.dart';
+import 'package:pawner_app/services/cloudinary_service.dart';
 import 'package:pawner_app/services/firestore_service.dart';
 
 class NuevaMascotaScreen extends StatefulWidget {
@@ -34,7 +36,16 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
   final Color _lavenderInput = const Color(0xFFE1D5F9);
   final Color _orangeButton = const Color(0xFFFFCC80);
 
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+      });
+    }
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -73,7 +84,10 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
         throw Exception("No tienes una familia asignada.");
       }
 
-
+      String fotoUrl = "";
+      if (_image != null) {
+        fotoUrl = await CloudinaryService().uploadImage(_image!) ?? "";
+      }
 
       final nuevaMascota = Mascota(
         mascotaID: '', // Firestore generará el ID
@@ -84,7 +98,7 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
         genero: _genero,
         esterilizado: _esterilizado,
         observaciones: _observacionesController.text.trim(),
-        fotoUrl: "",
+        fotoUrl: fotoUrl,
         familiaID: usuarioActual.familiaID!,
       );
 
@@ -129,6 +143,7 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
             children: [
               // Selector de Imagen
               GestureDetector(
+                onTap: _pickImage,
                 child: Container(
                   width: 120,
                   height: 120,

@@ -241,4 +241,12 @@ class FirestoreService {
       'codigoInvitacion': nuevoCodigo,
     });
   }
+
+  // Eliminar un miembro de la familia (solo por el administrador)
+  Future<void> eliminarMiembroFamilia(String usuarioID) async {
+    await _db.collection('Usuarios').doc(usuarioID).update({
+      'familiaID': null,
+      'rol': null,
+    });
+  }
 }

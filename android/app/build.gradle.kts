@@ -22,7 +22,7 @@ dependencies {
   implementation("com.google.firebase:firebase-crashlytics")
 
 
-  // Add the dependencies for any other desired Firebase products
+    // Add the dependencies for any other desired Firebase products
   // https://firebase.google.com/docs/android/setup#available-libraries
 }
 
@@ -34,6 +34,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true
+
     }
 
     kotlinOptions {
@@ -59,7 +61,10 @@ android {
         }
     }
 }
-
+dependencies {
+    // Corrección Error 3 (Comillas dobles)
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+}
 flutter {
     source = "../.."
 }
