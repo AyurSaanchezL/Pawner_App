@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Colores Base
+  // Colores Base del Core
   static const Color primary = Color.fromARGB(255, 255, 251, 233); // Blanco crema (#FFFDF0)
   static const Color secondary = Color(0XFF3F559E); // Azul oscuro
   static const Color accent = Color(0XFFFFC56E); // Naranja/Pastel
@@ -10,18 +10,16 @@ class AppColors {
   static const Color lightSecondary = Color(0XFFC4B6EE); // Lavanda claro
   static const Color complementary = Color(0xFFEFA434);
 
-  // Colores de UI y Pantallas
+  // Colores para Detalle Mascota y Temas Específicos
   static const Color background = Color(0xFFC5B4E3); // Lavanda del dashboard
   static const Color cardWhite = Colors.white;
-  static const Color textPrimary = Color(0XFF393939);
-  
-  // Colores Semánticos y de Estado
-  static const Color male = Color(0xFF64B5F6); // Azul claro para Macho
-  static const Color female = Color(0xFFF06292); // Rosa claro para Hembra
-  static const Color sterilized = Colors.lightGreen;
-  static const Color notSterilized = Color(0xFFE57373); // Rojo suave
+  static const Color accentYellow = Color(0xFFFFF176);
+  static const Color accentOrange = Color(0xFFFFCC80);
+  static const Color buttonPrimary = Color(0xFF42A5F5); // Azul
+  static const Color accentPink = Color(0xFFF06292);
+  static const Color textPrimary = Color(0xFF212121);
 
-  // Alias para HomeScreen/Dashboard
+  // Alias para HomeScreen
   static const Color homeScreenBackground = Color(0xFFFFFDF0);
   static const Color homeScreenLavender = Color(0xFFC5B4E3);
   static const Color homeScreenOrange = Color(0xFFFFCC80);

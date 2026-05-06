@@ -5,7 +5,9 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/core/constants.dart'; // Assuming Constants might have styles or enums
 import 'package:pawner_app/core/model/mascota.dart';
-import 'package:pawner_app/screens/usuario/nueva_mascota_screen.dart'; // Keep this for the FAB logic if needed
+import 'package:pawner_app/screens/mascota/detalle_mascota.dart';
+import 'package:pawner_app/screens/usuario/perfil_screen.dart';
+import 'package:pawner_app/screens/mascota/nueva_mascota_screen.dart'; // Keep this for the FAB logic if needed
 import 'package:pawner_app/screens/usuario/ajustes_screen.dart'; // For settings navigation
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pawner_app/services/firestore_service.dart';
@@ -307,10 +309,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
             },
           ),
           const SizedBox(width: 10),
-          const CircleAvatar(
-            radius: 18,
-            backgroundColor: Colors.grey, // Placeholder for profile image
-            child: Icon(Icons.person, color: Colors.white),
+          GestureDetector(
+            onTap: () {
+              if (_usuarioActual != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PerfilUsuarioScreen(u: _usuarioActual!),
+                  ),
+                );
+              }
+            },
+            child: const CircleAvatar(
+              radius: 18,
+              backgroundColor: Colors.grey, // Placeholder for profile image
+              child: Icon(Icons.person, color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -360,37 +374,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildPetItem(Mascota mascota) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 15.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-              image: DecorationImage(
-                image: mascota.fotoUrl.isNotEmpty 
-                    ? NetworkImage(mascota.fotoUrl) as ImageProvider
-                    : AssetImage(_getRandomAsset()),
-                fit: BoxFit.cover,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PetProfileScreen(mascota: mascota),
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(right: 15.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+                image: DecorationImage(
+                  image: mascota.fotoUrl.isNotEmpty 
+                      ? NetworkImage(mascota.fotoUrl) as ImageProvider
+                      : AssetImage(_getRandomAsset()),
+                  fit: BoxFit.cover,
+                ),
+                border: Border.all(color: _darkBlue, width: 2),
               ),
-              border: Border.all(color: _darkBlue, width: 2),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            mascota.nombre,
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: _textColorPrimary,
+            const SizedBox(height: 8),
+            Text(
+              mascota.nombre,
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: _textColorPrimary,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
