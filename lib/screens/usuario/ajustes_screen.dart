@@ -1,8 +1,10 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/core/components/chat_bubble_clipper.dart';
 import 'package:pawner_app/core/model/usuario.dart';
+import 'package:pawner_app/screens/usuario/dashboard_screen.dart';
 import 'package:pawner_app/screens/usuario/perfil_screen.dart';
 import 'package:pawner_app/services/auth_service.dart';
 import 'package:pawner_app/screens/familia/detalle_familia_screen.dart';
@@ -11,10 +13,6 @@ import 'package:pawner_app/core/app_colors.dart';
 class AjustesScreen extends StatelessWidget {
   const AjustesScreen({super.key});
 
-  final Color _orangeBubble = const Color(0xFFFFCC80);
-  final Color _lavenderBubble = const Color(0xFFC5B4E3);
-  final Color _darkPanel = const Color(0xFF333333);
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,11 +20,8 @@ class AjustesScreen extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           // Fondo igual a elegir_familia.dart
-          Image.asset(
-            "assets/images/background_01.png",
-            fit: BoxFit.cover,
-          ),
-          
+          Image.asset("assets/images/background_01.png", fit: BoxFit.cover),
+
           SafeArea(
             child: Column(
               children: [
@@ -34,11 +29,15 @@ class AjustesScreen extends StatelessWidget {
                 Align(
                   alignment: Alignment.topLeft,
                   child: IconButton(
-                    icon: const Icon(LucideIcons.arrowLeft, color: Colors.black, size: 28),
+                    icon: const Icon(
+                      LucideIcons.arrowLeft,
+                      color: Colors.black,
+                      size: 28,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ),
-                
+
                 // Espaciado para bajar los elementos hacia el centro
                 const Spacer(flex: 2),
 
@@ -57,12 +56,14 @@ class AjustesScreen extends StatelessWidget {
                           isRightTail: true,
                           iconColor: AppColors.secondary,
                           onTap: () async {
-                            Usuario usuario = await authService.value.getCurrentUser();
+                            Usuario usuario = await authService.value
+                                .getCurrentUser();
                             if (context.mounted) {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => PerfilUsuarioScreen(u: usuario),
+                                  builder: (context) =>
+                                      PerfilUsuarioScreen(u: usuario),
                                 ),
                               );
                             }
@@ -72,18 +73,22 @@ class AjustesScreen extends StatelessWidget {
                         // Chip de Familia - Ahora de segundo
                         _buildBubble(
                           text: "Familia",
-                          color: _orangeBubble,
+                          color: AppColors.accent,
                           icon: LucideIcons.users,
                           isRightTail: false, // Cambiado para alternar
                           iconColor: Colors.orange,
                           onTap: () async {
-                            Usuario usuario = await authService.value.getCurrentUser();
+                            Usuario usuario = await authService.value
+                                .getCurrentUser();
                             if (context.mounted) {
-                              if (usuario.familiaID != null && usuario.familiaID!.isNotEmpty) {
+                              if (usuario.familiaID != null &&
+                                  usuario.familiaID!.isNotEmpty) {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => DetalleFamiliaScreen(familiaID: usuario.familiaID!),
+                                    builder: (context) => DetalleFamiliaScreen(
+                                      familiaID: usuario.familiaID!,
+                                    ),
                                   ),
                                 );
                               } else {
@@ -129,7 +134,12 @@ class AjustesScreen extends StatelessWidget {
         child: Container(
           width: double.infinity,
           height: 90,
-          padding: const EdgeInsets.fromLTRB(25, 10, 25, 20), // Aumentado padding inferior para centrar texto
+          padding: const EdgeInsets.fromLTRB(
+            25,
+            10,
+            25,
+            20,
+          ), // Aumentado padding inferior para centrar texto
           color: color,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -140,7 +150,6 @@ class AjustesScreen extends StatelessWidget {
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
                   color: textColor,
-                  fontFamily: 'Nunito',
                 ),
               ),
               Container(
@@ -162,7 +171,7 @@ class AjustesScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: _darkPanel,
+        color: AppColors.dark,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(60)),
       ),
       padding: const EdgeInsets.only(top: 20, bottom: 40, left: 40, right: 40),
@@ -170,15 +179,21 @@ class AjustesScreen extends StatelessWidget {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(3, (index) => Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-            )),
+            children: List.generate(
+              3,
+              (index) => Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 30),
-          
+
           _buildSmallBubble("Ayuda", isRightTail: false),
           const SizedBox(height: 20),
           _buildSmallBubble("Sobre nosotros", isRightTail: true),
@@ -195,7 +210,7 @@ class AjustesScreen extends StatelessWidget {
         child: Container(
           width: 250,
           height: 70,
-          color: _lavenderBubble,
+          color: AppColors.lightSecondary,
           alignment: Alignment.center,
           padding: const EdgeInsets.only(bottom: 12),
           child: Text(

@@ -36,13 +36,18 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('¿Salir de la familia?'),
-        content: Text(usuario.rol == UserRol.admin
-            ? 'Eres el administrador. Si sales y no hay más miembros, la familia se eliminará permanentemente. Si hay más miembros, uno será nombrado administrador.'
-            : 'Dejarás de tener acceso a los datos de esta familia.'),
+        content: Text(
+          usuario.rol == UserRol.admin
+              ? 'Eres el administrador. Si sales y no hay más miembros, la familia se eliminará permanentemente. Si hay más miembros, uno será nombrado administrador.'
+              : 'Dejarás de tener acceso a los datos de esta familia.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar', style: TextStyle(color: AppColors.dark)),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: AppColors.dark),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
@@ -85,7 +90,8 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
       builder: (context) => AlertDialog(
         title: const Text('¿Regenerar código?'),
         content: const Text(
-            'El código actual dejará de funcionar para nuevos miembros. ¿Estás seguro?'),
+          'El código actual dejará de funcionar para nuevos miembros. ¿Estás seguro?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -93,8 +99,10 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Regenerar',
-                style: TextStyle(color: AppColors.complementary)),
+            child: const Text(
+              'Regenerar',
+              style: TextStyle(color: AppColors.complementary),
+            ),
           ),
         ],
       ),
@@ -162,8 +170,10 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
 
               final familiaData =
                   familySnapshot.data!.data() as Map<String, dynamic>;
-              final familia =
-                  Familia.fromJson(familiaData, familySnapshot.data!.id);
+              final familia = Familia.fromJson(
+                familiaData,
+                familySnapshot.data!.id,
+              );
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -224,7 +234,7 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(12),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -248,8 +258,11 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
               if (isAdmin)
                 IconButton(
                   onPressed: _regenerarCodigo,
-                  icon: const Icon(LucideIcons.refreshCw,
-                      size: 18, color: AppColors.complementary),
+                  icon: const Icon(
+                    LucideIcons.refreshCw,
+                    size: 18,
+                    color: AppColors.complementary,
+                  ),
                   tooltip: 'Regenerar código',
                   constraints: const BoxConstraints(),
                   padding: EdgeInsets.zero,
@@ -261,8 +274,10 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
             children: [
               Expanded(
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(15),
@@ -290,7 +305,7 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
                 icon: LucideIcons.share2,
                 color: AppColors.secondary,
                 onTap: () {
-                  final String message = 
+                  final String message =
                       '¡Únete a mi familia en Pawner! Usa este código para ver a nuestras mascotas: ${familia.codigoInvitacion}';
                   Share.share(message);
                 },
@@ -302,8 +317,11 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
     );
   }
 
-  Widget _buildActionButton(
-      {required IconData icon, required Color color, required VoidCallback onTap}) {
+  Widget _buildActionButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -323,7 +341,9 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SizedBox(
-              height: 100, child: Center(child: CircularProgressIndicator()));
+            height: 100,
+            child: Center(child: CircularProgressIndicator()),
+          );
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return Container(
@@ -333,8 +353,10 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
               color: AppColors.accent.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Text("Aún no hay mascotas en esta familia.",
-                textAlign: TextAlign.center),
+            child: const Text(
+              "Aún no hay mascotas en esta familia.",
+              textAlign: TextAlign.center,
+            ),
           );
         }
 
@@ -381,12 +403,15 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
                       backgroundColor: AppColors.lightSecondary,
                       backgroundImage: mascota.fotoUrl.isNotEmpty
                           ? (mascota.fotoUrl.contains('assets')
-                              ? AssetImage(mascota.fotoUrl) as ImageProvider
-                              : NetworkImage(mascota.fotoUrl))
+                                ? AssetImage(mascota.fotoUrl) as ImageProvider
+                                : NetworkImage(mascota.fotoUrl))
                           : null,
                       child: mascota.fotoUrl.isEmpty
-                          ? const Icon(Icons.pets,
-                              color: AppColors.secondary, size: 30)
+                          ? const Icon(
+                              Icons.pets,
+                              color: AppColors.secondary,
+                              size: 30,
+                            )
                           : null,
                     ),
                     const SizedBox(height: 12),
@@ -400,10 +425,7 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
                     ),
                     Text(
                       mascota.genero,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   ],
                 ),
@@ -421,12 +443,15 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
       builder: (context) => AlertDialog(
         title: const Text('¿Eliminar miembro?'),
         content: Text(
-            '¿Estás seguro de que quieres eliminar a ${miembro.nombre} de la familia?'),
+          '¿Estás seguro de que quieres eliminar a ${miembro.nombre} de la familia?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child:
-                const Text('Cancelar', style: TextStyle(color: AppColors.dark)),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: AppColors.dark),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
@@ -455,7 +480,9 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SizedBox(
-              height: 80, child: Center(child: CircularProgressIndicator()));
+            height: 80,
+            child: Center(child: CircularProgressIndicator()),
+          );
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const Text("No hay integrantes registrados.");
@@ -486,11 +513,12 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
                         backgroundColor: AppColors.accent,
                         backgroundImage: miembro.fotoUrl.isNotEmpty
                             ? (miembro.fotoUrl.contains('assets') ||
-                                    !miembro.fotoUrl.startsWith('http')
-                                ? AssetImage(
-                                        "assets/images/fotos_perfil/${miembro.fotoUrl}.png")
-                                    as ImageProvider
-                                : NetworkImage(miembro.fotoUrl))
+                                      !miembro.fotoUrl.startsWith('http')
+                                  ? AssetImage(
+                                          "assets/images/fotos_perfil/${miembro.fotoUrl}.png",
+                                        )
+                                        as ImageProvider
+                                  : NetworkImage(miembro.fotoUrl))
                             : null,
                         child: miembro.fotoUrl.isEmpty
                             ? const Icon(LucideIcons.user, color: Colors.white)

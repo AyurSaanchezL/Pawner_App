@@ -55,7 +55,7 @@ class _LogInScreenState extends State<LogInScreen> {
                 SizedBox(height: 50),
                 Column(
                   children: [
-                    // =============== USER ==============
+                    // =============== EMAIL ==============
                     Padding(
                       padding: const EdgeInsets.only(
                         top: 20,
@@ -64,6 +64,7 @@ class _LogInScreenState extends State<LogInScreen> {
                       ),
                       child: TextField(
                         maxLines: 1,
+                        keyboardType: .emailAddress,
                         controller: controllerEmail,
                         decoration: InputDecoration(
                           contentPadding: EdgeInsets.symmetric(
@@ -232,9 +233,7 @@ class _LogInScreenState extends State<LogInScreen> {
           // Redirigir al dashboard si ya tiene familia
           Navigator.pushReplacement(
             inContext,
-            MaterialPageRoute(
-              builder: (context) => const DashboardScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => const DashboardScreen()),
           );
         }
       }
