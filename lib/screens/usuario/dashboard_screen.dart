@@ -13,6 +13,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pawner_app/services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/model/usuario.dart' show Usuario;
+import 'package:pawner_app/screens/first_screen.dart';
 
 import 'package:pawner_app/core/components/invitation_share_sheet.dart';
 
@@ -212,7 +213,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.black),
         onPressed: () {
-          Navigator.pushReplacement(
+          Navigator.pop(
             context,
             MaterialPageRoute(builder: (context) => FirstScreen()),
           );
@@ -376,7 +377,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(LucideIcons.dog, color: _darkBlue.withOpacity(0.5), size: 40),
+          Icon(LucideIcons.dog, color: AppColors.darkBlue.withOpacity(0.5), size: 40),
           const SizedBox(width: 15),
           Text(
             "¡Añade a tus mascotas!",
@@ -384,7 +385,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fontFamily: 'Nunito',
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: _darkBlue.withOpacity(0.7),
+              color: AppColors.darkBlue.withOpacity(0.7),
             ),
           ),
         ],
@@ -419,7 +420,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       : AssetImage(_getRandomAsset()),
                   fit: BoxFit.cover,
                 ),
-                border: Border.all(color: _darkBlue, width: 2),
+                border: Border.all(color: AppColors.darkBlue, width: 2),
               ),
             ),
             const SizedBox(height: 8),
@@ -429,7 +430,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 fontFamily: 'Nunito',
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: _textColorPrimary,
+                color: AppColors.textColorPrimary,
               ),
             ),
           ],
