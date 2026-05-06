@@ -27,6 +27,8 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
   final TextEditingController _fechaController = TextEditingController();
   final TextEditingController _observacionesController = TextEditingController();
 
+  String? _selectedEspecie;
+  String? _selectedRaza;
   DateTime _selectedDate = DateTime.now();
   String _genero = 'Macho'; // 'Macho' o 'Hembra'
   bool _esterilizado = false;
@@ -74,6 +76,12 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
 
   Future<void> _guardarMascota() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedEspecie == null || _selectedRaza == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Por favor selecciona especie y raza"), backgroundColor: Colors.orange),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -92,6 +100,8 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
       final nuevaMascota = Mascota(
         mascotaID: '', // Firestore generará el ID
         nombre: _nombreController.text.trim(),
+        especie: _selectedEspecie!,
+        raza: _selectedRaza!,
         chip: _chipController.text.trim(),
         peso: double.tryParse(_pesoController.text.trim()) ?? 0.0,
         fechaNacimiento: _selectedDate,
@@ -171,6 +181,52 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
               // Formulario
               _buildLabel("Nombre"),
               _buildTextField(_nombreController, "Nombre de tu mascota"),
+
+              const SizedBox(height: 15),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      children: [
+                        _buildLabel("Especie"),
+                        _buildDropdown(
+                          value: _selectedEspecie,
+                          hint: "Especie",
+                          items: Constants.especiesYRazas.keys.toList(),
+                          onChanged: (val) {
+                            setState(() {
+                              _selectedEspecie = val;
+                              if (val == 'Otro') {
+                                _selectedRaza = 'Otro';
+                              } else {
+                                _selectedRaza = null; // Reset raza when especie changes
+                              }
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 15),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        _buildLabel("Raza"),
+                        _buildDropdown(
+                          value: _selectedRaza,
+                          hint: "Raza",
+                          items: _selectedEspecie != null ? Constants.especiesYRazas[_selectedEspecie]! : [],
+                          onChanged: (val) {
+                            setState(() {
+                              _selectedRaza = val;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
               
               const SizedBox(height: 15),
               _buildLabel("Chip"),
@@ -212,7 +268,7 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
 
               const SizedBox(height: 20),
               _buildLabel("Observaciones"),
-              _buildTextField(_observacionesController, "Notas sobre tu mascota...", maxLines: 4),
+              _buildTextField(_observacionesController, "Notas sobre tu mascota...", maxLines: 4, isOptional: true),
 
               const SizedBox(height: 30),
               // Botón Guardar
@@ -228,7 +284,7 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        elevation: 0,
+                        elevation: 4, // Añadida sombra para que destaque
                       ),
                       child: const Text(
                         "Guardar",
@@ -248,6 +304,36 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
     );
   }
 
+  Widget _buildDropdown({
+    required String? value,
+    required String hint,
+    required List<String> items,
+    required Function(String?) onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      decoration: BoxDecoration(
+        color: _lavenderInput,
+        borderRadius: BorderRadius.circular(25),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          hint: Text(hint, style: const TextStyle(color: Colors.black54)),
+          isExpanded: true,
+          icon: const Icon(LucideIcons.chevronDown, size: 20),
+          items: items.map((String item) {
+            return DropdownMenuItem<String>(
+              value: item,
+              child: Text(item, style: Constants.inputStyle),
+            );
+          }).toList(),
+          onChanged: onChanged,
+        ),
+      ),
+    );
+  }
+
   Widget _buildLabel(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -260,7 +346,7 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint, {bool isNumber = false, int maxLines = 1}) {
+  Widget _buildTextField(TextEditingController controller, String hint, {bool isNumber = false, int maxLines = 1, bool isOptional = false}) {
     return TextFormField(
       controller: controller,
       keyboardType: isNumber ? TextInputType.number : (maxLines > 1 ? TextInputType.multiline : TextInputType.text),
@@ -277,7 +363,10 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       ),
-      validator: (value) => value == null || value.isEmpty ? "Campo requerido" : null,
+      validator: (value) {
+        if (isOptional) return null;
+        return value == null || value.isEmpty ? "Campo requerido" : null;
+      },
     );
   }
 

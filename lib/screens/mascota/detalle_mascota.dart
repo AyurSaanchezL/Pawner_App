@@ -58,6 +58,13 @@ class PetProfileScreen extends StatelessWidget {
                           // Perfil "Unido": Avatar grande y Container de nombre pegado
                           _buildJoinedProfileHeader(edad),
                           
+                          if (mascota.especie.isNotEmpty && 
+                              mascota.raza.isNotEmpty && 
+                              !(mascota.especie == 'Otro' && mascota.raza == 'Otro')) ...[
+                            const SizedBox(height: 20),
+                            _buildSpeciesBreedCard(),
+                          ],
+                          
                           const SizedBox(height: 40),
 
                           // Fila de Info Rápida con iconos del formulario
@@ -199,6 +206,62 @@ class PetProfileScreen extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSpeciesBreedCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      decoration: BoxDecoration(
+        color: AppColors.cardWhite,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.secondary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(LucideIcons.fingerprint, color: AppColors.secondary, size: 24),
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Especie y Raza",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Nunito',
+                  ),
+                ),
+                Text(
+                  "${mascota.especie} - ${mascota.raza}",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.secondary,
+                    fontFamily: 'Nunito',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
