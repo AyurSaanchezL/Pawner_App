@@ -163,36 +163,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     StreamBuilder<List<Recordatorio>>(
                       stream: _recordatoriosStream,
                       builder: (context, snapshot) {
-                        if (snapshot.hasError) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 20),
-                            child: Center(
-                              child: Text(
-                                "Error al cargar: ${snapshot.error}",
-                                style: const TextStyle(color: Colors.red, fontFamily: 'Nunito'),
-                              ),
-                            ),
-                          );
-                        }
-                        if (!snapshot.hasData) {
-                          return const Center(child: CircularProgressIndicator());
+                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return const SizedBox.shrink();
                         }
                         final recordatorios = snapshot.data!;
-                        if (recordatorios.isEmpty) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 20),
-                            child: Center(
-                              child: Text(
-                                "No hay recordatorios próximos.",
-                                style: TextStyle(
-                                  fontFamily: 'Nunito',
-                                  color: Colors.grey,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                          );
-                        }
                         return ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
@@ -204,19 +178,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       },
                     )
                   else
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20),
-                      child: Center(
-                        child: Text(
-                          "Inicia sesión para ver recordatorios.",
-                          style: TextStyle(
-                            fontFamily: 'Nunito',
-                            color: Colors.grey,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                    ),
+                    const SizedBox.shrink(),
                 ],
               ),
             ),
