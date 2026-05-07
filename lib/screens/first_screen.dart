@@ -67,12 +67,12 @@ class FirstScreen extends StatelessWidget {
                         ),
                       );
                     }
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LogInScreen()),
+                    );
                   }
-
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => LogInScreen()),
-                  );
                 },
                 style: ButtonStyle(
                   backgroundColor: WidgetStatePropertyAll(AppColors.secondary),

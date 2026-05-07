@@ -155,15 +155,6 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
               'Debes hacer clic en el enlace de confirmación que hemos enviado a tu NUEVO correo para completar el cambio.',
               style: TextStyle(fontSize: 13),
             ),
-            SizedBox(height: 12),
-            Text(
-              'Mientras no confirmes, seguirás usando tu correo actual.',
-              style: TextStyle(
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-                color: Colors.grey[600],
-              ),
-            ),
           ],
         ),
         actions: [

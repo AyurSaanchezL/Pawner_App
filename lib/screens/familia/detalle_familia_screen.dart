@@ -338,7 +338,8 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
   }
 
   void _showPetOptionsMenu(Mascota mascota, Offset position) {
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
 
     showMenu<String>(
       context: context,
@@ -354,7 +355,13 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
             children: [
               Icon(LucideIcons.pencil, color: AppColors.secondary, size: 20),
               SizedBox(width: 10),
-              Text("Editar mascota", style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold)),
+              Text(
+                "Editar mascota",
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
         ),
@@ -364,8 +371,14 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
             children: [
               Icon(LucideIcons.trash2, color: Colors.red, size: 20),
               SizedBox(width: 10),
-              Text("Eliminar mascota",
-                  style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold, color: Colors.red)),
+              Text(
+                "Eliminar mascota",
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
+                ),
+              ),
             ],
           ),
         ),
@@ -374,7 +387,9 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
       if (value == 'editar') {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => EditarMascotaScreen(mascota: mascota)),
+          MaterialPageRoute(
+            builder: (context) => EditarMascotaScreen(mascota: mascota),
+          ),
         );
       } else if (value == 'eliminar') {
         _confirmarEliminacion(context, mascota);
@@ -386,14 +401,22 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Eliminar Mascota", style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold)),
-        content: Text("¿Estás seguro de que quieres eliminar a ${mascota.nombre}? Esta acción no se puede deshacer.",
-            style: const TextStyle(fontFamily: 'Nunito')),
+        title: const Text(
+          "Eliminar Mascota",
+          style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          "¿Estás seguro de que quieres eliminar a ${mascota.nombre}? Esta acción no se puede deshacer.",
+          style: const TextStyle(fontFamily: 'Nunito'),
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancelar", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+            child: const Text(
+              "Cancelar",
+              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+            ),
           ),
           TextButton(
             onPressed: () async {
@@ -401,11 +424,17 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
               await _fs.eliminarMascota(mascota.familiaID, mascota.mascotaID);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("${mascota.nombre} ha sido eliminado"), backgroundColor: Colors.red),
+                  SnackBar(
+                    content: Text("${mascota.nombre} ha sido eliminado"),
+                    backgroundColor: Colors.red,
+                  ),
                 );
               }
             },
-            child: const Text("Eliminar", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            child: const Text(
+              "Eliminar",
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -427,7 +456,7 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.accent.withOpacity(0.1),
+              color: AppColors.accent.withAlpha(25),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Text(
@@ -474,7 +503,7 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
                   borderRadius: BorderRadius.circular(25),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withAlpha(13),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -508,7 +537,7 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
                         color: AppColors.secondary,
                       ),
                     ),
-                   /* Text(
+                    /* Text(
                       mascota.genero,
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),*/
