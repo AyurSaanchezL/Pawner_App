@@ -8,6 +8,8 @@ import 'package:pawner_app/screens/session/register_screen.dart';
 import 'package:pawner_app/screens/usuario/dashboard_screen.dart';
 import 'package:pawner_app/services/auth_service.dart';
 import 'package:pawner_app/services/crash_manager.dart';
+import 'package:pawner_app/screens/familia/elegir_familia.dart';
+import 'package:pawner_app/services/firestore_service.dart';
 
 class LogInScreen extends StatefulWidget {
   const LogInScreen({super.key});
@@ -53,7 +55,7 @@ class _LogInScreenState extends State<LogInScreen> {
                 SizedBox(height: 50),
                 Column(
                   children: [
-                    // =============== USER ==============
+                    // =============== EMAIL ==============
                     Padding(
                       padding: const EdgeInsets.only(
                         top: 20,
@@ -62,6 +64,7 @@ class _LogInScreenState extends State<LogInScreen> {
                       ),
                       child: TextField(
                         maxLines: 1,
+                        keyboardType: .emailAddress,
                         controller: controllerEmail,
                         decoration: InputDecoration(
                           contentPadding: EdgeInsets.symmetric(
@@ -209,18 +212,30 @@ class _LogInScreenState extends State<LogInScreen> {
 
   Future<void> _iniciarSesion(BuildContext inContext) async {
     try {
-      await AuthService().signIn(
+      UserCredential credential = await AuthService().signIn(
         email: controllerEmail.text,
         password: controllerPassword.text,
       );
 
+      // Obtener datos del usuario desde Firestore
+      final usuario = await FirestoreService().getCurrentUser(credential.user!);
+
       if (context.mounted) {
-        Navigator.pushReplacement(
-          inContext,
-          MaterialPageRoute(
-            builder: (context) => const DashboardScreen(),
-          ),
-        );
+        if (usuario.familiaID == null || usuario.familiaID!.isEmpty) {
+          // Redirigir a elegir familia si no tiene una
+          Navigator.pushReplacement(
+            inContext,
+            MaterialPageRoute(
+              builder: (context) => const ElegirFamiliaLayout(),
+            ),
+          );
+        } else {
+          // Redirigir al dashboard si ya tiene familia
+          Navigator.pushReplacement(
+            inContext,
+            MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          );
+        }
       }
     } on FirebaseAuthException catch (e) {
       log(e.message!);

@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -47,8 +45,10 @@ class _PerfilUsuarioScreenState extends State<PerfilUsuarioScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.lightSecondary,
         leading: IconButton(
-          onPressed: () {},
-          icon: Icon(Icons.keyboard_return_rounded, size: 26),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: Icon(Icons.arrow_back),
         ),
       ),
       backgroundColor: AppColors.lightSecondary,
@@ -282,10 +282,6 @@ class _PerfilUsuarioScreenState extends State<PerfilUsuarioScreen> {
         .map((foto) => foto.path)
         .toList();
 
-    for (String s in fotosLista) {
-      log(s);
-    }
-
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -312,7 +308,6 @@ class _PerfilUsuarioScreenState extends State<PerfilUsuarioScreen> {
                       onTap: () {
                         setState(() {
                           u.fotoUrl = FotosPerfil.fromPath(fotosLista[index]);
-                          log(u.fotoUrl);
                         });
 
                         _editUser(u);
@@ -347,6 +342,8 @@ class _PerfilUsuarioScreenState extends State<PerfilUsuarioScreen> {
   }
 
   Future<void> _editUser(Usuario u) async {
+    String nombre = u.nombre;
+    String foto = u.fotoUrl;
     u.email = emailController.text;
     u.nombre = usernameController.text;
 
@@ -354,7 +351,9 @@ class _PerfilUsuarioScreenState extends State<PerfilUsuarioScreen> {
       // AuthService().changeEmail(newEmail: u.email, userPassword: ??);
       await FirestoreService().updateUsuario(u);
     } catch (e) {
-      log("Error al editar usuario: ${e.toString()}");
+      // Si algo sale mal, revierte los cambios para no confundir
+      u.nombre = nombre;
+      u.fotoUrl = foto;
     }
   }
 }

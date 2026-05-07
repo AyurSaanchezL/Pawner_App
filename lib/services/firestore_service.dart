@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,10 +7,27 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:pawner_app/core/constants.dart';
 import 'package:pawner_app/core/model/usuario.dart';
 import 'package:pawner_app/core/model/familia.dart';
+import 'package:pawner_app/core/model/mascota.dart';
 import 'package:pawner_app/firebase_options.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  // CREAR MASCOTA
+  Future<void> crearMascota(Mascota mascota) async {
+    // 1. Creamos la referencia en la subcolección dentro de la familia correspondiente
+    final docMascota = _db
+        .collection('Familias')
+        .doc(mascota.familiaID)
+        .collection('Mascotas')
+        .doc();
+
+    // 2. Actualizamos el objeto mascota con ese ID real generado
+    mascota.mascotaID = docMascota.id;
+
+    // 3. Enviamos el mapa
+    await docMascota.set(mascota.toJson());
+  }
 
   static Future<void> conectarFirebase() async {
     await Firebase.initializeApp(
@@ -20,8 +38,12 @@ class FirestoreService {
   // Generador de código aleatorio (6 caracteres alfanuméricos)
   String generarCodigoInvitacion() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    return String.fromCharCodes(Iterable.generate(
-        6, (_) => chars.codeUnitAt(Random().nextInt(chars.length))));
+    return String.fromCharCodes(
+      Iterable.generate(
+        6,
+        (_) => chars.codeUnitAt(Random().nextInt(chars.length)),
+      ),
+    );
   }
 
   // CREAR FAMILIA
@@ -49,12 +71,6 @@ class FirestoreService {
       'familiaID': docFamilia.id,
     });
 
-    // 3. Añadir al admin a la subcolección miembros
-    batch.set(docFamilia.collection('Miembros').doc(usuarioActual.usuarioID), {
-      'nombre': usuarioActual.nombre,
-      'rol': UserRol.admin.name,
-    });
-
     await batch.commit();
   }
 
@@ -79,14 +95,6 @@ class FirestoreService {
       'familiaID': familiaID,
     });
 
-    // 3. Añadir a la subcolección miembros
-    batch.set(
-        _db.collection('Familias').doc(familiaID).collection('Miembros').doc(usuarioActual.usuarioID),
-        {
-          'nombre': usuarioActual.nombre,
-          'rol': UserRol.miembro.name,
-        });
-
     await batch.commit();
     return null; // Éxito
   }
@@ -105,7 +113,10 @@ class FirestoreService {
   }
 
   // READ
-  Stream<List<Usuario>> readUsuarios() => _db.collection('Usuarios').snapshots().map(
+  Stream<List<Usuario>> readUsuarios() => _db
+      .collection('Usuarios')
+      .snapshots()
+      .map(
         (snapshot) => snapshot.docs
             .map((doc) => Usuario.fromJson(doc.data(), doc.id))
             .toList(),
@@ -114,6 +125,7 @@ class FirestoreService {
   // UPDATE
   Future<void> updateUsuario(Usuario u) async {
     final docUsuario = _db.collection('Usuarios').doc(u.usuarioID);
+    dev.log(u.toJson(u.usuarioID).toString());
     await docUsuario.update(u.toJson(u.usuarioID));
   }
 
@@ -127,5 +139,114 @@ class FirestoreService {
   Future<void> deleteUsuario(Usuario u) async {
     final docUsuario = _db.collection('Usuarios').doc(u.usuarioID);
     await docUsuario.delete();
+  }
+
+  // --- NUEVOS MÉTODOS PARA DETALLE DE FAMILIA ---
+
+  // Obtener una familia por ID
+  Future<Familia?> getFamilia(String familiaID) async {
+    final doc = await _db.collection('Familias').doc(familiaID).get();
+    if (!doc.exists) return null;
+    return Familia.fromJson(doc.data()!, doc.id);
+  }
+
+  // Stream de mascotas de una familia
+  Stream<List<Mascota>> streamMascotas(String familiaID) {
+    return _db
+        .collection('Familias')
+        .doc(familiaID)
+        .collection('Mascotas')
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => Mascota.fromJson(doc.data(), doc.id))
+              .toList(),
+        );
+  }
+
+  // Stream de miembros (usuarios) de una familia
+  Stream<List<Usuario>> streamMiembros(String familiaID) {
+    return _db
+        .collection('Usuarios')
+        .where('familiaID', isEqualTo: familiaID)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => Usuario.fromJson(doc.data(), doc.id))
+              .toList(),
+        );
+  }
+
+  // Abandonar una familia con lógica robusta
+  Future<void> abandonarFamilia(Usuario usuario) async {
+    final String? familiaID = usuario.familiaID;
+    if (familiaID == null) return;
+
+    WriteBatch batch = _db.batch();
+
+    if (usuario.rol == UserRol.admin) {
+      // 1. Buscar otros miembros de la familia
+      final miembrosQuery = await _db
+          .collection('Usuarios')
+          .where('familiaID', isEqualTo: familiaID)
+          .get();
+
+      final otrosMiembros = miembrosQuery.docs
+          .where((doc) => doc.id != usuario.usuarioID)
+          .toList();
+
+      if (otrosMiembros.isNotEmpty) {
+        // ESCENARIO A: Hay más personas -> Promover al primero que encontremos
+        final nuevoAdminDoc = otrosMiembros.first;
+
+        // Actualizar el rol del nuevo admin
+        batch.update(nuevoAdminDoc.reference, {'rol': UserRol.admin.name});
+
+        // Actualizar la referencia de admin en el documento de la Familia
+        batch.update(_db.collection('Familias').doc(familiaID), {
+          'adminID': nuevoAdminDoc.id,
+        });
+      } else {
+        // ESCENARIO B: Es el único -> Borrado total (Familia + Mascotas)
+
+        // 1. Borrar subcolección de mascotas
+        final mascotasQuery = await _db
+            .collection('Familias')
+            .doc(familiaID)
+            .collection('Mascotas')
+            .get();
+
+        for (var doc in mascotasQuery.docs) {
+          batch.delete(doc.reference);
+        }
+
+        // 2. Borrar documento de la familia
+        batch.delete(_db.collection('Familias').doc(familiaID));
+      }
+    }
+
+    // En todos los casos, el usuario actual se desvincula
+    batch.update(_db.collection('Usuarios').doc(usuario.usuarioID), {
+      'familiaID': null,
+      'rol': null,
+    });
+
+    await batch.commit();
+  }
+
+  // Regenerar el código de invitación de una familia
+  Future<void> regenerarCodigoFamilia(String familiaID) async {
+    final nuevoCodigo = generarCodigoInvitacion();
+    await _db.collection('Familias').doc(familiaID).update({
+      'codigoInvitacion': nuevoCodigo,
+    });
+  }
+
+  // Eliminar un miembro de la familia (solo por el administrador)
+  Future<void> eliminarMiembroFamilia(String usuarioID) async {
+    await _db.collection('Usuarios').doc(usuarioID).update({
+      'familiaID': null,
+      'rol': null,
+    });
   }
 }
