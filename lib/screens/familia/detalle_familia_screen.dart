@@ -529,12 +529,19 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
                           : null,
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      mascota.nombre,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: AppColors.secondary,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text(
+                        mascota.nombre,
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                        softWrap: false,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: AppColors.secondary,
+                        ),
                       ),
                     ),
                     /* Text(

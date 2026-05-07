@@ -7,6 +7,8 @@ import 'package:pawner_app/core/components/chat_bubble_clipper.dart';
 import 'package:pawner_app/core/model/mascota.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/screens/mascota/editar_mascota.dart';
+import 'package:pawner_app/screens/modulos/comida/comida_screen.dart';
+import 'package:pawner_app/screens/modulos/veterinario/veterinario_screen.dart';
 import 'package:pawner_app/services/cloudinary_service.dart';
 import 'package:pawner_app/services/firestore_service.dart';
 
@@ -210,7 +212,12 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                             icon: LucideIcons.utensils,
                             isRight: false,
                             onTap: () {
-                              // TODO: Navegar a pantalla de comida
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ComidaScreen(mascota: mascota),
+                                ),
+                              );
                             },
                           ),
                           const SizedBox(height: 20),
@@ -220,7 +227,12 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                             icon: LucideIcons.stethoscope,
                             isRight: true,
                             onTap: () {
-                              // TODO: Navegar a pantalla de veterinario
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => VeterinarioScreen(mascota: mascota),
+                                ),
+                              );
                             },
                           ),
                           const SizedBox(height: 20),

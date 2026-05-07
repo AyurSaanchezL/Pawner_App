@@ -177,6 +177,11 @@ class NotificationService {
     return scheduledDate;
   }
 
+  Future<void> cancel(int id) async {
+    await _notificationsPlugin.cancel(id);
+    print("Notificación cancelada: ID $id");
+  }
+
   Future<void> cancelAll() async {
     await _notificationsPlugin.cancelAll();
     print("Limpieza completa.");

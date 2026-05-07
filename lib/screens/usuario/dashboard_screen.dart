@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/core/constants.dart'; // Assuming Constants might have styles or enums
 import 'package:pawner_app/core/model/mascota.dart';
+import 'package:pawner_app/core/model/recordatorio.dart';
 import 'package:pawner_app/screens/mascota/detalle_mascota.dart';
 import 'package:pawner_app/screens/usuario/perfil_screen.dart';
 import 'package:pawner_app/screens/mascota/nueva_mascota_screen.dart'; // Keep this for the FAB logic if needed
@@ -27,6 +28,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   Usuario? _usuarioActual;
   Stream<List<Mascota>>? _mascotasStream;
+  Stream<List<Recordatorio>>? _recordatoriosStream;
 
   final List<String> _randomPetAssets = [
     'assets/images/fotos_perfil/buho.png',
@@ -49,8 +51,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     'assets/images/fotos_perfil/zorro.png',
   ];
 
-  String _getRandomAsset() {
-    return _randomPetAssets[Random().nextInt(_randomPetAssets.length)];
+  String _getDefaultAssetForMascota(String mascotaId) {
+    final index = mascotaId.hashCode.abs() % _randomPetAssets.length;
+    return _randomPetAssets[index];
   }
 
   @override
@@ -73,6 +76,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _usuarioActual = usuario;
           if (usuario.familiaID != null && usuario.familiaID!.isNotEmpty) {
             _mascotasStream = fs.streamMascotas(usuario.familiaID!);
+            _recordatoriosStream = fs.streamRecordatoriosFamilia(usuario.familiaID!);
           }
         });
       }
@@ -89,9 +93,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    const double verySmallScreenWidth = 375.0; // Threshold for very small screens
+    const double smallScreenWidth = 450.0; // Threshold for small screens
+
+    final bool isVerySmallScreen = screenWidth < verySmallScreenWidth;
+    final bool isSmallScreen = screenWidth < smallScreenWidth;
     return Scaffold(
       backgroundColor: AppColors.primary,
-      appBar: _buildCustomAppBar(),
+      appBar: _buildCustomAppBar(isVerySmallScreen, isSmallScreen),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,8 +167,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 15),
                   ListView.builder(
                     shrinkWrap: true,
-                    physics:
-                        const NeverScrollableScrollPhysics(), // Prevent nested scrolling issues
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: _remindersPlaceholder.length,
                     itemBuilder: (context, index) {
                       return _buildReminderCard(_remindersPlaceholder[index]);
@@ -177,7 +186,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           bottom: 20.0,
         ), // Adjust padding as needed
         child: FutureBuilder<String>(
-          future: obtenerNombreFamilia(), // Call the async function here
+          future: FirestoreService().obtenerNombreFamilia(), // Call the async function here
           builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Text(
@@ -242,7 +251,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // --- App Bar ---
-  PreferredSizeWidget _buildCustomAppBar() {
+  PreferredSizeWidget _buildCustomAppBar(bool isVerySmallScreen, bool isSmallScreen) {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -457,7 +466,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 image: DecorationImage(
                   image: mascota.fotoUrl.isNotEmpty
                       ? NetworkImage(mascota.fotoUrl) as ImageProvider
-                      : AssetImage(_getRandomAsset()),
+                      : AssetImage(_getDefaultAssetForMascota(mascota.mascotaID)),
                   fit: BoxFit.cover,
                 ),
                 border: Border.all(color: AppColors.darkBlue, width: 2),
@@ -465,7 +474,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              mascota.nombre,
+              (mascota.nombre.length > 15 ? mascota.nombre.substring(0, 12) + '...' : mascota.nombre),
               style: TextStyle(
                 fontFamily: 'Nunito',
                 fontSize: 14,
@@ -562,18 +571,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
+
+  Widget _buildReminderCardReal(Recordatorio r) {
+    final dateStr =
+        "${r.fechaHora.day.toString().padLeft(2, '0')}/${r.fechaHora.month.toString().padLeft(2, '0')}/${r.fechaHora.year.toString().substring(2)}";
+    final timeStr =
+        "${r.fechaHora.hour.toString().padLeft(2, '0')}:${r.fechaHora.minute.toString().padLeft(2, '0')}";
+    return Card(
+      color: r.completado ? Colors.grey.shade200 : AppColors.accent,
+      margin: const EdgeInsets.only(bottom: 15.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25.0)),
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    dateStr,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textColorPrimary,
+                    ),
+                  ),
+                  Text(
+                    timeStr,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textColorSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              flex: 3,
+              child: Text(
+                r.titulo,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textColorPrimary,
+                  decoration: r.completado ? TextDecoration.lineThrough : null,
+                ),
+              ),
+            ),
+            Checkbox(
+              value: r.completado,
+              onChanged: (v) {
+                if (v != null && _usuarioActual?.familiaID != null) {
+                  FirestoreService().toggleRecordatorioCompletado(
+                    _usuarioActual!.familiaID!,
+                    r.recordatorioID,
+                    v,
+                  );
+                }
+              },
+              activeColor: AppColors.secondary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-// Revisar este codigo
-// Fue hecho de manera rapida para el ejemplo, solo obtiene el nombre de la familia del usuario actual
-Future<String> obtenerNombreFamilia() async {
-  final u = FirebaseAuth.instance.currentUser;
-  final FirestoreService fs = FirestoreService();
-  Usuario usuario = await fs.getCurrentUser(u!);
-  var famDoc = await FirebaseFirestore.instance
-      .collection('Familias')
-      .doc(usuario.familiaID)
-      .get();
-
-  return famDoc.data()?['nombre'] ?? "Sin nombre";
-}
