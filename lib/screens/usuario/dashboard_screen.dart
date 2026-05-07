@@ -93,9 +93,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    const double verySmallScreenWidth = 375.0; // Threshold for very small screens
+    const double smallScreenWidth = 450.0; // Threshold for small screens
+
+    final bool isVerySmallScreen = screenWidth < verySmallScreenWidth;
+    final bool isSmallScreen = screenWidth < smallScreenWidth;
     return Scaffold(
       backgroundColor: AppColors.primary,
-      appBar: _buildCustomAppBar(),
+      appBar: _buildCustomAppBar(isVerySmallScreen, isSmallScreen),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,7 +186,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           bottom: 20.0,
         ), // Adjust padding as needed
         child: FutureBuilder<String>(
-          future: obtenerNombreFamilia(), // Call the async function here
+          future: FirestoreService().obtenerNombreFamilia(), // Call the async function here
           builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Text(
@@ -245,7 +251,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // --- App Bar ---
-  PreferredSizeWidget _buildCustomAppBar() {
+  PreferredSizeWidget _buildCustomAppBar(bool isVerySmallScreen, bool isSmallScreen) {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -468,7 +474,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              mascota.nombre,
+              (mascota.nombre.length > 15 ? mascota.nombre.substring(0, 12) + '...' : mascota.nombre),
               style: TextStyle(
                 fontFamily: 'Nunito',
                 fontSize: 14,
@@ -635,16 +641,3 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-// Revisar este codigo
-// Fue hecho de manera rapida para el ejemplo, solo obtiene el nombre de la familia del usuario actual
-Future<String> obtenerNombreFamilia() async {
-  final u = FirebaseAuth.instance.currentUser;
-  final FirestoreService fs = FirestoreService();
-  Usuario usuario = await fs.getCurrentUser(u!);
-  var famDoc = await FirebaseFirestore.instance
-      .collection('Familias')
-      .doc(usuario.familiaID)
-      .get();
-
-  return famDoc.data()?['nombre'] ?? "Sin nombre";
-}

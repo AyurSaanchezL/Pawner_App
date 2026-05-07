@@ -175,6 +175,26 @@ class FirestoreService {
     return Familia.fromJson(doc.data()!, doc.id);
   }
 
+  
+  // Obtener nombre de la familia del usuario actual
+  Future<String> obtenerNombreFamilia() async {
+    final u = FirebaseAuth.instance.currentUser;
+    if (u == null) return "Sin nombre";
+
+    Usuario usuario = await getCurrentUser(u);
+
+    if (usuario.familiaID == null || usuario.familiaID!.isEmpty) {
+      return "Sin nombre";
+    }
+
+    var famDoc = await _db
+        .collection('Familias')
+        .doc(usuario.familiaID)
+        .get();
+
+    return famDoc.data()?['nombre'] ?? "Sin nombre";
+  }
+
   // Stream de mascotas de una familia
   Stream<List<Mascota>> streamMascotas(String familiaID) {
     return _db
