@@ -4,6 +4,7 @@ class Constants {
   static final TextStyle inputStyle = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w600,
+    fontFamily: 'Nunito',
   );
 
   static const Map<String, List<String>> especiesYRazas = {

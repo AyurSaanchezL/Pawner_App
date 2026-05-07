@@ -29,6 +29,26 @@ class FirestoreService {
     await docMascota.set(mascota.toJson());
   }
 
+  // ACTUALIZAR MASCOTA
+  Future<void> actualizarMascota(Mascota mascota) async {
+    await _db
+        .collection('Familias')
+        .doc(mascota.familiaID)
+        .collection('Mascotas')
+        .doc(mascota.mascotaID)
+        .update(mascota.toJson());
+  }
+
+  // ELIMINAR MASCOTA
+  Future<void> eliminarMascota(String familiaID, String mascotaID) async {
+    await _db
+        .collection('Familias')
+        .doc(familiaID)
+        .collection('Mascotas')
+        .doc(mascotaID)
+        .delete();
+  }
+
   static Future<void> conectarFirebase() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
