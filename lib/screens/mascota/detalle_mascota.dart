@@ -231,7 +231,8 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                                 : "Toca para ver notas",
                             icon: LucideIcons.stickyNote,
                             onTap: () => _showObservationsModal(context),
-                          ),
+  ),
+                          const SizedBox(height: 20), // Added spacing before footer
                         ],
                       ),
                     ),
