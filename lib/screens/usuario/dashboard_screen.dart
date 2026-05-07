@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/core/constants.dart'; // Assuming Constants might have styles or enums
 import 'package:pawner_app/core/model/mascota.dart';
+import 'package:pawner_app/core/model/recordatorio.dart';
 import 'package:pawner_app/screens/mascota/detalle_mascota.dart';
 import 'package:pawner_app/screens/usuario/perfil_screen.dart';
 import 'package:pawner_app/screens/mascota/nueva_mascota_screen.dart'; // Keep this for the FAB logic if needed
@@ -27,6 +28,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   Usuario? _usuarioActual;
   Stream<List<Mascota>>? _mascotasStream;
+  Stream<List<Recordatorio>>? _recordatoriosStream;
 
   final List<String> _randomPetAssets = [
     'assets/images/fotos_perfil/buho.png',
@@ -49,8 +51,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     'assets/images/fotos_perfil/zorro.png',
   ];
 
-  String _getRandomAsset() {
-    return _randomPetAssets[Random().nextInt(_randomPetAssets.length)];
+  String _getDefaultAssetForMascota(String mascotaId) {
+    final index = mascotaId.hashCode.abs() % _randomPetAssets.length;
+    return _randomPetAssets[index];
   }
 
   @override
@@ -73,6 +76,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _usuarioActual = usuario;
           if (usuario.familiaID != null && usuario.familiaID!.isNotEmpty) {
             _mascotasStream = fs.streamMascotas(usuario.familiaID!);
+            _recordatoriosStream = fs.streamRecordatoriosFamilia(usuario.familiaID!);
           }
         });
       }
@@ -155,15 +159,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     showListIcon: true,
                   ),
                   const SizedBox(height: 15),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics:
-                        const NeverScrollableScrollPhysics(), // Prevent nested scrolling issues
-                    itemCount: _remindersPlaceholder.length,
-                    itemBuilder: (context, index) {
-                      return _buildReminderCard(_remindersPlaceholder[index]);
-                    },
-                  ),
+                  if (_recordatoriosStream != null)
+                    StreamBuilder<List<Recordatorio>>(
+                      stream: _recordatoriosStream,
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        final recordatorios = snapshot.data!;
+                        if (recordatorios.isEmpty) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 20),
+                            child: Center(
+                              child: Text(
+                                "No hay recordatorios próximos.",
+                                style: TextStyle(
+                                  fontFamily: 'Nunito',
+                                  color: Colors.grey,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: recordatorios.length,
+                          itemBuilder: (context, index) {
+                            return _buildReminderCardReal(recordatorios[index]);
+                          },
+                        );
+                      },
+                    )
+                  else
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: Text(
+                          "Inicia sesión para ver recordatorios.",
+                          style: TextStyle(
+                            fontFamily: 'Nunito',
+                            color: Colors.grey,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -457,7 +499,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 image: DecorationImage(
                   image: mascota.fotoUrl.isNotEmpty
                       ? NetworkImage(mascota.fotoUrl) as ImageProvider
-                      : AssetImage(_getRandomAsset()),
+                      : AssetImage(_getDefaultAssetForMascota(mascota.mascotaID)),
                   fit: BoxFit.cover,
                 ),
                 border: Border.all(color: AppColors.darkBlue, width: 2),
@@ -556,6 +598,74 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: AppColors.textColorPrimary,
                 ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReminderCardReal(Recordatorio r) {
+    final dateStr =
+        "${r.fechaHora.day.toString().padLeft(2, '0')}/${r.fechaHora.month.toString().padLeft(2, '0')}/${r.fechaHora.year.toString().substring(2)}";
+    final timeStr =
+        "${r.fechaHora.hour.toString().padLeft(2, '0')}:${r.fechaHora.minute.toString().padLeft(2, '0')}";
+    return Card(
+      color: r.completado ? Colors.grey.shade200 : AppColors.accent,
+      margin: const EdgeInsets.only(bottom: 15.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25.0)),
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    dateStr,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textColorPrimary,
+                    ),
+                  ),
+                  Text(
+                    timeStr,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textColorSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              flex: 3,
+              child: Text(
+                r.titulo,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textColorPrimary,
+                  decoration: r.completado ? TextDecoration.lineThrough : null,
+                ),
+              ),
+            ),
+            Checkbox(
+              value: r.completado,
+              onChanged: (v) {
+                if (v != null && _usuarioActual?.familiaID != null) {
+                  FirestoreService().toggleRecordatorioCompletado(
+                    _usuarioActual!.familiaID!,
+                    r.recordatorioID,
+                    v,
+                  );
+                }
+              },
+              activeColor: AppColors.secondary,
             ),
           ],
         ),
