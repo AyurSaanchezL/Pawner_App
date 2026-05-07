@@ -26,11 +26,11 @@ class AppColors {
   // Colores Semánticos y de Estado
   static const Color male = Color(0xFF64B5F6); // Azul claro para Macho
   static const Color female = Color(0xFFF06292); // Rosa claro para Hembra
-  static const Color sterilized = Colors.lightGreen;
-  static const Color notSterilized = Color(0xFFE57373); // Rojo suave
 
   // Alias para HomeScreen/Dashboard
   static const Color homeScreenBackground = Color(0xFFFFFDF0);
   static const Color homeScreenLavender = Color(0xFFC5B4E3);
   static const Color homeScreenOrange = Color(0xFFFFCC80);
+
+  static const Color inputBackground = Color(0xFFE1D5F9);
 }

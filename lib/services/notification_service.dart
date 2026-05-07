@@ -147,7 +147,7 @@ class NotificationService {
     }
   }
 
-  Future<void> testInexactScheduling() async {
+/*  Future<void> testInexactScheduling() async {
     final scheduledTime = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 15));
     await _notificationsPlugin.zonedSchedule(
       88,
@@ -159,7 +159,7 @@ class NotificationService {
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
     print("Inexacta registrada para: $scheduledTime");
-  }
+  }*/
 
   Future<void> openAlarmSettings() async {
     final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();

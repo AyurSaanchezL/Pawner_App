@@ -13,6 +13,8 @@ import 'package:pawner_app/screens/mascota/detalle_mascota.dart';
 import 'package:pawner_app/core/constants.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:pawner_app/screens/mascota/editar_mascota.dart';
+
 class DetalleFamiliaScreen extends StatefulWidget {
   final String familiaID;
 
@@ -335,6 +337,81 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
     );
   }
 
+  void _showPetOptionsMenu(Mascota mascota, Offset position) {
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(
+        position & const Size(40, 40), // Tap position
+        Offset.zero & overlay.size,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      items: [
+        const PopupMenuItem(
+          value: 'editar',
+          child: Row(
+            children: [
+              Icon(LucideIcons.pencil, color: AppColors.secondary, size: 20),
+              SizedBox(width: 10),
+              Text("Editar mascota", style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'eliminar',
+          child: Row(
+            children: [
+              Icon(LucideIcons.trash2, color: Colors.red, size: 20),
+              SizedBox(width: 10),
+              Text("Eliminar mascota",
+                  style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold, color: Colors.red)),
+            ],
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'editar') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => EditarMascotaScreen(mascota: mascota)),
+        );
+      } else if (value == 'eliminar') {
+        _confirmarEliminacion(context, mascota);
+      }
+    });
+  }
+
+  void _confirmarEliminacion(BuildContext context, Mascota mascota) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Eliminar Mascota", style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold)),
+        content: Text("¿Estás seguro de que quieres eliminar a ${mascota.nombre}? Esta acción no se puede deshacer.",
+            style: const TextStyle(fontFamily: 'Nunito')),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancelar", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context); // Cerrar diálogo
+              await _fs.eliminarMascota(mascota.familiaID, mascota.mascotaID);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("${mascota.nombre} ha sido eliminado"), backgroundColor: Colors.red),
+                );
+              }
+            },
+            child: const Text("Eliminar", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMascotasGrid() {
     return StreamBuilder<List<Mascota>>(
       stream: _fs.streamMascotas(widget.familiaID),
@@ -374,7 +451,15 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
           itemCount: mascotas.length,
           itemBuilder: (context, index) {
             final mascota = mascotas[index];
+            Offset? tapPosition;
+
             return GestureDetector(
+              onTapDown: (details) => tapPosition = details.globalPosition,
+              onLongPress: () {
+                if (tapPosition != null) {
+                  _showPetOptionsMenu(mascota, tapPosition!);
+                }
+              },
               onTap: () {
                 Navigator.push(
                   context,
@@ -423,10 +508,10 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
                         color: AppColors.secondary,
                       ),
                     ),
-                    Text(
+                   /* Text(
                       mascota.genero,
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
+                    ),*/
                   ],
                 ),
               ),

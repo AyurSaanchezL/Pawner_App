@@ -1,6 +1,8 @@
 class Mascota {
   String mascotaID;
   String nombre;
+  String especie;
+  String raza;
   String chip;
   double peso;
   DateTime fechaNacimiento;
@@ -13,6 +15,8 @@ class Mascota {
   Mascota({
     required this.mascotaID,
     required this.nombre,
+    required this.especie,
+    required this.raza,
     required this.chip,
     required this.peso,
     required this.fechaNacimiento,
@@ -26,6 +30,8 @@ class Mascota {
   Map<String, dynamic> toJson() => {
         'mascotaID': mascotaID,
         'nombre': nombre,
+        'especie': especie,
+        'raza': raza,
         'chip': chip,
         'peso': peso,
         'fechaNacimiento': fechaNacimiento.toIso8601String(),
@@ -40,6 +46,8 @@ class Mascota {
     return Mascota(
       mascotaID: id,
       nombre: json['nombre'] ?? '',
+      especie: json['especie'] ?? '',
+      raza: json['raza'] ?? '',
       chip: json['chip'] ?? '',
       peso: (json['peso'] ?? 0.0).toDouble(),
       fechaNacimiento: DateTime.parse(json['fechaNacimiento']),

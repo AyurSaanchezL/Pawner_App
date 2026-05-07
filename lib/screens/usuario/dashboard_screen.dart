@@ -138,7 +138,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           else
                             _buildEmptyPetsPlaceholder(),
                           const SizedBox(width: 15),
-                          _buildNewPetButton(),
                         ],
                       ),
                     ),
@@ -201,7 +200,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
           },
         ),
       ),
-      // Floating Action Button (migrated from original DashboardScreen)
+      // Floating Action Button
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 10, right: 10),
+        child: Container(
+          width: 70,
+          height: 70,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 8,
+                spreadRadius: 2,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: FloatingActionButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NuevaMascotaScreen()),
+              );
+            },
+            backgroundColor: Colors.white,
+            elevation: 0, // Elevation handled by Container shadow
+            shape: const CircleBorder(),
+            child: const Icon(Icons.add, size: 40, color: Colors.black),
+          ),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -460,9 +490,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 5,
-                    spreadRadius: 1,
+                    color: Colors.black26, // Sombra más oscura
+                    blurRadius: 8, // Sombra más difuminada
+                    spreadRadius: 2, // Sombra más extendida
+                    offset: Offset(0, 4),
                   ),
                 ],
               ),
