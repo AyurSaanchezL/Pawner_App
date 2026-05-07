@@ -159,26 +159,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     showListIcon: true,
                   ),
                   const SizedBox(height: 15),
-                  if (_recordatoriosStream != null)
-                    StreamBuilder<List<Recordatorio>>(
-                      stream: _recordatoriosStream,
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-                        final recordatorios = snapshot.data!;
-                        return ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: recordatorios.length,
-                          itemBuilder: (context, index) {
-                            return _buildReminderCardReal(recordatorios[index]);
-                          },
-                        );
-                      },
-                    )
-                  else
-                    const SizedBox.shrink(),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _remindersPlaceholder.length,
+                    itemBuilder: (context, index) {
+                      return _buildReminderCard(_remindersPlaceholder[index]);
+                    },
+                  ),
                 ],
               ),
             ),
