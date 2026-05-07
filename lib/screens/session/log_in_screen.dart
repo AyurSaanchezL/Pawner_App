@@ -238,8 +238,48 @@ class _LogInScreenState extends State<LogInScreen> {
         }
       }
     } on FirebaseAuthException catch (e) {
-      log(e.message!);
+      String mensajeError = "Error al iniciar sesión";
+
+      switch (e.code) {
+        case 'user-not-found':
+          mensajeError = "No existe ninguna cuenta con este correo.";
+          break;
+        case 'wrong-password':
+          mensajeError = "La contraseña es incorrecta.";
+          break;
+        case 'invalid-credential':
+          // Firebase ahora suele devolver este para ambos casos por seguridad
+          mensajeError = "Email o contraseña incorrectos.";
+          break;
+        case 'user-disabled':
+          mensajeError = "Esta cuenta ha sido deshabilitada.";
+          break;
+        case 'invalid-email':
+          mensajeError = "El formato del correo no es válido.";
+          break;
+        case 'too-many-requests':
+          mensajeError = "Demasiados intentos. Inténtalo más tarde.";
+          break;
+        case 'channel-error':
+          mensajeError = "Por favor, rellena todos los campos.";
+          break;
+        default:
+          mensajeError = "Error: ${e.message}";
+      }
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(inContext).showSnackBar(
+          SnackBar(
+            content: Text(mensajeError, textAlign: TextAlign.center),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+
+      log("Error de Login: ${e.code}");
       await firebaseController.reportCrash(e, e.stackTrace);
+    } catch (e) {
+      log("Error inesperado: $e");
     }
   }
 }

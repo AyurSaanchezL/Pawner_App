@@ -22,7 +22,7 @@ class Usuario {
     'nombre': nombre,
     'email': email,
     'fotoUrl': fotoUrl,
-    'rol': rol!.name,
+    'rol': rol?.name,
     'familiaID': familiaID,
   };
 

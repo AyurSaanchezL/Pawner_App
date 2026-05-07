@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/core/components/chat_bubble_clipper.dart';
 import 'package:pawner_app/core/model/usuario.dart';
+import 'package:pawner_app/screens/first_screen.dart';
 import 'package:pawner_app/screens/usuario/dashboard_screen.dart';
 import 'package:pawner_app/screens/usuario/perfil_screen.dart';
 import 'package:pawner_app/services/auth_service.dart';
@@ -95,6 +96,23 @@ class AjustesScreen extends StatelessWidget {
                                 log("El usuario no tiene familia");
                               }
                             }
+                          },
+                        ),
+                        const SizedBox(height: 25),
+                        _buildBubble(
+                          text: "Cerrar sesión",
+                          color: Colors.redAccent,
+                          icon: Icons.exit_to_app,
+                          isRightTail: true,
+                          iconColor: Colors.redAccent,
+                          onTap: () async {
+                            AuthService().signOut();
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FirstScreen(),
+                              ),
+                            );
                           },
                         ),
                       ],

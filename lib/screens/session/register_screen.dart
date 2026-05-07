@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/core/model/usuario.dart';
+import 'package:pawner_app/screens/session/log_in_screen.dart';
 import 'package:pawner_app/services/auth_service.dart';
 import 'package:pawner_app/services/crash_manager.dart';
 import 'package:pawner_app/services/firestore_service.dart';
@@ -23,39 +24,85 @@ class _RegisterScreenState extends State<RegisterScreen> {
   TextEditingController controllerPassword = TextEditingController();
 
   Future<void> _registrarse() async {
-    username = controllerUsername.text;
+    // 1. Validación básica antes de llamar a Firebase
+    if (controllerUsername.text.isEmpty ||
+        controllerCorreo.text.isEmpty ||
+        controllerPassword.text.isEmpty) {
+      _mostrarSnackBar("Por favor, completa todos los campos");
+      return;
+    }
+
     try {
+      // 2. Creación de cuenta
       UserCredential credential = await authService.value.createAccount(
-        email: controllerCorreo.text,
-        password: controllerPassword.text,
+        email: controllerCorreo.text.trim(),
+        password: controllerPassword.text.trim(),
       );
 
-      String realUID = credential.user!.uid;
+      // 3. Verificación de nulidad segura
+      final user = credential.user;
+      if (user != null) {
+        String realUID = user.uid;
 
-      await FirestoreService().addUsuario(
-        Usuario("", username, controllerCorreo.text, 'zorro', null, null),
-        realUID,
-      );
-      if (mounted) {
-        // Muestra una SnackBar de bienvenida
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Te has registrado. ¡Bienvenido!"),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
+        // 4. Guardar en Firestore
+        await FirestoreService().addUsuario(
+          Usuario(
+            "",
+            controllerUsername.text,
+            controllerCorreo.text,
+            'zorro',
+            null,
+            null,
           ),
+          realUID,
         );
 
-        // Navegar a la pantalla de elegir familia
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const ElegirFamiliaLayout()),
-          (route) => false, // Esto limpia el stack de navegación
-        );
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ElegirFamiliaLayout(),
+            ),
+            (route) => false,
+          );
+        }
       }
     } on FirebaseAuthException catch (e) {
-      log(e.message!);
+      String mensajeError = _mapearErrorFirebase(e.code);
+      _mostrarSnackBar(mensajeError);
+      log("Error de Firebase: ${e.code} - ${e.message}");
       await firebaseController.reportCrash(e, e.stackTrace);
+    } catch (e, stack) {
+      // Aquí capturamos el famoso "Null check operator" o errores de Firestore
+      log("Error genérico capturado: $e");
+      log("Stacktrace: $stack");
+      _mostrarSnackBar("Error inesperado: $e");
+    }
+  }
+
+  // Función auxiliar para no repetir código del SnackBar
+  void _mostrarSnackBar(String mensaje) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensaje, textAlign: TextAlign.center),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  String _mapearErrorFirebase(String code) {
+    switch (code) {
+      case 'invalid-email':
+        return "El formato del correo no es válido.";
+      case 'email-already-in-use':
+        return "El correo ya está en uso.";
+      case 'weak-password':
+        return "La contraseña es muy débil (min. 6 caracteres).";
+      case 'network-request-failed':
+        return "Error de conexión a internet.";
+      default:
+        return "Error en el registro. Inténtalo de nuevo.";
     }
   }
 
@@ -202,7 +249,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
 
-                    SizedBox(height: 125),
+                    SizedBox(height: 100),
+                    SizedBox(height: 25),
                     // =============== BOTÓN ==============
                     ElevatedButton(
                       onPressed: () {

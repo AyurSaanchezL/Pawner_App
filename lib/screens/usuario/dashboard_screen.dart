@@ -64,6 +64,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (u != null) {
       final fs = FirestoreService();
       final usuario = await fs.getCurrentUser(u);
+      if (usuario.email != u.email!) {
+        usuario.email = u.email!;
+        await FirestoreService().updateUsuario(usuario);
+      }
       if (mounted) {
         setState(() {
           _usuarioActual = usuario;
@@ -221,7 +225,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const NuevaMascotaScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const NuevaMascotaScreen(),
+                ),
               );
             },
             backgroundColor: Colors.white,
@@ -243,7 +249,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.black),
         onPressed: () {
-          Navigator.pop(
+          Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => FirstScreen()),
           );
@@ -407,7 +413,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(LucideIcons.dog, color: AppColors.darkBlue.withOpacity(0.5), size: 40),
+          Icon(
+            LucideIcons.dog,
+            color: AppColors.darkBlue.withAlpha(167),
+            size: 40,
+          ),
           const SizedBox(width: 15),
           Text(
             "¡Añade a tus mascotas!",
@@ -415,7 +425,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fontFamily: 'Nunito',
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: AppColors.darkBlue.withOpacity(0.7),
+              color: AppColors.darkBlue.withAlpha(178),
             ),
           ),
         ],

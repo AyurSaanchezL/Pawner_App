@@ -10,22 +10,28 @@ class ElegirFamiliaLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary, // This might be overridden by the Stack
-      body: SafeArea( // 1. Wrap in SafeArea
-        child: Stack( // 2. Keep Stack
+      backgroundColor:
+          AppColors.primary, // This might be overridden by the Stack
+      body: SafeArea(
+        // 1. Wrap in SafeArea
+        child: Stack(
+          // 2. Keep Stack
           fit: StackFit.expand,
           children: [
-            Image.asset( // 3. Keep background image
+            Image.asset(
+              // 3. Keep background image
               "assets/images/background_01.png",
               fit: BoxFit.cover, // Changed from fitWidth to cover
             ),
-            Padding( // 4. Add horizontal padding to the content
+            Padding(
+              // 4. Add horizontal padding to the content
               padding: const EdgeInsets.symmetric(horizontal: 30.0),
-              child: Column( // 5. Use Column for header and cards
-                crossAxisAlignment: CrossAxisAlignment.start, // Align header left
+              child: Column(
+                // 5. Use Column for header and cards
+                crossAxisAlignment:
+                    CrossAxisAlignment.start, // Align header left
                 children: [
                   const SizedBox(height: 40), // Space from SafeArea top
-
                   // Header
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,15 +57,15 @@ class ElegirFamiliaLayout extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 40), // Space between header and cards
-
                   // Interactive Cards for Join/Create
                   _buildFamilyOptionCard(
                     context: context,
                     icon: LucideIcons.users,
                     title: 'Unirse a familia',
                     subtitle: 'Tengo un código de invitación',
-                    backgroundColor: AppColors.complementary.withOpacity(0.95),
-                    textColor: Colors.black87, // Good contrast for complementary
+                    backgroundColor: AppColors.complementary.withAlpha(242),
+                    textColor:
+                        Colors.black87, // Good contrast for complementary
                     iconColor: Colors.black87,
                     arrowColor: Colors.black87,
                     destination: const UnirseFamiliaLayout(),
@@ -112,11 +118,10 @@ class ElegirFamiliaLayout extends StatelessWidget {
       },
       child: Card(
         elevation: 8, // Soft shadow
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(25),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         color: backgroundColor,
-        margin: EdgeInsets.zero, // Remove default Card margin if using Container padding
+        margin: EdgeInsets
+            .zero, // Remove default Card margin if using Container padding
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -146,7 +151,9 @@ class ElegirFamiliaLayout extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'Nunito',
                         fontSize: 12,
-                        color: textColor.withOpacity(0.8), // Slightly lighter subtitle
+                        color: textColor.withAlpha(
+                          204,
+                        ), // Slightly lighter subtitle
                       ),
                     ),
                   ],
