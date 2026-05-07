@@ -479,13 +479,13 @@ class FirestoreService {
         .collection('Familias')
         .doc(familiaID)
         .collection('Recordatorios')
-        .where('fechaHora', isGreaterThanOrEqualTo: DateTime.now().toIso8601String())
-        .orderBy('fechaHora')
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
               .map((doc) => Recordatorio.fromMap(doc.data(), doc.id))
-              .toList(),
+              .where((r) => r.fechaHora.isAfter(DateTime.now().subtract(const Duration(days: 1))))
+              .toList()
+            ..sort((a, b) => a.fechaHora.compareTo(b.fechaHora)),
         );
   }
 

@@ -163,6 +163,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     StreamBuilder<List<Recordatorio>>(
                       stream: _recordatoriosStream,
                       builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 20),
+                            child: Center(
+                              child: Text(
+                                "Error al cargar: ${snapshot.error}",
+                                style: const TextStyle(color: Colors.red, fontFamily: 'Nunito'),
+                              ),
+                            ),
+                          );
+                        }
                         if (!snapshot.hasData) {
                           return const Center(child: CircularProgressIndicator());
                         }
