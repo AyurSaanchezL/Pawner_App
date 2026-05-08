@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:developer' as dev;
 
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -67,7 +68,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (u != null) {
       final fs = FirestoreService();
       final usuario = await fs.getCurrentUser(u);
+      dev.log(
+        "Usuario: ${usuario.email} y Usuario de FirebaseAuth: ${u.email!}",
+      );
       if (usuario.email != u.email!) {
+        dev.log("Los correos no coinciden. Cambiando...");
         usuario.email = u.email!;
         await FirestoreService().updateUsuario(usuario);
       }

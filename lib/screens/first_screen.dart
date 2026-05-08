@@ -52,7 +52,6 @@ class FirstScreen extends StatelessWidget {
               SizedBox(height: 40),
               ElevatedButton(
                 onPressed: () async {
-                  log("Botón presionado");
                   if (snapshot.hasData && snapshot.data != null) {
                     final user = snapshot.data!;
 
