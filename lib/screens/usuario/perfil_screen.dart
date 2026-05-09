@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -6,6 +7,7 @@ import 'package:pawner_app/core/components/bottom_logo.dart';
 import 'package:pawner_app/core/help_methods.dart';
 import 'package:pawner_app/core/model/usuario.dart';
 import 'package:pawner_app/screens/session/change_email_screen.dart';
+import 'package:pawner_app/screens/session/change_password_screen.dart';
 import 'package:pawner_app/services/firestore_service.dart';
 
 class PerfilUsuarioScreen extends StatefulWidget {
@@ -105,7 +107,16 @@ class _PerfilUsuarioScreenState extends State<PerfilUsuarioScreen> {
                         letterSpacing: .5,
                         fontWeight: .w500,
                       ),
-                      recognizer: TapGestureRecognizer(),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const ChangePasswordScreen(),
+                            ),
+                          );
+                        },
                     ),
                   ),
                   Spacer(),
