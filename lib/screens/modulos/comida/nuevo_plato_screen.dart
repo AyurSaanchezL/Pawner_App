@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/core/model/mascota.dart';
-import 'package:pawner_app/core/model/plato_model.dart';
+import 'package:pawner_app/core/model/modulo_comida/plato_model.dart';
 import 'package:pawner_app/services/cloudinary_service.dart';
 import 'package:pawner_app/services/firestore_service.dart';
 

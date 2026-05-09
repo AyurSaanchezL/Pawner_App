@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/app_colors.dart';
@@ -217,7 +218,7 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
               const SizedBox(height: 30),
               
               _buildLabel("Nombre"),
-              _buildTextField(_nombreController, "Nombre de tu mascota"),
+              _buildTextField(_nombreController, "Nombre de tu mascota", maxLength: 20),
 
               const SizedBox(height: 15),
               Row(
@@ -422,13 +423,14 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint, {bool isNumber = false, int maxLines = 1, bool isOptional = false}) {
+  Widget _buildTextField(TextEditingController controller, String hint, {bool isNumber = false, int maxLines = 1, bool isOptional = false, int? maxLength}) {
     return TextFormField(
       controller: controller,
       keyboardType: isNumber ? TextInputType.number : (maxLines > 1 ? TextInputType.multiline : TextInputType.text),
       maxLines: maxLines,
       textAlign: TextAlign.center,
       style: Constants.inputStyle,
+      inputFormatters: maxLength != null ? [LengthLimitingTextInputFormatter(maxLength)] : null,
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
