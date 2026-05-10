@@ -13,6 +13,8 @@ import 'package:pawner_app/services/cloudinary_service.dart';
 import 'package:pawner_app/services/firestore_service.dart';
 import 'package:pawner_app/services/notification_service.dart';
 
+import '../modulos/comida/dashboard_comida_screen.dart';
+
 class PetProfileScreen extends StatefulWidget {
   final Mascota mascota;
 
@@ -216,7 +218,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => ComidaScreen(mascota: mascota),
+                                  builder: (_) => DashboardComidaScreen(mascota: mascota),
                                 ),
                               );
                             },

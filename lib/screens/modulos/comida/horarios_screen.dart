@@ -252,6 +252,15 @@ class _HorariosScreenState extends State<HorariosScreen> {
                       widget.mascota.mascotaID,
                     ),
                     builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          child: Text(
+                            "Error al cargar los horarios.",
+                            style: TextStyle(color: Colors.red, fontFamily: 'Nunito'),
+                          ),
+                        );
+                      }
                       if (!snapshot.hasData) {
                         return const Center(child: CircularProgressIndicator());
                       }

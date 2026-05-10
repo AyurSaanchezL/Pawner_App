@@ -45,9 +45,7 @@ class _ComidaScreenState extends State<ComidaScreen> {
   }
 
   List<Plato> _filtrarPlatos(List<Plato> platos) {
-    if (_filtroCategoria == 'Todas') {
-      return platos.where((p) => _categoriasActivas.contains(p.tipo)).toList();
-    }
+    if (_filtroCategoria == 'Todas') return platos;
     return platos.where((p) => p.tipo == _filtroCategoria).toList();
   }
 
@@ -155,15 +153,40 @@ class _ComidaScreenState extends State<ComidaScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => NuevoPlatoScreen(
-              mascota: widget.mascota,
-              onGuardado: () => setState(() {}),
+        onPressed: () async {
+          final nombre = await Navigator.push<String>(
+            context,
+            MaterialPageRoute(
+              builder: (_) => NuevoPlatoScreen(mascota: widget.mascota),
             ),
-          ),
-        ),
+          );
+          if (nombre != null && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(LucideIcons.checkCircle2, color: Colors.white, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        '¡$nombre añadido!',
+                        style: const TextStyle(
+                          fontFamily: 'Nunito',
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: Colors.green.shade600,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        },
         backgroundColor: AppColors.complementary,
         icon: const Icon(LucideIcons.plus, color: Colors.white),
         label: const Text(
@@ -234,7 +257,7 @@ class _ComidaScreenState extends State<ComidaScreen> {
   }
 
   Widget _buildCategoriaFilterChips() {
-    final categorias = ['Todas', ..._categoriasActivas];
+    final categorias = ['Todas', ..._todasLasCategorias];
     return Wrap(
       spacing: 10,
       children: categorias.map((cat) {

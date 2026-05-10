@@ -81,8 +81,7 @@ class FirestoreService {
 
     // Platos (sin notificación)
     final platosSnap = await _db
-        .collection(_modComidaPath(familiaID, mascotaID))
-        .doc('data')
+        .doc(_modComidaPath(familiaID, mascotaID))
         .collection('Platos')
         .get();
     for (final doc in platosSnap.docs) {
@@ -91,8 +90,7 @@ class FirestoreService {
 
     // Horarios de comida (notificaciones recurrentes)
     final horariosSnap = await _db
-        .collection(_modComidaPath(familiaID, mascotaID))
-        .doc('data')
+        .doc(_modComidaPath(familiaID, mascotaID))
         .collection('Horarios')
         .get();
     for (final doc in horariosSnap.docs) {

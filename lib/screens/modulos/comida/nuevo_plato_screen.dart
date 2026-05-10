@@ -11,15 +11,15 @@ import 'package:pawner_app/services/firestore_service.dart';
 
 class NuevoPlatoScreen extends StatefulWidget {
   final Mascota mascota;
-  final VoidCallback? onGuardado;
 
-  const NuevoPlatoScreen({super.key, required this.mascota, this.onGuardado});
+  const NuevoPlatoScreen({super.key, required this.mascota});
 
   @override
   State<NuevoPlatoScreen> createState() => _NuevoPlatoScreenState();
 }
 
 class _NuevoPlatoScreenState extends State<NuevoPlatoScreen> {
+  final _fs = FirestoreService();
   final _formKey = GlobalKey<FormState>();
   final _nombreController = TextEditingController();
   final _ingredientesController = TextEditingController();
@@ -29,24 +29,26 @@ class _NuevoPlatoScreenState extends State<NuevoPlatoScreen> {
 
   final List<String> _tipos = ['Seca', 'Húmeda', 'Natural', 'Suplemento'];
 
+  @override
+  void dispose() {
+    _nombreController.dispose();
+    _ingredientesController.dispose();
+    super.dispose();
+  }
+
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      setState(() => _image = File(picked.path));
-    }
+    if (picked != null) setState(() => _image = File(picked.path));
   }
 
   Future<void> _guardar() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
 
     try {
       String? fotoUrl;
-      if (_image != null) {
-        fotoUrl = await CloudinaryService().uploadImage(_image!);
-      }
+      if (_image != null) fotoUrl = await CloudinaryService().uploadImage(_image!);
 
       final ingredientes = _ingredientesController.text
           .split(',')
@@ -63,16 +65,9 @@ class _NuevoPlatoScreenState extends State<NuevoPlatoScreen> {
         esSugerencia: false,
       );
 
-      await FirestoreService().addPlato(
-        widget.mascota.familiaID,
-        widget.mascota.mascotaID,
-        plato,
-      );
+      await _fs.addPlato(widget.mascota.familiaID, widget.mascota.mascotaID, plato);
 
-      if (mounted) {
-        widget.onGuardado?.call();
-        Navigator.pop(context);
-      }
+      if (mounted) Navigator.pop(context, plato.nombre);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -121,10 +116,7 @@ class _NuevoPlatoScreenState extends State<NuevoPlatoScreen> {
                     color: AppColors.primary,
                     shape: BoxShape.circle,
                     image: _image != null
-                        ? DecorationImage(
-                            image: FileImage(_image!),
-                            fit: BoxFit.cover,
-                          )
+                        ? DecorationImage(image: FileImage(_image!), fit: BoxFit.cover)
                         : null,
                   ),
                   child: _image == null
@@ -162,9 +154,9 @@ class _NuevoPlatoScreenState extends State<NuevoPlatoScreen> {
                     value: _tipo,
                     isExpanded: true,
                     alignment: Alignment.center,
-                    items: _tipos.map((t) {
-                      return DropdownMenuItem(value: t, child: Center(child: Text(t)));
-                    }).toList(),
+                    items: _tipos
+                        .map((t) => DropdownMenuItem(value: t, child: Center(child: Text(t))))
+                        .toList(),
                     onChanged: (v) => setState(() => _tipo = v!),
                   ),
                 ),
@@ -194,9 +186,7 @@ class _NuevoPlatoScreenState extends State<NuevoPlatoScreen> {
                   onPressed: _isLoading ? null : _guardar,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.homeScreenOrange,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     elevation: 4,
                   ),
                   child: _isLoading
@@ -226,7 +216,11 @@ class _NuevoPlatoScreenState extends State<NuevoPlatoScreen> {
       child: Center(
         child: Text(
           text,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontFamily: 'Nunito'),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Nunito',
+          ),
         ),
       ),
     );
