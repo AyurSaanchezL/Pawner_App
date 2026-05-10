@@ -20,7 +20,8 @@ import 'package:pawner_app/firebase_options.dart';
 class FirestoreService {
   final FirebaseFirestore _db;
 
-  FirestoreService([FirebaseFirestore? db]) : _db = db ?? FirebaseFirestore.instance;
+  FirestoreService([FirebaseFirestore? db])
+    : _db = db ?? FirebaseFirestore.instance;
 
   // CREAR MASCOTA
   Future<void> crearMascota(Mascota mascota) async {
@@ -66,7 +67,10 @@ class FirestoreService {
     final batch = _db.batch();
 
     // Citas veterinarias (notificaciones one-time)
-    final citasSnap = await _modVetDoc(familiaID, mascotaID).collection('Citas').get();
+    final citasSnap = await _modVetDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Citas').get();
     for (final doc in citasSnap.docs) {
       final cita = CitaVeterinaria.fromMap(doc.data(), doc.id);
       if (cita.idNotificacion != null) notifIds.add(cita.idNotificacion!);
@@ -74,7 +78,10 @@ class FirestoreService {
     }
 
     // Eventos de salud (sin notificación)
-    final eventosSnap = await _modVetDoc(familiaID, mascotaID).collection('EventosSalud').get();
+    final eventosSnap = await _modVetDoc(
+      familiaID,
+      mascotaID,
+    ).collection('EventosSalud').get();
     for (final doc in eventosSnap.docs) {
       batch.delete(doc.reference);
     }
@@ -112,7 +119,11 @@ class FirestoreService {
 
     // El documento de la mascota
     batch.delete(
-      _db.collection('Familias').doc(familiaID).collection('Mascotas').doc(mascotaID),
+      _db
+          .collection('Familias')
+          .doc(familiaID)
+          .collection('Mascotas')
+          .doc(mascotaID),
     );
 
     await batch.commit();
@@ -259,7 +270,6 @@ class FirestoreService {
     return Familia.fromJson(doc.data()!, doc.id);
   }
 
-  
   // Obtener nombre de la familia del usuario actual
   Future<String> obtenerNombreFamilia() async {
     final u = FirebaseAuth.instance.currentUser;
@@ -271,10 +281,7 @@ class FirestoreService {
       return "Sin nombre";
     }
 
-    var famDoc = await _db
-        .collection('Familias')
-        .doc(usuario.familiaID)
-        .get();
+    var famDoc = await _db.collection('Familias').doc(usuario.familiaID).get();
 
     return famDoc.data()?['nombre'] ?? "Sin nombre";
   }
@@ -286,7 +293,9 @@ class FirestoreService {
         .doc(familiaID)
         .collection('Mascotas')
         .get();
-    return snap.docs.map((doc) => Mascota.fromJson(doc.data(), doc.id)).toList();
+    return snap.docs
+        .map((doc) => Mascota.fromJson(doc.data(), doc.id))
+        .toList();
   }
 
   // Stream de mascotas de una familia
@@ -420,7 +429,11 @@ class FirestoreService {
   }
 
   // Eliminar plato
-  Future<void> deletePlato(String familiaID, String mascotaID, String platoId) async {
+  Future<void> deletePlato(
+    String familiaID,
+    String mascotaID,
+    String platoId,
+  ) async {
     await _db
         .collection(_modComidaPath(familiaID, mascotaID))
         .doc('data')
@@ -430,7 +443,10 @@ class FirestoreService {
   }
 
   // Stream de horarios
-  Stream<List<HorarioComida>> streamHorarios(String familiaID, String mascotaID) {
+  Stream<List<HorarioComida>> streamHorarios(
+    String familiaID,
+    String mascotaID,
+  ) {
     return _db
         .collection(_modComidaPath(familiaID, mascotaID))
         .doc('data')
@@ -473,7 +489,11 @@ class FirestoreService {
   }
 
   // Eliminar horario
-  Future<void> deleteHorario(String familiaID, String mascotaID, String horarioId) async {
+  Future<void> deleteHorario(
+    String familiaID,
+    String mascotaID,
+    String horarioId,
+  ) async {
     await _db
         .collection(_modComidaPath(familiaID, mascotaID))
         .doc('data')
@@ -509,10 +529,13 @@ class FirestoreService {
 
   // --- MÓDULO VETERINARIO ---
 
-  DocumentReference _modVetDoc(String familiaID, String mascotaID) =>
-      _db.collection('Familias').doc(familiaID)
-          .collection('Mascotas').doc(mascotaID)
-          .collection('Modulos').doc('mod_vet');
+  DocumentReference _modVetDoc(String familiaID, String mascotaID) => _db
+      .collection('Familias')
+      .doc(familiaID)
+      .collection('Mascotas')
+      .doc(mascotaID)
+      .collection('Modulos')
+      .doc('mod_vet');
 
   // Guardar configuración del módulo veterinario (Perfil Médico)
   Future<void> saveModuloVetConfig(
@@ -520,8 +543,10 @@ class FirestoreService {
     String mascotaID,
     ModuloVetConfig config,
   ) async {
-    await _modVetDoc(familiaID, mascotaID)
-        .set(config.toMap(), SetOptions(merge: true));
+    await _modVetDoc(
+      familiaID,
+      mascotaID,
+    ).set(config.toMap(), SetOptions(merge: true));
   }
 
   // Obtener configuración del módulo veterinario
@@ -538,15 +563,25 @@ class FirestoreService {
     String familiaID,
     String mascotaID,
   ) {
-    return _modVetDoc(familiaID, mascotaID)
-        .snapshots()
-        .map((doc) => doc.exists ? ModuloVetConfig.fromMap(doc.data() as Map<String, dynamic>) : null);
+    return _modVetDoc(familiaID, mascotaID).snapshots().map(
+      (doc) => doc.exists
+          ? ModuloVetConfig.fromMap(doc.data() as Map<String, dynamic>)
+          : null,
+    );
   }
 
   // One-shot fetch de todas las citas de una mascota
-  Future<List<CitaVeterinaria>> getCitasVeterinarias(String familiaID, String mascotaID) async {
-    final snap = await _modVetDoc(familiaID, mascotaID).collection('Citas').get();
-    return snap.docs.map((doc) => CitaVeterinaria.fromMap(doc.data(), doc.id)).toList();
+  Future<List<CitaVeterinaria>> getCitasVeterinarias(
+    String familiaID,
+    String mascotaID,
+  ) async {
+    final snap = await _modVetDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Citas').get();
+    return snap.docs
+        .map((doc) => CitaVeterinaria.fromMap(doc.data(), doc.id))
+        .toList();
   }
 
   Stream<List<CitaVeterinaria>> streamCitasVeterinarias(
@@ -570,7 +605,11 @@ class FirestoreService {
     CitaVeterinaria cita,
   ) async {
     final citaDoc = _modVetDoc(familiaID, mascotaID).collection('Citas').doc();
-    final recDoc = _db.collection('Familias').doc(familiaID).collection('Recordatorios').doc();
+    final recDoc = _db
+        .collection('Familias')
+        .doc(familiaID)
+        .collection('Recordatorios')
+        .doc();
 
     cita.id = citaDoc.id;
     cita.recordatorioID = recDoc.id;
@@ -587,7 +626,7 @@ class FirestoreService {
 
     final batch = _db.batch();
     batch.set(citaDoc, cita.toMap());
-    batch.set(recDoc, recordatorio.toMap());
+    batch.set(recDoc, recordatorio.toJson());
     await batch.commit();
   }
 
@@ -596,10 +635,10 @@ class FirestoreService {
     String mascotaID,
     CitaVeterinaria cita,
   ) async {
-    await _modVetDoc(familiaID, mascotaID)
-        .collection('Citas')
-        .doc(cita.id)
-        .update(cita.toMap());
+    await _modVetDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Citas').doc(cita.id).update(cita.toMap());
   }
 
   Future<void> deleteCitaVeterinaria(
@@ -607,10 +646,10 @@ class FirestoreService {
     String mascotaID,
     String citaId,
   ) async {
-    await _modVetDoc(familiaID, mascotaID)
-        .collection('Citas')
-        .doc(citaId)
-        .delete();
+    await _modVetDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Citas').doc(citaId).delete();
   }
 
   // Implementación para eliminar cita y su recordatorio asociado
@@ -618,20 +657,23 @@ class FirestoreService {
     String familiaID,
     String mascotaID,
     String citaId,
-    String recordatorioId, // Se asume que se pasa el ID del recordatorio asociado
+    String
+    recordatorioId, // Se asume que se pasa el ID del recordatorio asociado
   ) async {
     WriteBatch batch = _db.batch();
 
     // 1. Eliminar la cita de la subcolección Citas
     batch.delete(
-      _modVetDoc(familiaID, mascotaID)
-          .collection('Citas')
-          .doc(citaId),
+      _modVetDoc(familiaID, mascotaID).collection('Citas').doc(citaId),
     );
 
     // 2. Eliminar el recordatorio de la colección global de Recordatorios
     batch.delete(
-      _db.collection('Familias').doc(familiaID).collection('Recordatorios').doc(recordatorioId),
+      _db
+          .collection('Familias')
+          .doc(familiaID)
+          .collection('Recordatorios')
+          .doc(recordatorioId),
     );
 
     await batch.commit();
@@ -678,9 +720,10 @@ class FirestoreService {
     String mascotaID,
     EventoSalud evento,
   ) async {
-    final doc = _modVetDoc(familiaID, mascotaID)
-        .collection('EventosSalud')
-        .doc();
+    final doc = _modVetDoc(
+      familiaID,
+      mascotaID,
+    ).collection('EventosSalud').doc();
     evento.id = doc.id;
     await doc.set(evento.toMap());
   }
@@ -691,22 +734,25 @@ class FirestoreService {
     String mascotaID,
     String eventoId,
   ) async {
-    await _modVetDoc(familiaID, mascotaID)
-        .collection('EventosSalud')
-        .doc(eventoId)
-        .delete();
+    await _modVetDoc(
+      familiaID,
+      mascotaID,
+    ).collection('EventosSalud').doc(eventoId).delete();
   }
 
   // --- RECORDATORIOS (nivel Familia) ---
 
-  Future<void> addRecordatorio(String familiaID, Recordatorio recordatorio) async {
+  Future<void> addRecordatorio(
+    String familiaID,
+    Recordatorio recordatorio,
+  ) async {
     final doc = _db
         .collection('Familias')
         .doc(familiaID)
         .collection('Recordatorios')
         .doc();
     recordatorio.recordatorioID = doc.id;
-    await doc.set(recordatorio.toMap());
+    await doc.set(recordatorio.toJson());
   }
 
   Stream<List<Recordatorio>> streamRecordatoriosFamilia(String familiaID) {
@@ -716,11 +762,18 @@ class FirestoreService {
         .collection('Recordatorios')
         .snapshots()
         .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => Recordatorio.fromMap(doc.data(), doc.id))
-              .where((r) => !r.completado && r.fechaHora.isAfter(DateTime.now().subtract(const Duration(days: 1))))
-  .toList()
-            ..sort((a, b) => a.fechaHora.compareTo(b.fechaHora)),
+          (snapshot) =>
+              snapshot.docs
+                  .map((doc) => Recordatorio.fromJson(doc.data(), doc.id))
+                  .where(
+                    (r) =>
+                        !r.completado &&
+                        r.fechaHora.isAfter(
+                          DateTime.now().subtract(const Duration(days: 1)),
+                        ),
+                  )
+                  .toList()
+                ..sort((a, b) => a.fechaHora.compareTo(b.fechaHora)),
         );
   }
 
@@ -737,7 +790,10 @@ class FirestoreService {
         .update({'completado': completado});
   }
 
-  Future<void> deleteRecordatorio(String familiaID, String recordatorioID) async {
+  Future<void> deleteRecordatorio(
+    String familiaID,
+    String recordatorioID,
+  ) async {
     await _db
         .collection('Familias')
         .doc(familiaID)

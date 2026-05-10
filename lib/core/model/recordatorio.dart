@@ -19,23 +19,25 @@ class Recordatorio {
     this.moduloID,
   });
 
-  Map<String, dynamic> toMap() => {
-        'recordatorioID': recordatorioID,
-        'titulo': titulo,
-        'descripcion': descripcion,
-        'fechaHora': fechaHora.toIso8601String(),
-        'completado': completado,
-        'familiaID': familiaID,
-        'mascotaID': mascotaID,
-        'moduloID': moduloID,
-      };
+  Map<String, dynamic> toJson() => {
+    'recordatorioID': recordatorioID,
+    'titulo': titulo,
+    'descripcion': descripcion,
+    'fechaHora': fechaHora.toIso8601String(),
+    'completado': completado,
+    'familiaID': familiaID,
+    'mascotaID': mascotaID,
+    'moduloID': moduloID,
+  };
 
-  factory Recordatorio.fromMap(Map<String, dynamic> map, String id) {
+  factory Recordatorio.fromJson(Map<String, dynamic> map, String id) {
     return Recordatorio(
       recordatorioID: id,
       titulo: map['titulo'] ?? '',
       descripcion: map['descripcion'],
-      fechaHora: DateTime.parse(map['fechaHora'] ?? DateTime.now().toIso8601String()),
+      fechaHora: DateTime.parse(
+        map['fechaHora'] ?? DateTime.now().toIso8601String(),
+      ),
       completado: map['completado'] ?? false,
       familiaID: map['familiaID'] ?? '',
       mascotaID: map['mascotaID'],
