@@ -52,7 +52,10 @@ void main() {
       final map = _cita().toMap()..remove('fecha');
       final before = DateTime.now();
       final cita = CitaVeterinaria.fromMap(map, 'x');
-      expect(cita.fecha.isAfter(before.subtract(const Duration(seconds: 1))), isTrue);
+      expect(
+        cita.fecha.isAfter(before.subtract(const Duration(seconds: 1))),
+        isTrue,
+      );
     });
 
     test('toMap serializa notifFechaHora como ISO8601', () {
@@ -62,7 +65,11 @@ void main() {
 
     test('cita completada se serializa y recupera', () {
       final original = CitaVeterinaria(
-        id: 'x', fecha: fecha, motivo: 'test', completada: true, notificacionActiva: false,
+        id: 'x',
+        fecha: fecha,
+        motivo: 'test',
+        completada: true,
+        notificacionActiva: false,
       );
       final rt = CitaVeterinaria.fromMap(original.toMap(), 'x');
       expect(rt.completada, isTrue);
@@ -76,8 +83,16 @@ void main() {
       final config = ModuloVetConfig(
         alergias: ['Polen', 'Penicilina'],
         veterinarios: [
-          {'nombre': 'Dr. García', 'telefono': '600111222', 'numColegiado': 'COL-001'},
-          {'nombre': 'Clínica Pawner', 'telefono': '911000000', 'numColegiado': ''},
+          {
+            'nombre': 'Dr. García',
+            'telefono': '600111222',
+            'numColegiado': 'COL-001',
+          },
+          {
+            'nombre': 'Clínica Pawner',
+            'telefono': '911000000',
+            'numColegiado': '',
+          },
         ],
         seguroMedico: 'AXA Plus',
         telUrgencias: '112',
@@ -120,18 +135,21 @@ void main() {
       expect(ModuloVetConfig.fromMap(config.toMap()).veterinarios, isEmpty);
     });
 
-    test('fromMap con valores de tipo mixto en veterinarios no lanza error', () {
-      final map = <String, dynamic>{
-        'alergias': <dynamic>[],
-        'veterinarios': [
-          {'nombre': 42, 'telefono': null, 'numColegiado': true},
-        ],
-      };
-      expect(() => ModuloVetConfig.fromMap(map), returnsNormally);
-      final config = ModuloVetConfig.fromMap(map);
-      expect(config.veterinarios[0]['nombre'], '42');
-      expect(config.veterinarios[0]['telefono'], '');
-    });
+    test(
+      'fromMap con valores de tipo mixto en veterinarios no lanza error',
+      () {
+        final map = <String, dynamic>{
+          'alergias': <dynamic>[],
+          'veterinarios': [
+            {'nombre': 42, 'telefono': null, 'numColegiado': true},
+          ],
+        };
+        expect(() => ModuloVetConfig.fromMap(map), returnsNormally);
+        final config = ModuloVetConfig.fromMap(map);
+        expect(config.veterinarios[0]['nombre'], '42');
+        expect(config.veterinarios[0]['telefono'], '');
+      },
+    );
   });
 
   // ------------------------------------------------------------------ Recordatorio
@@ -150,7 +168,7 @@ void main() {
         moduloID: 'mod_vet',
       );
 
-      final rt = Recordatorio.fromMap(original.toMap(), 'rec-001');
+      final rt = Recordatorio.fromJson(original.toJson(), 'rec-001');
 
       expect(rt.recordatorioID, 'rec-001');
       expect(rt.titulo, 'Cita vacuna');
@@ -168,7 +186,7 @@ void main() {
         'completado': false,
         'familiaID': 'fam-1',
       };
-      final r = Recordatorio.fromMap(map, 'rec-2');
+      final r = Recordatorio.fromJson(map, 'rec-2');
       expect(r.descripcion, isNull);
       expect(r.mascotaID, isNull);
       expect(r.moduloID, isNull);
@@ -176,10 +194,13 @@ void main() {
 
     test('recordatorio completado se serializa y recupera', () {
       final r = Recordatorio(
-        recordatorioID: 'x', titulo: 't', fechaHora: fecha,
-        completado: true, familiaID: 'f',
+        recordatorioID: 'x',
+        titulo: 't',
+        fechaHora: fecha,
+        completado: true,
+        familiaID: 'f',
       );
-      expect(Recordatorio.fromMap(r.toMap(), 'x').completado, isTrue);
+      expect(Recordatorio.fromJson(r.toJson(), 'x').completado, isTrue);
     });
   });
 
