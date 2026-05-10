@@ -3,9 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Familia {
   String familiaID;
   String nombre;
-  String adminID;
   String codigoInvitacion;
   DateTime creadoEn;
+  String adminID;
 
   Familia({
     required this.familiaID,

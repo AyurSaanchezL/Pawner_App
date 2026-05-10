@@ -119,7 +119,7 @@ class FirestoreService {
     return null; // Éxito
   }
 
-  // SEARCH
+  // READ
   Future<Usuario> getCurrentUser(User u) async {
     final doc = await _db.collection('Usuarios').doc(u.uid).get();
     return Usuario.fromJson(doc.data()!, doc.id);

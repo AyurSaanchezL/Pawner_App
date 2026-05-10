@@ -29,7 +29,7 @@ class Constants {
       'Galgo',
       'Mastín',
       'Bodeguero',
-      'Mestizo / Otro'
+      'Mestizo / Otro',
     ],
     'Gato': [
       'Persa',
@@ -43,7 +43,7 @@ class Constants {
       'Bosque de Noruega',
       'Azul Ruso',
       'Angora',
-      'Mestizo / Otro'
+      'Mestizo / Otro',
     ],
     'Hámster': [
       'Sirio (Dorado)',
@@ -51,7 +51,7 @@ class Constants {
       'Roborowski',
       'Chino',
       'Campbell',
-      'Otro'
+      'Otro',
     ],
     'Pájaro': [
       'Canario',
@@ -62,7 +62,7 @@ class Constants {
       'Ninfa (Carolina)',
       'Diamante de Gould',
       'Jilguero',
-      'Otro'
+      'Otro',
     ],
     'Pez': [
       'Betta',
@@ -75,7 +75,7 @@ class Constants {
       'Corydora',
       'Pez Disco',
       'Oscar',
-      'Otro'
+      'Otro',
     ],
     'Conejo': [
       'Belier (Orejas caídas)',
@@ -84,7 +84,7 @@ class Constants {
       'Cabeza de León',
       'Gigante de Flandes',
       'Holandés',
-      'Otro'
+      'Otro',
     ],
     'Cobaya': [
       'Americana (Pelo corto)',
@@ -92,7 +92,7 @@ class Constants {
       'Peruana (Pelo largo)',
       'Rex',
       'Skinny (Sin pelo)',
-      'Otro'
+      'Otro',
     ],
     'Hurón': [
       'Sable',
@@ -100,7 +100,7 @@ class Constants {
       'Champagne',
       'Silver / Plateado',
       'Panda',
-      'Otro'
+      'Otro',
     ],
     'Reptil': [
       'Tortuga de agua',
@@ -110,7 +110,7 @@ class Constants {
       'Iguana Verde',
       'Serpiente del Maíz',
       'Pitón Real',
-      'Otro'
+      'Otro',
     ],
     'Anfibio': [
       'Axolote',
@@ -118,22 +118,63 @@ class Constants {
       'Rana de ojos rojos',
       'Tritón',
       'Sapo de vientre de fuego',
-      'Otro'
+      'Otro',
     ],
-    'Erizo': [
-      'Erizo de tierra africano',
-      'Erizo orejudo',
-      'Otro'
-    ],
+    'Erizo': ['Erizo de tierra africano', 'Erizo orejudo', 'Otro'],
     'Chinchilla': [
       'Standard (Gris)',
       'Blanca',
       'Beige',
       'Terciopelo negro',
-      'Otro'
+      'Otro',
     ],
     'Otro': ['Otro'],
   };
 }
 
 enum UserRol { admin, miembro }
+
+enum FotosPerfil {
+  zorro('assets/images/fotos_perfil/zorro.png'),
+  lemur('assets/images/fotos_perfil/lemur.png'),
+  jabali('assets/images/fotos_perfil/jabali.png'),
+  tucan('assets/images/fotos_perfil/tucan.png'),
+  tejon('assets/images/fotos_perfil/tejon.png'),
+  flamenco('assets/images/fotos_perfil/flamenco.png'),
+  elefante('assets/images/fotos_perfil/elefante.png'),
+  panda('assets/images/fotos_perfil/panda.png'),
+  oso('assets/images/fotos_perfil/oso.png'),
+  ciervo('assets/images/fotos_perfil/ciervo.png'),
+  nutria('assets/images/fotos_perfil/nutria.png'),
+  cheeta('assets/images/fotos_perfil/cheeta.png'),
+  mapache('assets/images/fotos_perfil/mapache.png'),
+  buho('assets/images/fotos_perfil/buho.png'),
+  lobo('assets/images/fotos_perfil/lobo.png'),
+  jirafa('assets/images/fotos_perfil/jirafa.png'),
+  koala('assets/images/fotos_perfil/koala.png');
+
+  final String path;
+  const FotosPerfil(this.path);
+
+  static String fromPath(String path) {
+    String name = path.split('/').last;
+
+    return FotosPerfil.values
+        .firstWhere(
+          (e) => e.name == name.substring(0, name.indexOf('.')),
+          orElse: () => FotosPerfil.zorro, // Valor por defecto
+        )
+        .name;
+  }
+
+  static String getProfileImage(String image) {
+    String path = "";
+    for (FotosPerfil f in FotosPerfil.values) {
+      if (image == f.name) {
+        path = f.path;
+      }
+    }
+
+    return path;
+  }
+}
