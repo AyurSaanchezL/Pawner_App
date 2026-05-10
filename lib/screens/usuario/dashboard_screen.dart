@@ -83,13 +83,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  // Placeholder data for reminders
-  final List<Map<String, dynamic>> _remindersPlaceholder = [
-    {'date': '21/10/25', 'name': 'Veterinario Perro 1'},
-    {'date': '23/10/25', 'name': 'Vacuna Gato 1'},
-    {'date': '25/10/25', 'name': 'Peluquería Perro 2'},
-    {'date': '28/10/25', 'name': 'Cita Anual Perro 1'},
-  ];
+
 
   @override
   Widget build(BuildContext context) {
