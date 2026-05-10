@@ -6,6 +6,7 @@ import 'package:pawner_app/core/model/familia.dart';
 import 'package:pawner_app/core/model/mascota.dart';
 import 'package:pawner_app/core/model/usuario.dart';
 import 'package:pawner_app/services/firestore_service.dart';
+import 'package:pawner_app/services/notification_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pawner_app/screens/familia/elegir_familia.dart';
@@ -421,7 +422,11 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context); // Cerrar diálogo
-              await _fs.eliminarMascota(mascota.familiaID, mascota.mascotaID);
+              final notifIds = await _fs.eliminarMascota(mascota.familiaID, mascota.mascotaID);
+              final ns = NotificationService();
+              for (final id in notifIds) {
+                ns.cancel(id);
+              }
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -529,12 +534,19 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
                           : null,
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      mascota.nombre,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: AppColors.secondary,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text(
+                        mascota.nombre,
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                        softWrap: false,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: AppColors.secondary,
+                        ),
                       ),
                     ),
                     /* Text(

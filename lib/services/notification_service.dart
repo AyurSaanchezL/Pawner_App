@@ -41,23 +41,6 @@ class NotificationService {
         print("Notificación presionada: ${details.payload}");
       },
     );
-
-    final androidPlugin = _notificationsPlugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
-
-    if (androidPlugin != null) {
-      final hasNotificationPermission = await androidPlugin
-          .requestNotificationsPermission();
-      final bool? canScheduleExact = await androidPlugin
-          .canScheduleExactNotifications();
-
-      print("--- DIAGNÓSTICO DE INICIO ---");
-      print("1. Permiso de Notificación: $hasNotificationPermission");
-      print("2. ¿Puede programar alarmas exactas?: $canScheduleExact");
-      print("3. Reloj de la App: ${tz.TZDateTime.now(tz.local)}");
-    }
   }
 
   NotificationDetails _getNotificationDetails() {
@@ -113,33 +96,24 @@ class NotificationService {
     );
   }
 
-  Future<void> scheduleOneTimeNotification({required int minutes}) async {
-    // COMPARACIÓN DE RELOJES
-    final systemNow = DateTime.now();
-    final tzNow = tz.TZDateTime.now(tz.local);
-
-    print("--- COMPROBACIÓN DE RELOJES ---");
-    print("Reloj Sistema (Android): $systemNow");
-    print("Reloj TZ (Librería): $tzNow");
-    print(
-      "Diferencia detectada: ${systemNow.difference(tzNow).inSeconds} segundos",
-    );
-
-    final scheduledTime = tzNow.add(Duration(minutes: minutes));
-
-    print("Programando para: $scheduledTime");
+  Future<void> scheduleOneTimeNotification({
+    required int id,
+    required DateTime scheduledFor,
+    required String title,
+    required String body,
+  }) async {
+    final scheduledTime = tz.TZDateTime.from(scheduledFor, tz.local);
 
     await _notificationsPlugin.zonedSchedule(
-      DateTime.now().millisecond, // ID único basado en milisegundos
-      '¡Alarma de Mascota!',
-      'Han pasado $minutes minutos.',
+      id,
+      title,
+      body,
       scheduledTime,
       _getNotificationDetails(),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
     );
-    print("Registrada con éxito.");
   }
   // --- MÉTODOS DE DIAGNÓSTICO ---
 
@@ -161,6 +135,27 @@ class NotificationService {
     for (var r in pendingRequests) {
       print("- [ID ${r.id}] ${r.title}");
     }
+  }
+
+  Future<List<PendingNotificationRequest>> getPendingNotifications() =>
+      _notificationsPlugin.pendingNotificationRequests();
+
+  Future<bool> hasExactAlarmPermission() async {
+    final androidPlugin = _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (androidPlugin == null) return true; // iOS no lo necesita
+    return (await androidPlugin.canScheduleExactNotifications()) ?? false;
+  }
+
+  Future<bool> hasNotificationPermission() async {
+    final androidPlugin = _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (androidPlugin == null) return true;
+    return (await androidPlugin.requestNotificationsPermission()) ?? false;
   }
 
   /*  Future<void> testInexactScheduling() async {
@@ -204,6 +199,11 @@ class NotificationService {
       ); // le sumamos un día para decir "si la alarma ya sonó, que suene a la misma hora mañana"
     }
     return scheduledDate;
+  }
+
+  Future<void> cancel(int id) async {
+    await _notificationsPlugin.cancel(id);
+    print("Notificación cancelada: ID $id");
   }
 
   Future<void> cancelAll() async {

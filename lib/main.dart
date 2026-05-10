@@ -3,8 +3,10 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:pawner_app/screens/first_screen.dart';
 import 'package:pawner_app/services/crash_manager.dart';
+import 'package:pawner_app/services/notification_service.dart';
 import 'package:pawner_app/firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -12,6 +14,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await dotenv.load(fileName: ".env");
+  await initializeDateFormatting('es', null);
+  await NotificationService().init();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FirebaseCrashlytics crashlytics = FirebaseCrashlytics.instance;
   FlutterError.onError = crashlytics.recordFlutterFatalError;
