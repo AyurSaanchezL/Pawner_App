@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:pawner_app/core/model/usuario.dart';
@@ -69,24 +68,18 @@ class AuthService {
   }) async {
     if (currentUser == null) return;
 
-    try {
-      // 1. Reautenticar al usuario
-      AuthCredential credential = EmailAuthProvider.credential(
-        email: currentUser!.email!,
-        password: userPassword,
-      );
+    AuthCredential credential = EmailAuthProvider.credential(
+      email: currentUser!.email!,
+      password: userPassword,
+    );
 
-      await currentUser!.reauthenticateWithCredential(credential);
+    await currentUser!.reauthenticateWithCredential(credential);
 
-      log("Enviando correo a $newEmail");
-      // 2. Iniciar el cambio de email
-      // Este método envía un correo de verificación a la NUEVA dirección.
-      // El email no se cambiará en la base de datos hasta que el usuario haga clic en el enlace.
-      await currentUser!.verifyBeforeUpdateEmail(newEmail);
-    } on FirebaseAuthException catch (e) {
-      log(e.code);
-      log(e.message!);
-    }
+    log("Enviando correo a $newEmail");
+    // 2. Iniciar el cambio de email
+    // Este método envía un correo de verificación a la NUEVA dirección.
+    // El email no se cambiará en la base de datos hasta que el usuario haga clic en el enlace.
+    await currentUser!.verifyBeforeUpdateEmail(newEmail);
   }
 
   Future<void> changePasswordFromCurrentPassword({

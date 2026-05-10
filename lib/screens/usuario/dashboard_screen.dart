@@ -1,6 +1,8 @@
 import 'dart:math';
+import 'dart:developer' as dev;
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/core/constants.dart'; // Assuming Constants might have styles or enums
@@ -10,13 +12,14 @@ import 'package:pawner_app/screens/mascota/detalle_mascota.dart';
 import 'package:pawner_app/screens/usuario/perfil_screen.dart';
 import 'package:pawner_app/screens/mascota/nueva_mascota_screen.dart'; // Keep this for the FAB logic if needed
 import 'package:pawner_app/screens/usuario/ajustes_screen.dart'; // For settings navigation
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pawner_app/services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/model/usuario.dart' show Usuario;
 import 'package:pawner_app/screens/first_screen.dart';
 
 import 'package:pawner_app/core/components/invitation_share_sheet.dart';
+import 'package:pawner_app/core/components/notification_permission_dialog.dart';
+import 'package:pawner_app/services/notification_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -56,10 +59,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return _randomPetAssets[index];
   }
 
+  bool _permissionChecked = false;
+
   @override
   void initState() {
     super.initState();
     _loadInitialData();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkNotificationPermission());
+  }
+
+  Future<void> _checkNotificationPermission() async {
+    if (_permissionChecked) return;
+    _permissionChecked = true;
+
+    await NotificationPermissionDialog.checkAndShow(
+      context,
+      feature: 'los recordatorios y citas de tus mascotas',
+    );
   }
 
   Future<void> _loadInitialData() async {
@@ -67,7 +83,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (u != null) {
       final fs = FirestoreService();
       final usuario = await fs.getCurrentUser(u);
+      dev.log(
+        "Usuario: ${usuario.email} y Usuario de FirebaseAuth: ${u.email!}",
+      );
       if (usuario.email != u.email!) {
+        dev.log("Los correos no coinciden. Cambiando...");
         usuario.email = u.email!;
         await FirestoreService().updateUsuario(usuario);
       }
@@ -77,19 +97,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
           if (usuario.familiaID != null && usuario.familiaID!.isNotEmpty) {
             _mascotasStream = fs.streamMascotas(usuario.familiaID!);
             _recordatoriosStream = fs.streamRecordatoriosFamilia(usuario.familiaID!);
+            _sincronizarNotificaciones(usuario.familiaID!); // fire-and-forget
           }
         });
       }
     }
   }
 
+  Future<void> _sincronizarNotificaciones(String familiaID) async {
+    final fs = FirestoreService();
+    final ns = NotificationService();
+    final now = DateTime.now();
 
+    try {
+      final mascotas = await fs.getMascotas(familiaID);
+
+      for (final mascota in mascotas) {
+        final citas = await fs.getCitasVeterinarias(mascota.familiaID, mascota.mascotaID);
+
+        for (final cita in citas) {
+          if (!cita.notificacionActiva) continue;
+          if (cita.idNotificacion == null) continue;
+
+          final notifTime = cita.notifFechaHora ?? cita.fecha;
+          if (!notifTime.isAfter(now)) continue;
+
+          await ns.scheduleOneTimeNotification(
+            id: cita.idNotificacion!,
+            scheduledFor: notifTime,
+            title: '🐾 Cita: ${mascota.nombre}',
+            body: cita.motivo,
+          ).catchError((_) {});
+        }
+      }
+    } catch (_) {
+      // sync nunca debe bloquear ni crashear el dashboard
+    }
+  }
+
+  // Placeholder data for reminders
+  final List<Map<String, dynamic>> _remindersPlaceholder = [
+    {'date': '21/10/25', 'name': 'Veterinario Perro 1'},
+    {'date': '23/10/25', 'name': 'Vacuna Gato 1'},
+    {'date': '25/10/25', 'name': 'Peluquería Perro 2'},
+    {'date': '28/10/25', 'name': 'Cita Anual Perro 1'},
+  ];
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    const double verySmallScreenWidth = 375.0; // Threshold for very small screens
+    const double smallScreenWidth = 450.0; // Threshold for small screens
+
+    final bool isVerySmallScreen = screenWidth < verySmallScreenWidth;
+    final bool isSmallScreen = screenWidth < smallScreenWidth;
     return Scaffold(
       backgroundColor: AppColors.primary,
-      appBar: _buildCustomAppBar(),
+      appBar: _buildCustomAppBar(isVerySmallScreen, isSmallScreen),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,18 +211,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 30),
 
                   // Recordatorios Section
-                  _buildSectionHeader(
-                    'Próximos recordatorios',
-                    AppColors.darkBlue,
-                    showListIcon: true,
-                  ),
+                  _buildSectionHeader('Próximos recordatorios', AppColors.darkBlue, showListIcon: true),
                   const SizedBox(height: 15),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _remindersPlaceholder.length,
-                    itemBuilder: (context, index) {
-                      return _buildReminderCard(_remindersPlaceholder[index]);
+                  StreamBuilder<List<Mascota>>(
+                    stream: _mascotasStream,
+                    builder: (context, mascotasSnap) {
+                      final mascotas = mascotasSnap.data ?? [];
+                      return StreamBuilder<List<Recordatorio>>(
+                        stream: _recordatoriosStream,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
+
+                          final recordatorios = snapshot.data ?? [];
+
+                          if (recordatorios.isEmpty) {
+                            return Center(
+                              child: Column(
+                                children: [
+                                  Icon(LucideIcons.bellOff, size: 40, color: Colors.grey.shade300),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    "No tienes recordatorios pendientes",
+                                    style: TextStyle(fontFamily: 'Nunito', color: Colors.grey, fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          return ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: recordatorios.length,
+                            itemBuilder: (context, index) {
+                              return _buildReminderCardReal(recordatorios[index], mascotas);
+                            },
+                          );
+                        },
+                      );
                     },
                   ),
                 ],
@@ -174,7 +266,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           bottom: 20.0,
         ), // Adjust padding as needed
         child: FutureBuilder<String>(
-          future: obtenerNombreFamilia(), // Call the async function here
+          future: FirestoreService().obtenerNombreFamilia(), // Call the async function here
           builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Text(
@@ -239,7 +331,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // --- App Bar ---
-  PreferredSizeWidget _buildCustomAppBar() {
+  PreferredSizeWidget _buildCustomAppBar(bool isVerySmallScreen, bool isSmallScreen) {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -252,13 +344,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           );
         },
       ),
-      title: _buildLogoTitle(),
-      titleSpacing: 0, // Adjust spacing if needed
+      title: _buildLogoTitle(isVerySmallScreen),
+      titleSpacing: 0,
       actions: [_buildAppBarActions()],
     );
   }
 
-  Widget _buildLogoTitle() {
+  Widget _buildLogoTitle(bool isVerySmallScreen) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,19 +358,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Text(
           'Pawner',
           style: TextStyle(
-            fontSize: 24,
+            fontSize: isVerySmallScreen ? 20 : 24,
             fontWeight: FontWeight.bold,
             color: AppColors.textColorPrimary,
           ),
         ),
-        Text(
-          'WE <3 MASCOTAS',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.normal,
-            color: AppColors.textColorSecondary,
+        if (!isVerySmallScreen)
+          Text(
+            'WE <3 MASCOTAS',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.normal,
+              color: AppColors.textColorSecondary,
+            ),
           ),
-        ),
       ],
     );
   }
@@ -462,7 +555,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              mascota.nombre,
+              (mascota.nombre.length > 15 ? mascota.nombre.substring(0, 12) + '...' : mascota.nombre),
               style: TextStyle(
                 fontFamily: 'Nunito',
                 fontSize: 14,
@@ -560,67 +653,151 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildReminderCardReal(Recordatorio r) {
-    final dateStr =
-        "${r.fechaHora.day.toString().padLeft(2, '0')}/${r.fechaHora.month.toString().padLeft(2, '0')}/${r.fechaHora.year.toString().substring(2)}";
-    final timeStr =
-        "${r.fechaHora.hour.toString().padLeft(2, '0')}:${r.fechaHora.minute.toString().padLeft(2, '0')}";
-    return Card(
-      color: r.completado ? Colors.grey.shade200 : AppColors.accent,
-      margin: const EdgeInsets.only(bottom: 15.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25.0)),
-      elevation: 4,
+  Widget _buildReminderCardReal(Recordatorio r, List<Mascota> mascotas) {
+    Mascota? mascota;
+    if (r.mascotaID != null) {
+      final matches = mascotas.where((m) => m.mascotaID == r.mascotaID);
+      if (matches.isNotEmpty) mascota = matches.first;
+    }
+
+    final day = r.fechaHora.day.toString();
+    final monthAbbr = DateFormat('MMM', 'es').format(r.fechaHora);
+    final timeStr = DateFormat('HH:mm').format(r.fechaHora);
+
+    IconData moduleIcon;
+    Color moduleColor;
+    switch (r.moduloID) {
+      case 'mod_vet':
+        moduleIcon = LucideIcons.stethoscope;
+        moduleColor = AppColors.secondary;
+        break;
+      case 'mod_comida':
+        moduleIcon = LucideIcons.utensils;
+        moduleColor = Colors.orange.shade700;
+        break;
+      default:
+        moduleIcon = LucideIcons.bell;
+        moduleColor = AppColors.complementary;
+    }
+
+    final desc = r.descripcion;
+    final hasDesc = desc != null && desc.isNotEmpty;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(18),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              flex: 2,
+            // Date pill
+            Container(
+              width: 50,
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+              decoration: BoxDecoration(
+                color: AppColors.lightSecondary.withAlpha(89),
+                borderRadius: BorderRadius.circular(14),
+              ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    dateStr,
+                    day,
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textColorPrimary,
+                      color: AppColors.secondary,
+                      height: 1.0,
                     ),
                   ),
                   Text(
-                    timeStr,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textColorSecondary,
+                    monthAbbr.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black45,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: 12),
+            Container(width: 1.5, height: 48, color: AppColors.lightSecondary.withAlpha(128)),
+            const SizedBox(width: 12),
+            // Content
             Expanded(
-              flex: 3,
-              child: Text(
-                r.titulo,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textColorPrimary,
-                  decoration: r.completado ? TextDecoration.lineThrough : null,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Icon(moduleIcon, size: 13, color: moduleColor),
+                      const SizedBox(width: 5),
+                      Expanded(
+                        child: Text(
+                          r.titulo,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  if (mascota != null)
+                    Text(
+                      mascota.nombre,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.complementary,
+                      ),
+                    ),
+                  if (hasDesc) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      desc,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 12,
+                        color: Colors.black45,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 3),
+                  Text(
+                    timeStr,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 11,
+                      color: Colors.black38,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            Checkbox(
-              value: r.completado,
-              onChanged: (v) {
-                if (v != null && _usuarioActual?.familiaID != null) {
-                  FirestoreService().toggleRecordatorioCompletado(
-                    _usuarioActual!.familiaID!,
-                    r.recordatorioID,
-                    v,
-                  );
-                }
-              },
-              activeColor: AppColors.secondary,
             ),
           ],
         ),
@@ -629,16 +806,3 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-// Revisar este codigo
-// Fue hecho de manera rapida para el ejemplo, solo obtiene el nombre de la familia del usuario actual
-Future<String> obtenerNombreFamilia() async {
-  final u = FirebaseAuth.instance.currentUser;
-  final FirestoreService fs = FirestoreService();
-  Usuario usuario = await fs.getCurrentUser(u!);
-  var famDoc = await FirebaseFirestore.instance
-      .collection('Familias')
-      .doc(usuario.familiaID)
-      .get();
-
-  return famDoc.data()?['nombre'] ?? "Sin nombre";
-}

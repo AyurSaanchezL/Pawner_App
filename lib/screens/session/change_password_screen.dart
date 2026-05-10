@@ -4,49 +4,35 @@ import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/screens/first_screen.dart';
 import 'package:pawner_app/services/auth_service.dart';
 
-class ChangeEmailScreen extends StatefulWidget {
-  final String currentEmail;
-
-  const ChangeEmailScreen({super.key, required this.currentEmail});
+class ChangePasswordScreen extends StatefulWidget {
+  const ChangePasswordScreen({super.key});
 
   @override
-  State<ChangeEmailScreen> createState() => _ChangeEmailScreenState();
+  State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
 }
 
-class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
+class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _newEmailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _currentPasswordController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
-  bool _obscurePassword = true;
+  bool _obscureCurrentPassword = true;
+  bool _obscureNewPassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
-    _newEmailController.dispose();
-    _passwordController.dispose();
+    _currentPasswordController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  String? _validateEmail(String? value) {
+  String? _validateCurrentPassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'El correo electrónico es obligatorio';
-    }
-    // Validar formato de email
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(value)) {
-      return 'Introduce un correo electrónico válido';
-    }
-    // Verificar que no sea el mismo email
-    if (value.toLowerCase() == widget.currentEmail.toLowerCase()) {
-      return 'El nuevo correo debe ser diferente al actual';
-    }
-    return null;
-  }
-
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'La contraseña es obligatoria';
+      return 'La contraseña actual es obligatoria';
     }
     if (value.length < 6) {
       return 'La contraseña debe tener al menos 6 caracteres';
@@ -54,7 +40,27 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
     return null;
   }
 
-  Future<void> _handleChangeEmail() async {
+  String? _validateNewPassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'La nueva contraseña es obligatoria';
+    }
+    if (value.length < 6) {
+      return 'La contraseña debe tener al menos 6 caracteres';
+    }
+    return null;
+  }
+
+  String? _validateConfirmPassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Confirma la nueva contraseña';
+    }
+    if (value != _newPasswordController.text) {
+      return 'Las contraseñas no coinciden';
+    }
+    return null;
+  }
+
+  Future<void> _handleChangePassword() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -64,15 +70,14 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
     });
 
     try {
-      // Llamar al método de AuthService
-      await AuthService().changeEmail(
-        newEmail: _newEmailController.text.trim(),
-        userPassword: _passwordController.text,
+      await AuthService().changePasswordFromCurrentPassword(
+        email: FirebaseAuth.instance.currentUser!.email!,
+        currentPassword: _currentPasswordController.text,
+        newPassword: _newPasswordController.text,
       );
 
       if (mounted) {
-        // Mostrar diálogo explicativo y navegar a login
-        _showLogoutDialog();
+        _showSuccessDialog();
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) {
@@ -80,7 +85,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        _showErrorDialog('Error al cambiar el correo: ${e.toString()}');
+        _showErrorDialog('Error al cambiar la contraseña: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -93,22 +98,20 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
 
   String _getErrorMessage(String code) {
     switch (code) {
-      case 'invalid-email':
-        return 'El correo electrónico no es válido';
-      case 'email-already-in-use':
-        return 'Este correo electrónico ya está en uso';
       case 'wrong-password':
-        return 'La contraseña es incorrecta';
-      case 'user-mismatch':
-        return 'Las credenciales no coinciden';
+        return 'La contraseña actual es incorrecta';
+      case 'weak-password':
+        return 'La nueva contraseña es demasiado débil';
+      case 'requires-recent-login':
+        return 'Debes haber iniciado sesión recientemente para cambiar la contraseña';
       case 'invalid-credential':
-        return 'Las credenciales no son válidas';
+        return 'La contraseña actual es incorrecta';
       default:
-        return 'Error al cambiar el correo. Inténtalo de nuevo.';
+        return 'Error al cambiar la contraseña. Inténtalo de nuevo.';
     }
   }
 
-  void _showLogoutDialog() {
+  void _showSuccessDialog() {
     final double screenWidth = MediaQuery.of(context).size.width;
 
     showDialog(
@@ -117,11 +120,11 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.email_outlined, color: AppColors.accent),
+            Icon(Icons.check_circle_outline, color: Colors.green),
             SizedBox(width: 8),
             Flexible(
               child: Text(
-                'Correo Enviado y Sesión Cerrada',
+                'Contraseña Cambiada y Sesión Cerrada',
                 style: TextStyle(fontSize: 20),
               ),
             ),
@@ -134,47 +137,22 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Se ha enviado un correo de verificación a:',
+                'Tu contraseña ha sido cambiada exitosamente.',
                 style: TextStyle(fontSize: 14),
               ),
               SizedBox(height: 8),
-              Container(
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.lightSecondary,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  _newEmailController.text.trim(),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-              SizedBox(height: 16),
               Text(
-                '⚠️ IMPORTANTE:',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.orange[700],
-                ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                '1. Haz clic en el enlace de confirmación en tu NUEVO correo.\n'
-                '2. Una vez verificado, inicia sesión de nuevo con tu nuevo email.\n'
-                '3. Tu perfil se actualizará automáticamente.',
-                style: TextStyle(fontSize: 13),
+                'Por seguridad, debes iniciar sesión de nuevo.',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
               ),
             ],
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(context).pop(); // Cerrar diálogo
-              AuthService().signOut();
+              await FirebaseAuth.instance.signOut();
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => FirstScreen()),
@@ -197,7 +175,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
           children: [
             Icon(Icons.error_outline, color: Colors.red),
             SizedBox(width: 8),
-            Text('Error'),
+            Flexible(child: Text('Error')),
           ],
         ),
         content: SizedBox(width: screenWidth * 0.7, child: Text(message)),
@@ -220,7 +198,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
         centerTitle: true,
         toolbarHeight: 40,
         title: Text(
-          "CAMBIAR CORREO",
+          "CAMBIAR CONTRASEÑA",
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
       ),
@@ -241,7 +219,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.email_outlined,
+                    Icons.lock_outline,
                     size: 48,
                     color: AppColors.primary,
                   ),
@@ -252,7 +230,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
               // =============== TÍTULO ==============
               Center(
                 child: Text(
-                  'Cambiar Correo Electrónico',
+                  'Cambiar Contraseña',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -263,46 +241,15 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
               SizedBox(height: 8),
               Center(
                 child: Text(
-                  'Ingresa tu nuevo correo y confirma tu identidad',
+                  'Ingresa tu contraseña actual y la nueva',
                   style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
               ),
               SizedBox(height: 32),
 
-              // =============== EMAIL ACTUAL ==============
+              // =============== CONTRASEÑA ACTUAL ==============
               Text(
-                'Correo actual:',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[700],
-                ),
-              ),
-              SizedBox(height: 4),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.person_outline, color: Colors.grey[600]),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        widget.currentEmail,
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 20),
-
-              // =============== NUEVO EMAIL ==============
-              Text(
-                'Nuevo correo electrónico: *',
+                'Contraseña actual: *',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -311,13 +258,25 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
               ),
               SizedBox(height: 8),
               TextFormField(
-                controller: _newEmailController,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.next,
-                validator: _validateEmail,
+                controller: _currentPasswordController,
+                obscureText: _obscureCurrentPassword,
+                validator: _validateCurrentPassword,
+                style: TextStyle(fontSize: 15),
                 decoration: InputDecoration(
-                  hintText: 'ejemplo@correo.com',
-                  prefixIcon: Icon(Icons.email_outlined),
+                  hintText: 'Tu contraseña actual',
+                  prefixIcon: Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureCurrentPassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureCurrentPassword = !_obscureCurrentPassword;
+                      });
+                    },
+                  ),
                   fillColor: AppColors.primary,
                   filled: true,
                   border: OutlineInputBorder(
@@ -328,37 +287,73 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
               ),
               SizedBox(height: 20),
 
-              // =============== CONTRASEÑA (REAUTENTICACIÓN) ==============
+              // =============== NUEVA CONTRASEÑA ==============
               Text(
-                'Contraseña actual: *',
+                'Nueva contraseña: *',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: Colors.grey[700],
                 ),
               ),
-              SizedBox(height: 4),
-              Text(
-                'Necesaria para confirmar tu identidad',
-                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-              ),
               SizedBox(height: 8),
               TextFormField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                validator: _validatePassword,
+                controller: _newPasswordController,
+                obscureText: _obscureNewPassword,
+                validator: _validateNewPassword,
+                style: TextStyle(fontSize: 15),
                 decoration: InputDecoration(
-                  hintText: 'Tu contraseña actual',
+                  hintText: 'Nueva contraseña',
                   prefixIcon: Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword
+                      _obscureNewPassword
                           ? Icons.visibility_off
                           : Icons.visibility,
                     ),
                     onPressed: () {
                       setState(() {
-                        _obscurePassword = !_obscurePassword;
+                        _obscureNewPassword = !_obscureNewPassword;
+                      });
+                    },
+                  ),
+                  fillColor: AppColors.primary,
+                  filled: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+
+              // =============== CONFIRMAR CONTRASEÑA ==============
+              Text(
+                'Confirmar nueva contraseña: *',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[700],
+                ),
+              ),
+              SizedBox(height: 8),
+              TextFormField(
+                controller: _confirmPasswordController,
+                obscureText: _obscureConfirmPassword,
+                validator: _validateConfirmPassword,
+                style: TextStyle(fontSize: 15),
+                decoration: InputDecoration(
+                  hintText: 'Confirma la nueva contraseña',
+                  prefixIcon: Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureConfirmPassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureConfirmPassword = !_obscureConfirmPassword;
                       });
                     },
                   ),
@@ -377,7 +372,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _handleChangeEmail,
+                  onPressed: _isLoading ? null : _handleChangePassword,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.accent,
                     foregroundColor: Colors.white,
@@ -395,59 +390,12 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
                           ),
                         )
                       : Text(
-                          'ENVIAR CORREO DE VERIFICACIÓN',
-                          textAlign: TextAlign.center,
+                          'CAMBIAR CONTRASEÑA',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                ),
-              ),
-              SizedBox(height: 24),
-
-              // =============== INFORMACIÓN ==============
-              Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.amber[50],
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.amber[200]!),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: Colors.amber[800],
-                          size: 20,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Información',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.amber[800],
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      '• Se enviará un enlace de confirmación a tu NUEVO correo\n'
-                      '• Debes hacer clic en ese enlace para completar el cambio\n'
-                      '• Tu contraseña se requiere para verificar tu identidad\n'
-                      '• Cerraremos tu sesión después de cerrar esta pantalla',
-
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.amber[900],
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ],

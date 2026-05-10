@@ -1,6 +1,6 @@
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
-// Definimos la variable global aquí
+// Variable global
 late CrashManager firebaseController;
 
 class CrashManager {

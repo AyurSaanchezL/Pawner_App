@@ -1,19 +1,25 @@
 import 'dart:io';
+import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class CloudinaryService {
   final String cloudName = dotenv.get('CLOUDINARY_CLOUD_NAME', fallback: '');
-  final String uploadPreset = dotenv.get('CLOUDINARY_UPLOAD_PRESET', fallback: 'ml_default');
+  final String uploadPreset = dotenv.get(
+    'CLOUDINARY_UPLOAD_PRESET',
+    fallback: 'ml_default',
+  );
 
   Future<String?> uploadImage(File imageFile) async {
     if (cloudName.isEmpty) {
-      print("Error: CLOUDINARY_CLOUD_NAME no configurado en .env");
+      log("Error: CLOUDINARY_CLOUD_NAME no configurado en .env");
       return null;
     }
 
-    final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
+    final url = Uri.parse(
+      'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
+    );
 
     final request = http.MultipartRequest('POST', url)
       ..fields['upload_preset'] = uploadPreset
@@ -28,11 +34,11 @@ class CloudinaryService {
         final jsonMap = jsonDecode(responseString);
         return jsonMap['secure_url'];
       } else {
-        print("Error al subir a Cloudinary: ${response.statusCode}");
+        log("Error al subir a Cloudinary: ${response.statusCode}");
         return null;
       }
     } catch (e) {
-      print("Excepción al subir imagen: $e");
+      log("Excepción al subir imagen: $e");
       return null;
     }
   }

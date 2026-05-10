@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/app_colors.dart';
-import 'package:pawner_app/core/model/horario_model.dart';
+import 'package:pawner_app/core/model/modulo_comida/horario_model.dart';
 import 'package:pawner_app/core/model/mascota.dart';
 import 'package:pawner_app/services/firestore_service.dart';
 import 'package:pawner_app/services/notification_service.dart';
