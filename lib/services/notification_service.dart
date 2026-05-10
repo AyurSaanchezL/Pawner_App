@@ -8,28 +8,32 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
     tz.initializeTimeZones();
-    
+
     // DETECTAR ZONA HORARIA LOCAL USANDO time_zone_plus con fallback a UTC
-    final String timeZoneName = await TimeZonePlus.getCurrentTimeZone() ?? 'UTC';
+    final String timeZoneName =
+        await TimeZonePlus.getCurrentTimeZone() ?? 'UTC';
     tz.setLocalLocation(tz.getLocation(timeZoneName));
-    
+
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
+    const DarwinInitializationSettings initializationSettingsIOS =
+        DarwinInitializationSettings(
+          requestAlertPermission: true,
+          requestBadgePermission: true,
+          requestSoundPermission: true,
+        );
 
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
-    );
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
+          android: initializationSettingsAndroid,
+          iOS: initializationSettingsIOS,
+        );
 
     await _notificationsPlugin.initialize(
       initializationSettings,
@@ -37,7 +41,6 @@ class NotificationService {
         print("Notificación presionada: ${details.payload}");
       },
     );
-
   }
 
   NotificationDetails _getNotificationDetails() {
@@ -73,7 +76,10 @@ class NotificationService {
     );
   }
 
-  Future<void> scheduleFixedTimeNotification({required int hour, required int minute}) async {
+  Future<void> scheduleFixedTimeNotification({
+    required int hour,
+    required int minute,
+  }) async {
     final scheduledDate = _nextInstanceOfTime(hour, minute);
     print("Programando notificación DIARIA para: $scheduledDate");
 
@@ -84,7 +90,8 @@ class NotificationService {
       scheduledDate,
       _getNotificationDetails(),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
@@ -104,7 +111,8 @@ class NotificationService {
       scheduledTime,
       _getNotificationDetails(),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
   // --- MÉTODOS DE DIAGNÓSTICO ---
@@ -120,7 +128,8 @@ class NotificationService {
   }
 
   Future<void> checkPendingNotifications() async {
-    final List<PendingNotificationRequest> pendingRequests = await _notificationsPlugin.pendingNotificationRequests();
+    final List<PendingNotificationRequest> pendingRequests =
+        await _notificationsPlugin.pendingNotificationRequests();
     print("--- PENDIENTES EN EL SISTEMA ---");
     print("Total: ${pendingRequests.length}");
     for (var r in pendingRequests) {
@@ -133,19 +142,23 @@ class NotificationService {
 
   Future<bool> hasExactAlarmPermission() async {
     final androidPlugin = _notificationsPlugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (androidPlugin == null) return true; // iOS no lo necesita
     return (await androidPlugin.canScheduleExactNotifications()) ?? false;
   }
 
   Future<bool> hasNotificationPermission() async {
     final androidPlugin = _notificationsPlugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (androidPlugin == null) return true;
     return (await androidPlugin.requestNotificationsPermission()) ?? false;
   }
 
-/*  Future<void> testInexactScheduling() async {
+  /*  Future<void> testInexactScheduling() async {
     final scheduledTime = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 15));
     await _notificationsPlugin.zonedSchedule(
       88,
@@ -160,17 +173,30 @@ class NotificationService {
   }*/
 
   Future<void> openAlarmSettings() async {
-    final androidPlugin = _notificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    if (androidPlugin != null) await androidPlugin.requestExactAlarmsPermission();
+    final androidPlugin = _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (androidPlugin != null)
+      await androidPlugin.requestExactAlarmsPermission();
   }
 
   // --- LÓGICA DE TIEMPO ---
 
   tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
     final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);  // hora y minuto que yo estoy definiendo
+    tz.TZDateTime scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    ); // hora y minuto que yo estoy definiendo
     if (scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1)); // le sumamos un día para decir "si la alarma ya sonó, que suene a la misma hora mañana"
+      scheduledDate = scheduledDate.add(
+        const Duration(days: 1),
+      ); // le sumamos un día para decir "si la alarma ya sonó, que suene a la misma hora mañana"
     }
     return scheduledDate;
   }

@@ -1,10 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/core/components/bottom_logo.dart';
-import 'package:pawner_app/core/help_methods.dart';
+import 'package:pawner_app/core/constants.dart';
 import 'package:pawner_app/core/model/usuario.dart';
 import 'package:pawner_app/screens/session/change_email_screen.dart';
 import 'package:pawner_app/screens/session/change_password_screen.dart';
@@ -271,7 +270,7 @@ class _PerfilUsuarioScreenState extends State<PerfilUsuarioScreen> {
           CircleAvatar(
             backgroundColor: AppColors.lightSecondary,
             radius: 65,
-            child: Image.asset(HelpMethods().getProfileImage(usuario.fotoUrl)),
+            child: Image.asset(FotosPerfil.getProfileImage(usuario.fotoUrl)),
           ),
           Positioned(
             top: -8,

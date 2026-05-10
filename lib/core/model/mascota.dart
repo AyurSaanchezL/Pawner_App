@@ -1,15 +1,10 @@
 class Mascota {
-  String mascotaID;
-  String nombre;
-  String especie;
-  String raza;
-  String chip;
-  double peso;
-  DateTime fechaNacimiento;
+  String mascotaID, nombre, especie, raza, chip;
+  String observaciones, fotoUrl;
   String genero; // 'Macho' o 'Hembra'
   bool esterilizado;
-  String observaciones;
-  String fotoUrl;
+  double peso;
+  DateTime fechaNacimiento;
   String familiaID;
 
   Mascota({
@@ -28,19 +23,19 @@ class Mascota {
   });
 
   Map<String, dynamic> toJson() => {
-        'mascotaID': mascotaID,
-        'nombre': nombre,
-        'especie': especie,
-        'raza': raza,
-        'chip': chip,
-        'peso': peso,
-        'fechaNacimiento': fechaNacimiento.toIso8601String(),
-        'genero': genero,
-        'esterilizado': esterilizado,
-        'observaciones': observaciones,
-        'fotoUrl': fotoUrl,
-        'familiaID': familiaID,
-      };
+    'mascotaID': mascotaID,
+    'nombre': nombre,
+    'especie': especie,
+    'raza': raza,
+    'chip': chip,
+    'peso': peso,
+    'fechaNacimiento': fechaNacimiento.toIso8601String(),
+    'genero': genero,
+    'esterilizado': esterilizado,
+    'observaciones': observaciones,
+    'fotoUrl': fotoUrl,
+    'familiaID': familiaID,
+  };
 
   factory Mascota.fromJson(Map<String, dynamic> json, String id) {
     return Mascota(
