@@ -7,8 +7,11 @@ import 'package:pawner_app/core/components/chat_bubble_clipper.dart';
 import 'package:pawner_app/core/model/mascota.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/screens/mascota/editar_mascota.dart';
+import 'package:pawner_app/screens/modulos/comida/comida_screen.dart';
+import 'package:pawner_app/screens/modulos/veterinario/veterinario_screen.dart';
 import 'package:pawner_app/services/cloudinary_service.dart';
 import 'package:pawner_app/services/firestore_service.dart';
+import 'package:pawner_app/services/notification_service.dart';
 
 class PetProfileScreen extends StatefulWidget {
   final Mascota mascota;
@@ -210,7 +213,12 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                             icon: LucideIcons.utensils,
                             isRight: false,
                             onTap: () {
-                              // TODO: Navegar a pantalla de comida
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ComidaScreen(mascota: mascota),
+                                ),
+                              );
                             },
                           ),
                           const SizedBox(height: 20),
@@ -220,7 +228,12 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                             icon: LucideIcons.stethoscope,
                             isRight: true,
                             onTap: () {
-                              // TODO: Navegar a pantalla de veterinario
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => VeterinarioScreen(mascota: mascota),
+                                ),
+                              );
                             },
                           ),
                           const SizedBox(height: 20),
@@ -231,7 +244,8 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                                 : "Toca para ver notas",
                             icon: LucideIcons.stickyNote,
                             onTap: () => _showObservationsModal(context),
-                          ),
+  ),
+                          const SizedBox(height: 20), // Added spacing before footer
                         ],
                       ),
                     ),
@@ -274,10 +288,14 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context); // Cerrar diálogo
-              await FirestoreService().eliminarMascota(
+              final notifIds = await FirestoreService().eliminarMascota(
                 mascota.familiaID,
                 mascota.mascotaID,
               );
+              final ns = NotificationService();
+              for (final id in notifIds) {
+                ns.cancel(id);
+              }
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
