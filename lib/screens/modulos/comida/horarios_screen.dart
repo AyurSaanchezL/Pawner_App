@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/app_colors.dart';
@@ -20,99 +18,53 @@ class HorariosScreen extends StatefulWidget {
 class _HorariosScreenState extends State<HorariosScreen> {
   final FirestoreService _fs = FirestoreService();
   final NotificationService _notifications = NotificationService();
-  int _modoSeleccionado = 0; // 0=Fijo, 1=Intervalos, 2=Repeticiones
 
-  // Modo Fijo
-  TimeOfDay? _horaDesayuno;
-  TimeOfDay? _horaAlmuerzo;
-  TimeOfDay? _horaCena;
+  TimeOfDay _horaDesayuno = const TimeOfDay(hour: 8, minute: 0);
+  TimeOfDay _horaAlmuerzo = const TimeOfDay(hour: 14, minute: 0);
+  TimeOfDay _horaCena = const TimeOfDay(hour: 20, minute: 0);
 
-  // Modo Intervalos
-  int _intervaloHoras = 4;
+  String _formatTime(TimeOfDay t) =>
+      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
-  // Modo Repeticiones
-  int _numComidas = 3;
-  TimeOfDay _horaInicio = const TimeOfDay(hour: 8, minute: 0);
-  TimeOfDay _horaFin = const TimeOfDay(hour: 20, minute: 0);
-
-  @override
-  void initState() {
-    super.initState();
-    _horaDesayuno = const TimeOfDay(hour: 8, minute: 0);
-    _horaAlmuerzo = const TimeOfDay(hour: 14, minute: 0);
-    _horaCena = const TimeOfDay(hour: 20, minute: 0);
-  }
-
-  int _generarIdNotificacion() {
-    return DateTime.now().millisecondsSinceEpoch % 100000;
-  }
-
-  Future<void> _crearHorarioFijo() async {
-    final horarios = [
-      if (_horaDesayuno != null) _buildHorario('Desayuno', _horaDesayuno!),
-      if (_horaAlmuerzo != null) _buildHorario('Almuerzo', _horaAlmuerzo!),
-      if (_horaCena != null) _buildHorario('Cena', _horaCena!),
-    ];
-    await _guardarHorarios(horarios);
-  }
-
-  Future<void> _crearHorarioIntervalos() async {
-    final horarios = <HorarioComida>[];
-    final ahora = DateTime.now();
-    for (int i = 0; i < 24; i += _intervaloHoras) {
-      final hora = TimeOfDay(hour: (ahora.hour + i) % 24, minute: 0);
-      final label = 'Cada ${_intervaloHoras}h';
-      horarios.add(_buildHorario(label, hora));
-    }
-    await _guardarHorarios(horarios);
-  }
-
-  Future<void> _crearHorarioRepeticiones() async {
-    final startMin = _horaInicio.hour * 60 + _horaInicio.minute;
-    final endMin = _horaFin.hour * 60 + _horaFin.minute;
-    final totalMin = endMin - startMin;
-    final step = totalMin ~/ (_numComidas - 1);
-
-    final horarios = <HorarioComida>[];
-    for (int i = 0; i < _numComidas; i++) {
-      final min = startMin + (step * i);
-      final hora = TimeOfDay(hour: min ~/ 60, minute: min % 60);
-      horarios.add(_buildHorario('Comida ${i + 1}', hora));
-    }
-    await _guardarHorarios(horarios);
-  }
-
-  HorarioComida _buildHorario(String label, TimeOfDay hora) {
-    final idNotif = _generarIdNotificacion();
-    final horaStr = '${hora.hour.toString().padLeft(2, '0')}:${hora.minute.toString().padLeft(2, '0')}';
+  HorarioComida _buildHorario(TimeOfDay hora) {
+    final horaStr = _formatTime(hora);
+    final idNotif = DateTime.now().millisecondsSinceEpoch % 100000;
     return HorarioComida(
-      id: '${label}_${horaStr}_${DateTime.now().millisecondsSinceEpoch}',
+      id: '${horaStr}_${DateTime.now().millisecondsSinceEpoch}',
       hora: horaStr,
       idNotificacion: idNotif,
       activo: true,
     );
   }
 
-  Future<void> _guardarHorarios(List<HorarioComida> horarios) async {
+  Future<void> _guardarHorarios() async {
+    final horarios = [
+      _buildHorario(_horaDesayuno),
+      _buildHorario(_horaAlmuerzo),
+      _buildHorario(_horaCena),
+    ];
     for (final h in horarios) {
-      await _fs.saveHorario(
-        widget.mascota.familiaID,
-        widget.mascota.mascotaID,
-        h,
-      );
+      await _fs.saveHorario(widget.mascota.familiaID, widget.mascota.mascotaID, h);
       final parts = h.hora.split(':');
-      final hour = int.parse(parts[0]);
-      final minute = int.parse(parts[1]);
-      await _notifications.scheduleFixedTimeNotification(
-        hour: hour,
-        minute: minute,
-      );
+      await _notifications
+          .scheduleFixedTimeNotification(
+            id: h.idNotificacion,
+            hour: int.parse(parts[0]),
+            minute: int.parse(parts[1]),
+          )
+          .catchError((_) {});
     }
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Horarios guardados y notificaciones activadas"),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text(
+            'Horarios guardados',
+            style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: AppColors.secondary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
         ),
       );
     }
@@ -129,10 +81,13 @@ class _HorariosScreenState extends State<HorariosScreen> {
       await _notifications.cancel(h.idNotificacion);
     } else {
       final parts = h.hora.split(':');
-      await _notifications.scheduleFixedTimeNotification(
-        hour: int.parse(parts[0]),
-        minute: int.parse(parts[1]),
-      );
+      await _notifications
+          .scheduleFixedTimeNotification(
+            id: h.idNotificacion,
+            hour: int.parse(parts[0]),
+            minute: int.parse(parts[1]),
+          )
+          .catchError((_) {});
     }
   }
 
@@ -145,143 +100,64 @@ class _HorariosScreenState extends State<HorariosScreen> {
     );
   }
 
-  Future<TimeOfDay?> _pickTime(BuildContext context, TimeOfDay initial) async {
-    return showTimePicker(
+  Future<void> _pickTime(TimeOfDay current, void Function(TimeOfDay) onPicked) async {
+    final picked = await showTimePicker(
       context: context,
-      initialTime: initial,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(primary: AppColors.secondary),
-          ),
-          child: child!,
-        );
-      },
+      initialTime: current,
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(primary: AppColors.secondary),
+        ),
+        child: child!,
+      ),
     );
+    if (picked != null) onPicked(picked);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.homeScreenBackground,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(LucideIcons.chevronLeft, color: Colors.black, size: 30),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          "Horarios de Comida",
-          style: TextStyle(
-            fontFamily: 'Nunito',
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
-        centerTitle: true,
+      appBar: _buildAppBar(),
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(child: _buildFormCard()),
+          SliverToBoxAdapter(child: _buildSectionHeader()),
+          _buildHorariosList(),
+          const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
+        ],
       ),
-      body: Column(
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      leading: IconButton(
+        icon: const Icon(LucideIcons.chevronLeft, color: Colors.black, size: 30),
+        onPressed: () => Navigator.pop(context),
+      ),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Selector de modo
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: SegmentedButton<int>(
-              segments: const [
-                ButtonSegment(value: 0, label: Text("Fijo")),
-                ButtonSegment(value: 1, label: Text("Intervalos")),
-                ButtonSegment(value: 2, label: Text("Repeticiones")),
-              ],
-              selected: {_modoSeleccionado},
-              onSelectionChanged: (set) => setState(() => _modoSeleccionado = set.first),
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.lightSecondary.withAlpha(70),
+              shape: BoxShape.circle,
             ),
+            child: const Icon(LucideIcons.clock, size: 16, color: AppColors.secondary),
           ),
-          // Formulario según modo
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Column(
-                children: [
-                  if (_modoSeleccionado == 0) _buildModoFijo(),
-                  if (_modoSeleccionado == 1) _buildModoIntervalos(),
-                  if (_modoSeleccionado == 2) _buildModoRepeticiones(),
-                  const SizedBox(height: 30),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (_modoSeleccionado == 0) _crearHorarioFijo();
-                        if (_modoSeleccionado == 1) _crearHorarioIntervalos();
-                        if (_modoSeleccionado == 2) _crearHorarioRepeticiones();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.complementary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        elevation: 4,
-                      ),
-                      child: const Text(
-                        "Guardar Horarios",
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  const Divider(),
-                  const SizedBox(height: 10),
-                  const Text(
-                    "Horarios activos",
-                    style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.secondary,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  StreamBuilder<List<HorarioComida>>(
-                    stream: _fs.streamHorarios(
-                      widget.mascota.familiaID,
-                      widget.mascota.mascotaID,
-                    ),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 20),
-                          child: Text(
-                            "Error al cargar los horarios.",
-                            style: TextStyle(color: Colors.red, fontFamily: 'Nunito'),
-                          ),
-                        );
-                      }
-                      if (!snapshot.hasData) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      final horarios = snapshot.data!;
-                      if (horarios.isEmpty) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 20),
-                          child: Text(
-                            "No hay horarios configurados.",
-                            style: TextStyle(color: Colors.grey, fontFamily: 'Nunito'),
-                          ),
-                        );
-                      }
-                      return Column(
-                        children: horarios.map((h) => _buildHorarioTile(h)).toList(),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 40),
-                ],
-              ),
+          const SizedBox(width: 10),
+          Text(
+            'Horarios · ${widget.mascota.nombre}',
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+              fontSize: 18,
             ),
           ),
         ],
@@ -289,159 +165,265 @@ class _HorariosScreenState extends State<HorariosScreen> {
     );
   }
 
-  Widget _buildModoFijo() {
-    return Column(
-      children: [
-        _buildTimePickerTile("Desayuno", _horaDesayuno, (t) => setState(() => _horaDesayuno = t)),
-        _buildTimePickerTile("Almuerzo", _horaAlmuerzo, (t) => setState(() => _horaAlmuerzo = t)),
-        _buildTimePickerTile("Cena", _horaCena, (t) => setState(() => _horaCena = t)),
-      ],
-    );
-  }
-
-  Widget _buildModoIntervalos() {
-    return Column(
-      children: [
-        const Text(
-          "Repetir cada X horas",
-          style: TextStyle(fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(
-              icon: const Icon(LucideIcons.minus, color: AppColors.secondary),
-              onPressed: () => setState(() => _intervaloHoras = max(1, _intervaloHoras - 1)),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.lightSecondary.withAlpha(51),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Text(
-                "$_intervaloHoras h",
-                style: const TextStyle(fontFamily: 'Nunito', fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ),
-            IconButton(
-              icon: const Icon(LucideIcons.plus, color: AppColors.secondary),
-              onPressed: () => setState(() => _intervaloHoras = min(24, _intervaloHoras + 1)),
+  Widget _buildFormCard() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(13),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-      ],
-    );
-  }
-
-  Widget _buildModoRepeticiones() {
-    return Column(
-      children: [
-        const Text(
-          "Nº de comidas",
-          style: TextStyle(fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            IconButton(
-              icon: const Icon(LucideIcons.minus, color: AppColors.secondary),
-              onPressed: () => setState(() => _numComidas = max(2, _numComidas - 1)),
+            Row(
+              children: [
+                const Icon(LucideIcons.clock, size: 15, color: AppColors.secondary),
+                const SizedBox(width: 6),
+                const Text(
+                  'Nuevo horario',
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.secondary,
+                  ),
+                ),
+              ],
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.lightSecondary.withAlpha(51),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Text(
-                "$_numComidas",
-                style: const TextStyle(fontFamily: 'Nunito', fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+            const SizedBox(height: 16),
+            _buildTimeRow(
+              label: 'Desayuno',
+              value: _horaDesayuno,
+              onTap: () => _pickTime(_horaDesayuno, (t) => setState(() => _horaDesayuno = t)),
             ),
-            IconButton(
-              icon: const Icon(LucideIcons.plus, color: AppColors.secondary),
-              onPressed: () => setState(() => _numComidas = min(10, _numComidas + 1)),
+            const SizedBox(height: 10),
+            _buildTimeRow(
+              label: 'Almuerzo',
+              value: _horaAlmuerzo,
+              onTap: () => _pickTime(_horaAlmuerzo, (t) => setState(() => _horaAlmuerzo = t)),
+            ),
+            const SizedBox(height: 10),
+            _buildTimeRow(
+              label: 'Cena',
+              value: _horaCena,
+              onTap: () => _pickTime(_horaCena, (t) => setState(() => _horaCena = t)),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _guardarHorarios,
+                icon: const Icon(LucideIcons.bell, size: 16, color: Colors.white),
+                label: const Text(
+                  'Añadir horarios',
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 15,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.secondary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                ),
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 20),
-        _buildTimePickerTile("Hora inicio", _horaInicio, (t) => setState(() => _horaInicio = t!)),
-        _buildTimePickerTile("Hora fin", _horaFin, (t) => setState(() => _horaFin = t!)),
-      ],
+      ),
     );
   }
 
-  Widget _buildTimePickerTile(String label, TimeOfDay? value, Function(TimeOfDay?) onPicked) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.lightSecondary.withAlpha(51),
-            shape: BoxShape.circle,
+  Widget _buildTimeRow({
+    required String label,
+    required TimeOfDay value,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        decoration: BoxDecoration(
+          color: AppColors.homeScreenBackground,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            const Icon(LucideIcons.clock, size: 16, color: AppColors.secondary),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: const TextStyle(
+                fontFamily: 'Nunito',
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              _formatTime(value),
+              style: const TextStyle(
+                fontFamily: 'Nunito',
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: AppColors.secondary,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(LucideIcons.chevronRight, size: 16, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
+      child: Row(
+        children: [
+          const Icon(LucideIcons.list, size: 16, color: AppColors.secondary),
+          const SizedBox(width: 6),
+          const Text(
+            'Horarios activos',
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppColors.secondary,
+            ),
           ),
-          child: const Icon(LucideIcons.clock, color: AppColors.secondary, size: 20),
-        ),
-        title: Text(label, style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold)),
-        subtitle: Text(
-          value != null
-              ? "${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}"
-              : "Sin definir",
-          style: const TextStyle(fontFamily: 'Nunito', color: Colors.grey),
-        ),
-        trailing: const Icon(LucideIcons.chevronRight, color: Colors.grey),
-        onTap: () async {
-          final picked = await _pickTime(context, value ?? const TimeOfDay(hour: 12, minute: 0));
-          if (picked != null) onPicked(picked);
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHorariosList() {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      sliver: StreamBuilder<List<HorarioComida>>(
+        stream: _fs.streamHorarios(widget.mascota.familiaID, widget.mascota.mascotaID),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(32),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            );
+          }
+          if (snapshot.hasError) {
+            return SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Error al cargar los horarios',
+                  style: TextStyle(fontFamily: 'Nunito', color: Colors.grey.shade500),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
+          final horarios = snapshot.data ?? [];
+          if (horarios.isEmpty) {
+            return SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+                child: Column(
+                  children: [
+                    Icon(LucideIcons.bell, size: 40, color: Colors.grey.shade300),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Sin horarios configurados',
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        color: Colors.grey.shade400,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          return SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, i) => _buildHorarioTile(horarios[i]),
+              childCount: horarios.length,
+            ),
+          );
         },
       ),
     );
   }
 
   Widget _buildHorarioTile(HorarioComida h) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: h.activo ? Colors.green.withAlpha(26) : Colors.red.withAlpha(26),
-            shape: BoxShape.circle,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(10),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
-          child: Icon(
-            LucideIcons.bell,
-            color: h.activo ? Colors.green : Colors.red,
-            size: 20,
-          ),
-        ),
-        title: Text(
-          h.hora,
-          style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          h.activo ? "Activo" : "Desactivado",
-          style: TextStyle(
-            fontFamily: 'Nunito',
-            color: h.activo ? Colors.green : Colors.red,
-            fontSize: 12,
-          ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
           children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: h.activo
+                    ? AppColors.lightSecondary.withAlpha(60)
+                    : Colors.grey.withAlpha(30),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                LucideIcons.bell,
+                size: 20,
+                color: h.activo ? AppColors.secondary : Colors.grey.shade400,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Text(
+              h.hora,
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: h.activo ? Colors.black87 : Colors.grey.shade400,
+              ),
+            ),
+            const Spacer(),
             Switch(
               value: h.activo,
               onChanged: (v) => _toggleHorario(h, v),
-              activeColor: AppColors.secondary,
+              activeThumbColor: AppColors.secondary,
+              activeTrackColor: AppColors.lightSecondary,
             ),
             IconButton(
-              icon: const Icon(LucideIcons.trash2, color: Colors.red, size: 20),
+              icon: Icon(LucideIcons.trash2, size: 18, color: Colors.grey.shade400),
               onPressed: () => _eliminarHorario(h),
             ),
           ],

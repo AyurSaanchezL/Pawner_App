@@ -90,6 +90,7 @@ class ComidaService {
         final hour = int.parse(partes[0]);
         final minute = int.parse(partes[1]);
         await NotificationService().scheduleFixedTimeNotification(
+          id: horario.idNotificacion,
           hour: hour,
           minute: minute,
         );
@@ -99,7 +100,7 @@ class ComidaService {
 
   Future<void> toggleHorario(String familiaId, String mascotaId, HorarioComida horario) async {
     horario.activo = !horario.activo;
-    
+
     await _getModComidaRef(familiaId, mascotaId)
         .collection('Horarios')
         .doc(horario.id)
@@ -111,6 +112,7 @@ class ComidaService {
         final hour = int.parse(partes[0]);
         final minute = int.parse(partes[1]);
         await NotificationService().scheduleFixedTimeNotification(
+          id: horario.idNotificacion,
           hour: hour,
           minute: minute,
         );
