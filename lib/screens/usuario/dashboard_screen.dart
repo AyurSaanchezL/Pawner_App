@@ -129,6 +129,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
             body: cita.motivo,
           ).catchError((_) {});
         }
+
+        final horarios = await fs.getHorarios(mascota.familiaID, mascota.mascotaID);
+
+        for (final horario in horarios) {
+          if (!horario.activo) continue;
+
+          final parts = horario.hora.split(':');
+          if (parts.length != 2) continue;
+
+          await ns.scheduleFixedTimeNotification(
+            id: horario.idNotificacion,
+            hour: int.parse(parts[0]),
+            minute: int.parse(parts[1]),
+          ).catchError((_) {});
+        }
       }
     } catch (_) {
       // sync nunca debe bloquear ni crashear el dashboard

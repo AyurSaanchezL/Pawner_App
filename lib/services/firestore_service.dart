@@ -408,8 +408,7 @@ class FirestoreService {
   // Stream de platos
   Stream<List<Plato>> streamPlatos(String familiaID, String mascotaID) {
     return _db
-        .collection(_modComidaPath(familiaID, mascotaID))
-        .doc('data')
+        .doc(_modComidaPath(familiaID, mascotaID))
         .collection('Platos')
         .snapshots()
         .map(
@@ -422,8 +421,7 @@ class FirestoreService {
   // Añadir plato
   Future<void> addPlato(String familiaID, String mascotaID, Plato plato) async {
     final doc = _db
-        .collection(_modComidaPath(familiaID, mascotaID))
-        .doc('data')
+        .doc(_modComidaPath(familiaID, mascotaID))
         .collection('Platos')
         .doc();
     plato.id = doc.id;
@@ -437,11 +435,33 @@ class FirestoreService {
     String platoId,
   ) async {
     await _db
-        .collection(_modComidaPath(familiaID, mascotaID))
-        .doc('data')
+        .doc(_modComidaPath(familiaID, mascotaID))
         .collection('Platos')
         .doc(platoId)
         .delete();
+  }
+
+  // Actualizar plato
+  Future<void> updatePlato(String familiaID, String mascotaID, Plato plato) async {
+    await _db
+        .doc(_modComidaPath(familiaID, mascotaID))
+        .collection('Platos')
+        .doc(plato.id)
+        .update(plato.toMap());
+  }
+
+  // One-shot horarios (usado en sync de notificaciones del dashboard)
+  Future<List<HorarioComida>> getHorarios(
+    String familiaID,
+    String mascotaID,
+  ) async {
+    final snap = await _db
+        .doc(_modComidaPath(familiaID, mascotaID))
+        .collection('Horarios')
+        .get();
+    return snap.docs
+        .map((doc) => HorarioComida.fromMap(doc.data(), doc.id))
+        .toList();
   }
 
   // Stream de horarios
@@ -450,8 +470,7 @@ class FirestoreService {
     String mascotaID,
   ) {
     return _db
-        .collection(_modComidaPath(familiaID, mascotaID))
-        .doc('data')
+        .doc(_modComidaPath(familiaID, mascotaID))
         .collection('Horarios')
         .snapshots()
         .map(
@@ -469,8 +488,7 @@ class FirestoreService {
     bool activo,
   ) async {
     await _db
-        .collection(_modComidaPath(familiaID, mascotaID))
-        .doc('data')
+        .doc(_modComidaPath(familiaID, mascotaID))
         .collection('Horarios')
         .doc(horarioId)
         .update({'activo': activo});
@@ -483,8 +501,7 @@ class FirestoreService {
     HorarioComida horario,
   ) async {
     final doc = _db
-        .collection(_modComidaPath(familiaID, mascotaID))
-        .doc('data')
+        .doc(_modComidaPath(familiaID, mascotaID))
         .collection('Horarios')
         .doc(horario.id);
     await doc.set(horario.toMap());
@@ -497,8 +514,7 @@ class FirestoreService {
     String horarioId,
   ) async {
     await _db
-        .collection(_modComidaPath(familiaID, mascotaID))
-        .doc('data')
+        .doc(_modComidaPath(familiaID, mascotaID))
         .collection('Horarios')
         .doc(horarioId)
         .delete();
@@ -511,8 +527,7 @@ class FirestoreService {
     ModuloComidaConfig config,
   ) async {
     await _db
-        .collection(_modComidaPath(familiaID, mascotaID))
-        .doc('data')
+        .doc(_modComidaPath(familiaID, mascotaID))
         .set(config.toMap());
   }
 
@@ -522,8 +537,7 @@ class FirestoreService {
     String mascotaID,
   ) async {
     final doc = await _db
-        .collection(_modComidaPath(familiaID, mascotaID))
-        .doc('data')
+        .doc(_modComidaPath(familiaID, mascotaID))
         .get();
     if (!doc.exists) return null;
     return ModuloComidaConfig.fromMap(doc.data()!);
@@ -637,10 +651,27 @@ class FirestoreService {
     String mascotaID,
     CitaVeterinaria cita,
   ) async {
-    await _modVetDoc(
-      familiaID,
-      mascotaID,
-    ).collection('Citas').doc(cita.id).update(cita.toMap());
+    final citaDoc = _modVetDoc(familiaID, mascotaID).collection('Citas').doc(cita.id);
+
+    if (cita.recordatorioID == null) {
+      await citaDoc.update(cita.toMap());
+      return;
+    }
+
+    final recDoc = _db
+        .collection('Familias')
+        .doc(familiaID)
+        .collection('Recordatorios')
+        .doc(cita.recordatorioID);
+
+    final batch = _db.batch();
+    batch.update(citaDoc, cita.toMap());
+    batch.update(recDoc, {
+      'titulo': cita.motivo,
+      'descripcion': cita.veterinario,
+      'fechaHora': cita.fecha.toIso8601String(),
+    });
+    await batch.commit();
   }
 
   Future<void> deleteCitaVeterinaria(

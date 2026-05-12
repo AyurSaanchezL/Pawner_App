@@ -77,14 +77,14 @@ class NotificationService {
   }
 
   Future<void> scheduleFixedTimeNotification({
+    required int id,
     required int hour,
     required int minute,
   }) async {
     final scheduledDate = _nextInstanceOfTime(hour, minute);
-    print("Programando notificación DIARIA para: $scheduledDate");
 
     await _notificationsPlugin.zonedSchedule(
-      1,
+      id,
       '¡Atención!',
       'Es hora de alimentar a tu mascota',
       scheduledDate,
