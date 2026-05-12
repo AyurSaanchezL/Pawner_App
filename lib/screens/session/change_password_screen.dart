@@ -47,6 +47,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     if (value.length < 6) {
       return 'La contraseña debe tener al menos 6 caracteres';
     }
+    if (value == _currentPasswordController.text) {
+      return 'La nueva contraseña debe ser diferente a la actual';
+    }
     return null;
   }
 
