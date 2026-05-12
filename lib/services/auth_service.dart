@@ -49,15 +49,25 @@ class AuthService {
   }
 
   Future<void> deleteAccount({
-    required String email,
+    required Usuario usuario,
     required String password,
   }) async {
+    final email = currentUser?.email;
+    if (email == null) {
+      throw FirebaseAuthException(
+        code: 'user-not-logged-in',
+        message: 'No hay ningún usuario conectado.',
+      );
+    }
+
     AuthCredential credential = EmailAuthProvider.credential(
       email: email,
       password: password,
     );
 
     await currentUser!.reauthenticateWithCredential(credential);
+    await FirestoreService().abandonarFamilia(usuario);
+    await FirestoreService().deleteUsuario(usuario);
     await currentUser!.delete();
     await firebaseAuth.signOut();
   }

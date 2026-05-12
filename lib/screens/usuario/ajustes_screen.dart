@@ -5,11 +5,9 @@ import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/core/components/chat_bubble_clipper.dart';
 import 'package:pawner_app/core/model/usuario.dart';
 import 'package:pawner_app/screens/first_screen.dart';
-import 'package:pawner_app/screens/usuario/dashboard_screen.dart';
 import 'package:pawner_app/screens/usuario/perfil_screen.dart';
 import 'package:pawner_app/services/auth_service.dart';
 import 'package:pawner_app/screens/familia/detalle_familia_screen.dart';
-import 'package:pawner_app/core/app_colors.dart';
 
 class AjustesScreen extends StatelessWidget {
   const AjustesScreen({super.key});
@@ -24,6 +22,7 @@ class AjustesScreen extends StatelessWidget {
           Image.asset("assets/images/background_01.png", fit: BoxFit.cover),
 
           SafeArea(
+            bottom: false,
             child: Column(
               children: [
                 // Barra Superior
@@ -40,7 +39,7 @@ class AjustesScreen extends StatelessWidget {
                 ),
 
                 // Espaciado para bajar los elementos hacia el centro
-                const Spacer(flex: 2),
+                const Spacer(flex: 1),
 
                 Expanded(
                   flex: 8,

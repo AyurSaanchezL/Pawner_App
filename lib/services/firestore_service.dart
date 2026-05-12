@@ -357,9 +357,9 @@ class FirestoreService {
           'adminID': nuevoAdminDoc.id,
         });
       } else {
-        // ESCENARIO B: Es el único -> Borrado total (Familia + Mascotas)
+        // ESCENARIO B: Es el único -> Borrado total (Familia + Mascotas + Recordatorios)
 
-        // 1. Borrar subcolección de mascotas
+        // 1. Borrar cada mascota junto con sus subcolecciones y recordatorios vinculados.
         final mascotasQuery = await _db
             .collection('Familias')
             .doc(familiaID)
@@ -367,10 +367,21 @@ class FirestoreService {
             .get();
 
         for (var doc in mascotasQuery.docs) {
+          await eliminarMascota(familiaID, doc.id);
+        }
+
+        // 2. Borrar recordatorios familiares restantes
+        final recordatoriosQuery = await _db
+            .collection('Familias')
+            .doc(familiaID)
+            .collection('Recordatorios')
+            .get();
+
+        for (var doc in recordatoriosQuery.docs) {
           batch.delete(doc.reference);
         }
 
-        // 2. Borrar documento de la familia
+        // 3. Borrar documento de la familia
         batch.delete(_db.collection('Familias').doc(familiaID));
       }
     }
@@ -442,7 +453,11 @@ class FirestoreService {
   }
 
   // Actualizar plato
-  Future<void> updatePlato(String familiaID, String mascotaID, Plato plato) async {
+  Future<void> updatePlato(
+    String familiaID,
+    String mascotaID,
+    Plato plato,
+  ) async {
     await _db
         .doc(_modComidaPath(familiaID, mascotaID))
         .collection('Platos')
@@ -526,9 +541,7 @@ class FirestoreService {
     String mascotaID,
     ModuloComidaConfig config,
   ) async {
-    await _db
-        .doc(_modComidaPath(familiaID, mascotaID))
-        .set(config.toMap());
+    await _db.doc(_modComidaPath(familiaID, mascotaID)).set(config.toMap());
   }
 
   // Obtener configuración del módulo comida
@@ -536,9 +549,7 @@ class FirestoreService {
     String familiaID,
     String mascotaID,
   ) async {
-    final doc = await _db
-        .doc(_modComidaPath(familiaID, mascotaID))
-        .get();
+    final doc = await _db.doc(_modComidaPath(familiaID, mascotaID)).get();
     if (!doc.exists) return null;
     return ModuloComidaConfig.fromMap(doc.data()!);
   }
@@ -651,7 +662,10 @@ class FirestoreService {
     String mascotaID,
     CitaVeterinaria cita,
   ) async {
-    final citaDoc = _modVetDoc(familiaID, mascotaID).collection('Citas').doc(cita.id);
+    final citaDoc = _modVetDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Citas').doc(cita.id);
 
     if (cita.recordatorioID == null) {
       await citaDoc.update(cita.toMap());
