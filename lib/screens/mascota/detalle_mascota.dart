@@ -8,6 +8,7 @@ import 'package:pawner_app/core/model/mascota.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/screens/mascota/editar_mascota.dart';
 import 'package:pawner_app/screens/modulos/comida/comida_screen.dart';
+import 'package:pawner_app/screens/modulos/paseo/paseo_screen.dart';
 import 'package:pawner_app/screens/modulos/veterinario/veterinario_screen.dart';
 import 'package:pawner_app/services/cloudinary_service.dart';
 import 'package:pawner_app/services/firestore_service.dart';
@@ -218,7 +219,8 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => DashboardComidaScreen(mascota: mascota),
+                                  builder: (_) =>
+                                      DashboardComidaScreen(mascota: mascota),
                                 ),
                               );
                             },
@@ -233,7 +235,23 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => VeterinarioScreen(mascota: mascota),
+                                  builder: (_) =>
+                                      VeterinarioScreen(mascota: mascota),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          _buildNavigationBubbleChip(
+                            title: "Paseos",
+                            subtitle: "Bienestar y salud",
+                            icon: IconData(0xe4a1, fontFamily: 'MaterialIcons'),
+                            isRight: false,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PaseoScreen(m: mascota),
                                 ),
                               );
                             },
@@ -246,8 +264,10 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                                 : "Toca para ver notas",
                             icon: LucideIcons.stickyNote,
                             onTap: () => _showObservationsModal(context),
-  ),
-                          const SizedBox(height: 20), // Added spacing before footer
+                          ),
+                          const SizedBox(
+                            height: 20,
+                          ), // Added spacing before footer
                         ],
                       ),
                     ),
