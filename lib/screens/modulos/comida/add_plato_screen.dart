@@ -24,6 +24,7 @@ class _AddPlatoScreenState extends State<AddPlatoScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nombreController = TextEditingController();
   final _ingredienteController = TextEditingController();
+  final _preparacionController = TextEditingController();
   
   String _tipoSeleccionado = 'Seca';
   final List<String> _tiposComida = ['Seca', 'Húmeda', 'Natural', 'Suplemento'];
@@ -71,11 +72,13 @@ class _AddPlatoScreenState extends State<AddPlatoScreen> {
       }
     }
 
+    final preparacion = _preparacionController.text.trim();
     final plato = Plato(
       id: '',
       nombre: _nombreController.text.trim(),
       tipo: _tipoSeleccionado,
       ingredientes: _ingredientes,
+      preparacion: preparacion.isNotEmpty ? preparacion : null,
       fotoUrl: imageUrl.isNotEmpty ? imageUrl : null,
       esSugerencia: false,
     );
@@ -193,6 +196,18 @@ class _AddPlatoScreenState extends State<AddPlatoScreen> {
                           onDeleted: () => _removeIngrediente(entry.key),
                         );
                       }).toList(),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _preparacionController,
+                      maxLines: 4,
+                      minLines: 2,
+                      decoration: const InputDecoration(
+                        labelText: 'Preparación / especificaciones',
+                        hintText: 'Modo de preparación, temperatura, cantidad...',
+                        border: OutlineInputBorder(),
+                        alignLabelWithHint: true,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton(

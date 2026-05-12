@@ -3,6 +3,8 @@ class Plato {
   String nombre;
   String tipo; // Seca, Húmeda, Natural, Suplemento
   List<String> ingredientes;
+  String? preparacion;
+
   String? fotoUrl;
   bool esSugerencia;
 
@@ -11,6 +13,7 @@ class Plato {
     required this.nombre,
     required this.tipo,
     required this.ingredientes,
+    this.preparacion,
     this.fotoUrl,
     this.esSugerencia = false,
   });
@@ -20,6 +23,7 @@ class Plato {
         'nombre': nombre,
         'tipo': tipo,
         'ingredientes': ingredientes,
+        'preparacion': preparacion,
         'fotoUrl': fotoUrl,
         'esSugerencia': esSugerencia,
       };
@@ -30,6 +34,7 @@ class Plato {
       nombre: map['nombre'] ?? '',
       tipo: map['tipo'] ?? 'Seca',
       ingredientes: List<String>.from(map['ingredientes'] ?? []),
+      preparacion: map['preparacion'],
       fotoUrl: map['fotoUrl'],
       esSugerencia: map['esSugerencia'] ?? false,
     );

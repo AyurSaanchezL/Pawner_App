@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/core/model/mascota.dart';
-import 'package:pawner_app/core/model/modulo_comida/modulo_comida_config.dart';
 import 'package:pawner_app/core/model/modulo_comida/plato_model.dart';
 import 'package:pawner_app/screens/modulos/comida/add_plato_screen.dart';
-import 'package:pawner_app/screens/modulos/comida/config_horarios_screen.dart';
+import 'package:pawner_app/screens/modulos/comida/detalle_plato_sheet.dart';
+import 'package:pawner_app/screens/modulos/comida/horarios_screen.dart';
 import 'package:pawner_app/services/comida_service.dart';
 
 class DashboardComidaScreen extends StatefulWidget {
@@ -21,234 +22,402 @@ class DashboardComidaScreen extends StatefulWidget {
 
 class _DashboardComidaScreenState extends State<DashboardComidaScreen> {
   final ComidaService _comidaService = ComidaService();
-  ModuloComidaConfig? _config;
-  
-  // Categorias base disponibles
-  final List<String> _todasLasCategorias = ['Seca', 'Húmeda', 'Natural', 'Suplemento'];
+  final Set<String> _filtros = {};
+
+  static const List<String> _categorias = ['Seca', 'Húmeda', 'Natural', 'Suplemento'];
+
+  Color _colorParaTipo(String tipo) {
+    switch (tipo) {
+      case 'Seca':       return Colors.amber.shade600;
+      case 'Húmeda':     return Colors.blue.shade400;
+      case 'Natural':    return Colors.green.shade500;
+      case 'Suplemento': return AppColors.secondary;
+      default:           return Colors.grey;
+    }
+  }
+
+  IconData _iconParaTipo(String tipo) {
+    switch (tipo) {
+      case 'Seca':       return LucideIcons.box;
+      case 'Húmeda':     return LucideIcons.droplets;
+      case 'Natural':    return LucideIcons.leaf;
+      case 'Suplemento': return LucideIcons.pill;
+      default:           return LucideIcons.utensils;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text('Comida - ${widget.mascota.nombre}'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.dark,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.alarm),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ConfigHorariosScreen(
-                    familiaId: widget.mascota.familiaID,
-                    mascotaId: widget.mascota.mascotaID,
-                  ),
-                ),
-              );
-            },
-          )
+      backgroundColor: AppColors.homeScreenBackground,
+      appBar: _buildAppBar(),
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(child: _buildFiltrosRow()),
+          SliverToBoxAdapter(child: _buildSeccionHeader()),
+          _buildCatalogo(),
+          const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
         ],
-      ),
-      body: StreamBuilder<ModuloComidaConfig>(
-        stream: _comidaService.getConfig(widget.mascota.familiaID, widget.mascota.mascotaID),
-        builder: (context, configSnapshot) {
-          if (configSnapshot.hasData) {
-            _config = configSnapshot.data;
-          }
-
-          return CustomScrollView(
-            slivers: [
-              // 1. Cabecera (Chips informativos)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildInfoChip(Icons.pets, widget.mascota.especie),
-                      _buildInfoChip(Icons.category, widget.mascota.raza),
-                      _buildInfoChip(Icons.monitor_weight, '${widget.mascota.peso} kg'),
-                    ],
-                  ),
-                ),
-              ),
-
-              // 2. Barra de Categorías (FilterChips)
-              SliverToBoxAdapter(
-                child: _config == null
-                    ? const Center(child: CircularProgressIndicator())
-                    : Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: _todasLasCategorias.map((cat) {
-                              final isSelected = _config!.categoriasActivas.contains(cat);
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 8.0),
-                                child: FilterChip(
-                                  label: Text(cat),
-                                  selected: isSelected,
-                                  selectedColor: AppColors.secondary.withOpacity(0.3),
-                                  onSelected: (bool selected) {
-                                    setState(() {
-                                      if (selected) {
-                                        _config!.categoriasActivas.add(cat);
-                                      } else {
-                                        _config!.categoriasActivas.remove(cat);
-                                      }
-                                      _comidaService.saveConfig(
-                                        widget.mascota.familiaID,
-                                        widget.mascota.mascotaID,
-                                        _config!,
-                                      );
-                                    });
-                                  },
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ),
-              ),
-
-              const SliverPadding(padding: EdgeInsets.only(top: 20)),
-
-              // 3. Catálogo de Platos
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Catálogo de Platos',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.add_circle, color: AppColors.secondary, size: 30),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AddPlatoScreen(
-                                familiaId: widget.mascota.familiaID,
-                                mascotaId: widget.mascota.mascotaID,
-                              ),
-                            ),
-                          );
-                        },
-                      )
-                    ],
-                  ),
-                ),
-              ),
-
-              StreamBuilder<List<Plato>>(
-                stream: _comidaService.getPlatos(widget.mascota.familiaID, widget.mascota.mascotaID),
-                builder: (context, platosSnapshot) {
-                  if (platosSnapshot.connectionState == ConnectionState.waiting) {
-                    return const SliverToBoxAdapter(child: Center(child: CircularProgressIndicator()));
-                  }
-
-                  final platos = platosSnapshot.data ?? [];
-                  
-                  // Filtrar según categorias activas
-                  final platosFiltrados = platos.where((p) {
-                    return _config?.categoriasActivas.contains(p.tipo) ?? true;
-                  }).toList();
-
-                  if (platosFiltrados.isEmpty) {
-                    return const SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.all(32.0),
-                        child: Center(child: Text("No hay platos disponibles para estas categorías.")),
-                      ),
-                    );
-                  }
-
-                  return SliverPadding(
-                    padding: const EdgeInsets.all(16.0),
-                    sliver: SliverGrid(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.8,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          return _buildPlatoCard(platosFiltrados[index]);
-                        },
-                        childCount: platosFiltrados.length,
-                      ),
-                    ),
-                  );
-                },
-              ),
-              const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
-            ],
-          );
-        },
       ),
     );
   }
 
-  Widget _buildInfoChip(IconData icon, String label) {
-    return Chip(
-      avatar: Icon(icon, color: AppColors.primary, size: 20),
-      label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-      backgroundColor: AppColors.secondary.withOpacity(0.2),
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      leading: IconButton(
+        icon: const Icon(LucideIcons.chevronLeft, color: Colors.black, size: 30),
+        onPressed: () => Navigator.pop(context),
+      ),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.lightSecondary.withAlpha(70),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(LucideIcons.utensils, size: 16, color: AppColors.secondary),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'Alimentación · ${widget.mascota.nombre}',
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+              fontSize: 18,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => HorariosScreen(mascota: widget.mascota),
+              ),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.lightSecondary.withAlpha(70),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(LucideIcons.clock, size: 18, color: AppColors.secondary),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFiltrosRow() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: _categorias.map((cat) {
+            final isSelected = _filtros.contains(cat);
+            final color = _colorParaTipo(cat);
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: GestureDetector(
+                onTap: () => setState(() {
+                  if (isSelected) {
+                    _filtros.remove(cat);
+                  } else {
+                    _filtros.add(cat);
+                  }
+                }),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isSelected ? color.withAlpha(30) : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isSelected ? color : Colors.grey.shade300,
+                      width: isSelected ? 1.5 : 1,
+                    ),
+                    boxShadow: isSelected
+                        ? []
+                        : [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(10),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _iconParaTipo(cat),
+                        size: 13,
+                        color: isSelected ? color : Colors.grey.shade500,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        cat,
+                        style: TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 13,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected ? color : Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSeccionHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 22, 12, 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            'Menú de platos',
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.secondary,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(LucideIcons.plusCircle, color: AppColors.secondary, size: 28),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => AddPlatoScreen(
+                  familiaId: widget.mascota.familiaID,
+                  mascotaId: widget.mascota.mascotaID,
+                ),
+              ),
+            ),
+            tooltip: 'Añadir plato',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCatalogo() {
+    return StreamBuilder<List<Plato>>(
+      stream: _comidaService.getPlatos(
+        widget.mascota.familiaID,
+        widget.mascota.mascotaID,
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(40),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          );
+        }
+
+        final platos = snapshot.data ?? [];
+        final platosFiltrados = _filtros.isEmpty
+            ? platos
+            : platos.where((p) => _filtros.contains(p.tipo)).toList();
+
+        if (platosFiltrados.isEmpty) {
+          return SliverToBoxAdapter(child: _buildEmptyState(platos.isEmpty));
+        }
+
+        return SliverPadding(
+          padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.82,
+              crossAxisSpacing: 14,
+              mainAxisSpacing: 14,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => _buildPlatoCard(platosFiltrados[index]),
+              childCount: platosFiltrados.length,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyState(bool noHayPlatos) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 48),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            noHayPlatos ? LucideIcons.utensils : LucideIcons.filter,
+            size: 48,
+            color: Colors.grey.shade300,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            noHayPlatos
+                ? 'Aún no hay platos en el menú'
+                : 'Sin platos para estos filtros',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 15,
+              color: Colors.grey.shade400,
+            ),
+          ),
+          if (noHayPlatos) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Toca + para añadir el primero',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 13,
+                color: Colors.grey.shade400,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _abrirDetalle(BuildContext context, Plato plato) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DetallePlatoSheet(
+        plato: plato,
+        familiaId: widget.mascota.familiaID,
+        mascotaId: widget.mascota.mascotaID,
+      ),
     );
   }
 
   Widget _buildPlatoCard(Plato plato) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+    final color = _colorParaTipo(plato.tipo);
+    final hasImage = plato.fotoUrl != null && plato.fotoUrl!.isNotEmpty;
+
+    return GestureDetector(
+      onTap: () => _abrirDetalle(context, plato),
+      child: Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(13),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
             flex: 3,
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-              child: plato.fotoUrl != null && plato.fotoUrl!.isNotEmpty
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              child: hasImage
                   ? Image.network(
                       plato.fotoUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.fastfood, size: 50, color: Colors.grey),
+                      errorBuilder: (context, error, _) => _buildColorHeader(color),
                     )
-                  : const Icon(Icons.fastfood, size: 50, color: Colors.grey),
+                  : _buildColorHeader(color),
             ),
           ),
           Expanded(
             flex: 2,
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     plato.nombre,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    maxLines: 1,
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    plato.tipo,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: color.withAlpha(30),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          plato.tipo,
+                          style: TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: color,
+                          ),
+                        ),
+                      ),
+                      if (plato.ingredientes.isNotEmpty) ...[
+                        const Spacer(),
+                        Text(
+                          '${plato.ingredientes.length} ing.',
+                          style: const TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 10,
+                            color: Colors.black38,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
             ),
           ),
         ],
+      ),
+    ),
+    );
+  }
+
+  Widget _buildColorHeader(Color color) {
+    return Container(
+      color: color.withAlpha(30),
+      child: Center(
+        child: Icon(
+          LucideIcons.chefHat,
+          size: 36,
+          color: color.withAlpha(180),
+        ),
       ),
     );
   }
