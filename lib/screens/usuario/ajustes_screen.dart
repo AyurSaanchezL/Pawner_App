@@ -5,6 +5,7 @@ import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/core/components/chat_bubble_clipper.dart';
 import 'package:pawner_app/core/model/usuario.dart';
 import 'package:pawner_app/screens/first_screen.dart';
+import 'package:pawner_app/screens/usuario/dashboard_screen.dart';
 import 'package:pawner_app/screens/usuario/perfil_screen.dart';
 import 'package:pawner_app/services/auth_service.dart';
 import 'package:pawner_app/screens/familia/detalle_familia_screen.dart';
@@ -34,7 +35,12 @@ class AjustesScreen extends StatelessWidget {
                       color: Colors.black,
                       size: 28,
                     ),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DashboardScreen(),
+                      ),
+                    ),
                   ),
                 ),
 
