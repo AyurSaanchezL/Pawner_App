@@ -16,6 +16,13 @@ import 'package:pawner_app/core/model/modulo_comida/modulo_comida_config.dart';
 import 'package:pawner_app/core/model/modulo_vet/cita_veterinaria.dart';
 import 'package:pawner_app/core/model/modulo_vet/evento_salud.dart';
 import 'package:pawner_app/core/model/modulo_vet/modulo_vet_config.dart';
+import 'package:pawner_app/core/model/modulo_limpieza/sesion_limpieza.dart';
+import 'package:pawner_app/core/model/modulo_limpieza/modulo_limpieza_config.dart';
+import 'package:pawner_app/core/model/modulo_calor/monitoreo_temperatura.dart';
+import 'package:pawner_app/core/model/modulo_calor/modulo_calor_config.dart';
+import 'package:pawner_app/core/model/modulo_comportamiento/registro_comportamiento.dart';
+import 'package:pawner_app/core/model/modulo_comportamiento/ejercicio_adiestramiento.dart';
+import 'package:pawner_app/core/model/modulo_comportamiento/modulo_comportamiento_config.dart';
 import 'package:pawner_app/core/model/recordatorio.dart';
 import 'package:pawner_app/firebase_options.dart';
 
@@ -943,5 +950,252 @@ class FirestoreService {
         .collection('Recordatorios')
         .doc(recordatorioID)
         .delete();
+  }
+
+  // --- MÓDULO LIMPIEZA ---
+
+  DocumentReference _modLimpiezaDoc(String familiaID, String mascotaID) => _db
+      .collection('Familias')
+      .doc(familiaID)
+      .collection('Mascotas')
+      .doc(mascotaID)
+      .collection('Modulos')
+      .doc('mod_limpieza');
+
+  Future<ModuloLimpiezaConfig?> getModuloLimpiezaConfig(
+    String familiaID,
+    String mascotaID,
+  ) async {
+    final doc = await _modLimpiezaDoc(familiaID, mascotaID).get();
+    if (!doc.exists) return null;
+    return ModuloLimpiezaConfig.fromMap(doc.data()!);
+  }
+
+  Future<void> saveModuloLimpiezaConfig(
+    String familiaID,
+    String mascotaID,
+    ModuloLimpiezaConfig config,
+  ) async {
+    await _modLimpiezaDoc(
+      familiaID,
+      mascotaID,
+    ).set(config.toMap(), SetOptions(merge: true));
+  }
+
+  Stream<List<SesionLimpieza>> streamSesionesLimpieza(
+    String familiaID,
+    String mascotaID,
+  ) {
+    return _modLimpiezaDoc(familiaID, mascotaID)
+        .collection('Sesiones')
+        .orderBy('fecha', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => SesionLimpieza.fromMap(doc.data(), doc.id))
+              .toList(),
+        );
+  }
+
+  Future<void> guardarSesionLimpieza(
+    String familiaID,
+    String mascotaID,
+    SesionLimpieza sesion,
+  ) async {
+    final doc = _modLimpiezaDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Sesiones').doc();
+    sesion.id = doc.id;
+    await doc.set(sesion.toMap());
+  }
+
+  Future<void> actualizarSesionLimpieza(
+    String familiaID,
+    String mascotaID,
+    SesionLimpieza sesion,
+  ) async {
+    await _modLimpiezaDoc(familiaID, mascotaID)
+        .collection('Sesiones')
+        .doc(sesion.id)
+        .set(sesion.toMap(), SetOptions(merge: true));
+  }
+
+  Future<void> eliminarSesionLimpieza(
+    String familiaID,
+    String mascotaID,
+    String sesionID,
+  ) async {
+    await _modLimpiezaDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Sesiones').doc(sesionID).delete();
+  }
+
+  // --- MÓDULO CALOR ---
+
+  DocumentReference _modCalorDoc(String familiaID, String mascotaID) => _db
+      .collection('Familias')
+      .doc(familiaID)
+      .collection('Mascotas')
+      .doc(mascotaID)
+      .collection('Modulos')
+      .doc('mod_calor');
+
+  Future<ModuloCalorConfig?> getModuloCalorConfig(
+    String familiaID,
+    String mascotaID,
+  ) async {
+    final doc = await _modCalorDoc(familiaID, mascotaID).get();
+    if (!doc.exists) return null;
+    return ModuloCalorConfig.fromMap(doc.data()!);
+  }
+
+  Future<void> saveModuloCalorConfig(
+    String familiaID,
+    String mascotaID,
+    ModuloCalorConfig config,
+  ) async {
+    await _modCalorDoc(
+      familiaID,
+      mascotaID,
+    ).set(config.toMap(), SetOptions(merge: true));
+  }
+
+  Stream<List<MonitoreoTemperatura>> streamMonitoreoTemperatura(
+    String familiaID,
+    String mascotaID,
+  ) {
+    return _modCalorDoc(familiaID, mascotaID)
+        .collection('Monitoreos')
+        .orderBy('fecha', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => MonitoreoTemperatura.fromMap(doc.data(), doc.id))
+              .toList(),
+        );
+  }
+
+  Future<void> guardarMonitoreoTemperatura(
+    String familiaID,
+    String mascotaID,
+    MonitoreoTemperatura monitoreo,
+  ) async {
+    final doc = _modCalorDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Monitoreos').doc();
+    monitoreo.id = doc.id;
+    await doc.set(monitoreo.toMap());
+  }
+
+  Future<void> actualizarMonitoreoTemperatura(
+    String familiaID,
+    String mascotaID,
+    MonitoreoTemperatura monitoreo,
+  ) async {
+    await _modCalorDoc(familiaID, mascotaID)
+        .collection('Monitoreos')
+        .doc(monitoreo.id)
+        .set(monitoreo.toMap(), SetOptions(merge: true));
+  }
+
+  Future<void> eliminarMonitoreoTemperatura(
+    String familiaID,
+    String mascotaID,
+    String monitoreoID,
+  ) async {
+    await _modCalorDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Monitoreos').doc(monitoreoID).delete();
+  }
+
+  // --- MÓDULO COMPORTAMIENTO ---
+
+  DocumentReference _modComportamientoDoc(String familiaID, String mascotaID) =>
+      _db
+          .collection('Familias')
+          .doc(familiaID)
+          .collection('Mascotas')
+          .doc(mascotaID)
+          .collection('Modulos')
+          .doc('mod_comportamiento');
+
+  Future<ModuloComportamientoConfig?> getModuloComportamientoConfig(
+    String familiaID,
+    String mascotaID,
+  ) async {
+    final doc = await _modComportamientoDoc(familiaID, mascotaID).get();
+    if (!doc.exists) return null;
+    return ModuloComportamientoConfig.fromMap(doc.data()!);
+  }
+
+  Future<void> saveModuloComportamientoConfig(
+    String familiaID,
+    String mascotaID,
+    ModuloComportamientoConfig config,
+  ) async {
+    await _modComportamientoDoc(
+      familiaID,
+      mascotaID,
+    ).set(config.toMap(), SetOptions(merge: true));
+  }
+
+  Stream<List<RegistroComportamiento>> streamRegistrosComportamiento(
+    String familiaID,
+    String mascotaID,
+  ) {
+    return _modComportamientoDoc(familiaID, mascotaID)
+        .collection('Registros')
+        .orderBy('fecha', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => RegistroComportamiento.fromMap(doc.data(), doc.id))
+              .toList(),
+        );
+  }
+
+  Future<void> guardarRegistroComportamiento(
+    String familiaID,
+    String mascotaID,
+    RegistroComportamiento registro,
+  ) async {
+    final doc = _modComportamientoDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Registros').doc();
+    registro.id = doc.id;
+    await doc.set(registro.toMap());
+  }
+
+  Stream<List<EjercicioAdiestramiento>> streamEjerciciosAdiestramiento(
+    String familiaID,
+    String mascotaID,
+  ) {
+    return _modComportamientoDoc(familiaID, mascotaID)
+        .collection('Ejercicios')
+        .orderBy('fechaInicio', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => EjercicioAdiestramiento.fromMap(doc.data(), doc.id))
+              .toList(),
+        );
+  }
+
+  Future<void> guardarEjercicioAdiestramiento(
+    String familiaID,
+    String mascotaID,
+    EjercicioAdiestramiento ejercicio,
+  ) async {
+    final doc = _modComportamientoDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Ejercicios').doc();
+    ejercicio.id = doc.id;
+    await doc.set(ejercicio.toMap());
   }
 }
