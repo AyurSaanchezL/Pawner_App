@@ -21,12 +21,13 @@ class NuevaMascotaScreen extends StatefulWidget {
 
 class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _chipController = TextEditingController();
   final TextEditingController _pesoController = TextEditingController();
   final TextEditingController _fechaController = TextEditingController();
-  final TextEditingController _observacionesController = TextEditingController();
+  final TextEditingController _observacionesController =
+      TextEditingController();
 
   String? _selectedEspecie;
   String? _selectedRaza;
@@ -41,7 +42,9 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
 
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+    );
 
     if (pickedFile != null) {
       setState(() {
@@ -59,9 +62,7 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: AppColors.secondary,
-            ),
+            colorScheme: ColorScheme.light(primary: AppColors.secondary),
           ),
           child: child!,
         );
@@ -79,7 +80,10 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedEspecie == null || _selectedRaza == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Por favor selecciona especie y raza"), backgroundColor: Colors.orange),
+        const SnackBar(
+          content: Text("Por favor selecciona especie y raza"),
+          backgroundColor: Colors.orange,
+        ),
       );
       return;
     }
@@ -88,7 +92,7 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
 
     try {
       Usuario usuarioActual = await authService.value.getCurrentUser();
-      
+
       if (usuarioActual.familiaID == null || usuarioActual.familiaID!.isEmpty) {
         throw Exception("No tienes una familia asignada.");
       }
@@ -117,7 +121,10 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("¡Mascota guardada con éxito!"), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text("¡Mascota guardada con éxito!"),
+            backgroundColor: Colors.green,
+          ),
         );
         Navigator.pop(context);
       }
@@ -141,7 +148,11 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(LucideIcons.chevronLeft, color: Colors.black, size: 30),
+          icon: const Icon(
+            LucideIcons.chevronLeft,
+            color: Colors.black,
+            size: 30,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -160,14 +171,22 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
                   height: 120,
                   decoration: BoxDecoration(
                     color: AppColors.primary, // Crema
+                    border: Border.all(color: Colors.black54, width: 2),
                     shape: BoxShape.circle,
-                    image: _image != null 
-                      ? DecorationImage(image: FileImage(_image!), fit: BoxFit.cover)
-                      : null,
+                    image: _image != null
+                        ? DecorationImage(
+                            image: FileImage(_image!),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
                   ),
-                  child: _image == null 
-                    ? const Icon(LucideIcons.plus, size: 50, color: Colors.black54)
-                    : null,
+                  child: _image == null
+                      ? const Icon(
+                          LucideIcons.plus,
+                          size: 50,
+                          color: Colors.black54,
+                        )
+                      : null,
                 ),
               ),
               const SizedBox(height: 20),
@@ -178,10 +197,14 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 30),
-              
+
               // Formulario
               _buildLabel("Nombre"),
-              _buildTextField(_nombreController, "Nombre de tu mascota", maxLength: 20),
+              _buildTextField(
+                _nombreController,
+                "Nombre de tu mascota",
+                maxLength: 20,
+              ),
 
               const SizedBox(height: 15),
               Row(
@@ -200,7 +223,8 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
                               if (val == 'Otro') {
                                 _selectedRaza = 'Otro';
                               } else {
-                                _selectedRaza = null; // Reset raza when especie changes
+                                _selectedRaza =
+                                    null; // Reset raza when especie changes
                               }
                             });
                           },
@@ -216,7 +240,9 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
                         _buildDropdown(
                           value: _selectedRaza,
                           hint: "Raza",
-                          items: _selectedEspecie != null ? Constants.especiesYRazas[_selectedEspecie]! : [],
+                          items: _selectedEspecie != null
+                              ? Constants.especiesYRazas[_selectedEspecie]!
+                              : [],
                           onChanged: (val) {
                             setState(() {
                               _selectedRaza = val;
@@ -228,7 +254,7 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 15),
               _buildLabel("Chip"),
               _buildTextField(_chipController, "Número de chip"),
@@ -261,42 +287,44 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildGenderSelector(),
-                  _buildSterilizedSelector(),
-                ],
+                children: [_buildGenderSelector(), _buildSterilizedSelector()],
               ),
 
               const SizedBox(height: 20),
               _buildLabel("Observaciones"),
-              _buildTextField(_observacionesController, "Notas sobre tu mascota...", maxLines: 4, isOptional: true),
+              _buildTextField(
+                _observacionesController,
+                "Notas sobre tu mascota...",
+                maxLines: 4,
+                isOptional: true,
+              ),
 
               const SizedBox(height: 30),
               // Botón Guardar
               _isLoading
-                ? const CircularProgressIndicator()
-                : SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: _guardarMascota,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _orangeButton,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                  ? const CircularProgressIndicator()
+                  : SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: ElevatedButton(
+                        onPressed: _guardarMascota,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _orangeButton,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          elevation: 4, // Añadida sombra para que destaque
                         ),
-                        elevation: 4, // Añadida sombra para que destaque
-                      ),
-                      child: const Text(
-                        "Guardar",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                        child: const Text(
+                          "Guardar",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
               const SizedBox(height: 40),
             ],
           ),
@@ -347,14 +375,25 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint, {bool isNumber = false, int maxLines = 1, bool isOptional = false, int? maxLength}) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String hint, {
+    bool isNumber = false,
+    int maxLines = 1,
+    bool isOptional = false,
+    int? maxLength,
+  }) {
     return TextFormField(
       controller: controller,
-      keyboardType: isNumber ? TextInputType.number : (maxLines > 1 ? TextInputType.multiline : TextInputType.text),
+      keyboardType: isNumber
+          ? TextInputType.number
+          : (maxLines > 1 ? TextInputType.multiline : TextInputType.text),
       maxLines: maxLines,
       textAlign: TextAlign.center,
       style: Constants.inputStyle,
-      inputFormatters: maxLength != null ? [LengthLimitingTextInputFormatter(maxLength)] : null,
+      inputFormatters: maxLength != null
+          ? [LengthLimitingTextInputFormatter(maxLength)]
+          : null,
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
@@ -363,7 +402,10 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
           borderRadius: BorderRadius.circular(25),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 15,
+        ),
       ),
       validator: (value) {
         if (isOptional) return null;
@@ -387,9 +429,13 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
           borderRadius: BorderRadius.circular(25),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 15,
+        ),
       ),
-      validator: (value) => value == null || value.isEmpty ? "Campo requerido" : null,
+      validator: (value) =>
+          value == null || value.isEmpty ? "Campo requerido" : null,
     );
   }
 
@@ -462,9 +508,14 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
             decoration: BoxDecoration(
               color: isSelected ? color : _lavenderInput,
               shape: BoxShape.circle,
-              border: isSelected ? Border.all(color: Colors.white, width: 2) : null,
+              border: isSelected
+                  ? Border.all(color: Colors.white, width: 2)
+                  : null,
             ),
-            child: Icon(icon, color: isSelected ? Colors.white : Colors.black54),
+            child: Icon(
+              icon,
+              color: isSelected ? Colors.white : Colors.black54,
+            ),
           ),
           if (showCheck)
             Positioned(
@@ -472,7 +523,10 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
               top: 0,
               child: Container(
                 padding: const EdgeInsets.all(2),
-                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
                 child: const Icon(Icons.check, size: 12, color: Colors.green),
               ),
             ),
@@ -482,7 +536,10 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
               top: 0,
               child: Container(
                 padding: const EdgeInsets.all(2),
-                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
                 child: const Icon(Icons.close, size: 12, color: Colors.red),
               ),
             ),

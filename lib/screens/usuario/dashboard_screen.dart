@@ -65,7 +65,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _loadInitialData();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkNotificationPermission());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _checkNotificationPermission(),
+    );
   }
 
   Future<void> _checkNotificationPermission() async {
@@ -96,7 +98,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _usuarioActual = usuario;
           if (usuario.familiaID != null && usuario.familiaID!.isNotEmpty) {
             _mascotasStream = fs.streamMascotas(usuario.familiaID!);
-            _recordatoriosStream = fs.streamRecordatoriosFamilia(usuario.familiaID!);
+            _recordatoriosStream = fs.streamRecordatoriosFamilia(
+              usuario.familiaID!,
+            );
             _sincronizarNotificaciones(usuario.familiaID!); // fire-and-forget
           }
         });
@@ -113,7 +117,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final mascotas = await fs.getMascotas(familiaID);
 
       for (final mascota in mascotas) {
-        final citas = await fs.getCitasVeterinarias(mascota.familiaID, mascota.mascotaID);
+        final citas = await fs.getCitasVeterinarias(
+          mascota.familiaID,
+          mascota.mascotaID,
+        );
 
         for (final cita in citas) {
           if (!cita.notificacionActiva) continue;
@@ -122,15 +129,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
           final notifTime = cita.notifFechaHora ?? cita.fecha;
           if (!notifTime.isAfter(now)) continue;
 
-          await ns.scheduleOneTimeNotification(
-            id: cita.idNotificacion!,
-            scheduledFor: notifTime,
-            title: '🐾 Cita: ${mascota.nombre}',
-            body: cita.motivo,
-          ).catchError((_) {});
+          await ns
+              .scheduleOneTimeNotification(
+                id: cita.idNotificacion!,
+                scheduledFor: notifTime,
+                title: '🐾 Cita: ${mascota.nombre}',
+                body: cita.motivo,
+              )
+              .catchError((_) {});
         }
 
-        final horarios = await fs.getHorarios(mascota.familiaID, mascota.mascotaID);
+        final horarios = await fs.getHorarios(
+          mascota.familiaID,
+          mascota.mascotaID,
+        );
 
         for (final horario in horarios) {
           if (!horario.activo) continue;
@@ -138,11 +150,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           final parts = horario.hora.split(':');
           if (parts.length != 2) continue;
 
-          await ns.scheduleFixedTimeNotification(
-            id: horario.idNotificacion,
-            hour: int.parse(parts[0]),
-            minute: int.parse(parts[1]),
-          ).catchError((_) {});
+          await ns
+              .scheduleFixedTimeNotification(
+                id: horario.idNotificacion,
+                hour: int.parse(parts[0]),
+                minute: int.parse(parts[1]),
+              )
+              .catchError((_) {});
         }
       }
     } catch (_) {
@@ -161,7 +175,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    const double verySmallScreenWidth = 375.0; // Threshold for very small screens
+    const double verySmallScreenWidth =
+        375.0; // Threshold for very small screens
     const double smallScreenWidth = 450.0; // Threshold for small screens
 
     final bool isVerySmallScreen = screenWidth < verySmallScreenWidth;
@@ -226,7 +241,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 30),
 
                   // Recordatorios Section
-                  _buildSectionHeader('Próximos recordatorios', AppColors.darkBlue, showListIcon: true),
+                  _buildSectionHeader(
+                    'Próximos recordatorios',
+                    AppColors.darkBlue,
+                    showListIcon: true,
+                  ),
                   const SizedBox(height: 15),
                   StreamBuilder<List<Mascota>>(
                     stream: _mascotasStream,
@@ -235,8 +254,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       return StreamBuilder<List<Recordatorio>>(
                         stream: _recordatoriosStream,
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
                           }
 
                           final recordatorios = snapshot.data ?? [];
@@ -245,11 +267,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             return Center(
                               child: Column(
                                 children: [
-                                  Icon(LucideIcons.bellOff, size: 40, color: Colors.grey.shade300),
+                                  Icon(
+                                    LucideIcons.bellOff,
+                                    size: 40,
+                                    color: Colors.grey.shade300,
+                                  ),
                                   const SizedBox(height: 8),
                                   const Text(
                                     "No tienes recordatorios pendientes",
-                                    style: TextStyle(fontFamily: 'Nunito', color: Colors.grey, fontSize: 14),
+                                    style: TextStyle(
+                                      fontFamily: 'Nunito',
+                                      color: Colors.grey,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -261,7 +291,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: recordatorios.length,
                             itemBuilder: (context, index) {
-                              return _buildReminderCardReal(recordatorios[index], mascotas);
+                              return _buildReminderCardReal(
+                                recordatorios[index],
+                                mascotas,
+                              );
                             },
                           );
                         },
@@ -281,7 +314,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           bottom: 20.0,
         ), // Adjust padding as needed
         child: FutureBuilder<String>(
-          future: FirestoreService().obtenerNombreFamilia(), // Call the async function here
+          future: FirestoreService()
+              .obtenerNombreFamilia(), // Call the async function here
           builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Text(
@@ -311,33 +345,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // Floating Action Button
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 10, right: 10),
-        child: Container(
-          width: 70,
-          height: 70,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 8,
-                spreadRadius: 2,
-                offset: Offset(0, 4),
+        child: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const NuevaMascotaScreen(),
               ),
-            ],
-          ),
-          child: FloatingActionButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const NuevaMascotaScreen(),
-                ),
-              );
-            },
-            backgroundColor: Colors.white,
-            elevation: 0, // Elevation handled by Container shadow
-            shape: const CircleBorder(),
-            child: const Icon(Icons.add, size: 40, color: Colors.black),
+            );
+          },
+          backgroundColor: AppColors.accent,
+          child: const Icon(
+            LucideIcons.plus,
+            color: AppColors.cardWhite,
+            size: 30,
           ),
         ),
       ),
@@ -346,7 +367,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // --- App Bar ---
-  PreferredSizeWidget _buildCustomAppBar(bool isVerySmallScreen, bool isSmallScreen) {
+  PreferredSizeWidget _buildCustomAppBar(
+    bool isVerySmallScreen,
+    bool isSmallScreen,
+  ) {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -562,7 +586,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 image: DecorationImage(
                   image: mascota.fotoUrl.isNotEmpty
                       ? NetworkImage(mascota.fotoUrl) as ImageProvider
-                      : AssetImage(_getDefaultAssetForMascota(mascota.mascotaID)),
+                      : AssetImage(
+                          _getDefaultAssetForMascota(mascota.mascotaID),
+                        ),
                   fit: BoxFit.cover,
                 ),
                 border: Border.all(color: AppColors.darkBlue, width: 2),
@@ -570,7 +596,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              (mascota.nombre.length > 15 ? mascota.nombre.substring(0, 12) + '...' : mascota.nombre),
+              (mascota.nombre.length > 15
+                  ? mascota.nombre.substring(0, 12) + '...'
+                  : mascota.nombre),
               style: TextStyle(
                 fontFamily: 'Nunito',
                 fontSize: 14,
@@ -749,7 +777,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            Container(width: 1.5, height: 48, color: AppColors.lightSecondary.withAlpha(128)),
+            Container(
+              width: 1.5,
+              height: 48,
+              color: AppColors.lightSecondary.withAlpha(128),
+            ),
             const SizedBox(width: 12),
             // Content
             Expanded(
@@ -820,4 +852,3 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 }
-

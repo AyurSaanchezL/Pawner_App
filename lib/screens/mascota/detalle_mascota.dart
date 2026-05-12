@@ -7,7 +7,6 @@ import 'package:pawner_app/core/components/chat_bubble_clipper.dart';
 import 'package:pawner_app/core/model/mascota.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/screens/mascota/editar_mascota.dart';
-import 'package:pawner_app/screens/modulos/comida/comida_screen.dart';
 import 'package:pawner_app/screens/modulos/paseo/paseo_screen.dart';
 import 'package:pawner_app/screens/modulos/veterinario/veterinario_screen.dart';
 import 'package:pawner_app/services/cloudinary_service.dart';
@@ -26,13 +25,8 @@ class PetProfileScreen extends StatefulWidget {
 }
 
 class _PetProfileScreenState extends State<PetProfileScreen> {
-  late Mascota mascota;
-
-  @override
-  void initState() {
-    super.initState();
-    mascota = widget.mascota;
-  }
+  final FirestoreService _firestoreService = FirestoreService();
+  late Mascota mascota = widget.mascota;
 
   String _getFormattedAgeString(DateTime birthDate) {
     final today = DateTime.now();
@@ -68,221 +62,259 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final String ageString = _getFormattedAgeString(mascota.fechaNacimiento);
+    return StreamBuilder<Mascota>(
+      stream: _firestoreService.streamMascota(
+        widget.mascota.familiaID,
+        widget.mascota.mascotaID,
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    return Scaffold(
-      backgroundColor: AppColors.background, // Lavanda del dashboard
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            LucideIcons.chevronLeft,
-            color: AppColors.textPrimary,
-            size: 32,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(
-              LucideIcons.moreVertical,
-              color: AppColors.textPrimary,
-              size: 28,
+        if (snapshot.hasError) {
+          return Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(child: Text('Error: ${snapshot.error}')),
+          );
+        }
+
+        if (!snapshot.hasData) {
+          return const Scaffold(
+            backgroundColor: AppColors.background,
+            body: Center(child: Text('Mascota no encontrada')),
+          );
+        }
+
+        mascota = snapshot.data!;
+        final String ageString = _getFormattedAgeString(
+          mascota.fechaNacimiento,
+        );
+
+        return Scaffold(
+          backgroundColor: AppColors.background, // Lavanda del dashboard
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(
+                LucideIcons.chevronLeft,
+                color: AppColors.textPrimary,
+                size: 32,
+              ),
+              onPressed: () => Navigator.pop(context),
             ),
-            onSelected: (value) async {
-              if (value == 'editar') {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditarMascotaScreen(mascota: mascota),
+            actions: [
+              PopupMenuButton<String>(
+                icon: const Icon(
+                  LucideIcons.moreVertical,
+                  color: AppColors.textPrimary,
+                  size: 28,
+                ),
+                onSelected: (value) async {
+                  if (value == 'editar') {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            EditarMascotaScreen(mascota: mascota),
+                      ),
+                    );
+                    if (result != null && result is Mascota) {
+                      setState(() {
+                        mascota = result;
+                      });
+                    }
+                  } else if (value == 'eliminar') {
+                    _confirmarEliminacion(context);
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'editar',
+                    child: Row(
+                      children: [
+                        Icon(
+                          LucideIcons.pencil,
+                          color: AppColors.secondary,
+                          size: 20,
+                        ),
+                        SizedBox(width: 10),
+                        Text(
+                          "Editar mascota",
+                          style: TextStyle(
+                            fontFamily: 'Nunito',
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                );
-                if (result != null && result is Mascota) {
-                  setState(() {
-                    mascota = result;
-                  });
-                }
-              } else if (value == 'eliminar') {
-                _confirmarEliminacion(context);
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'editar',
-                child: Row(
-                  children: [
-                    Icon(
-                      LucideIcons.pencil,
-                      color: AppColors.secondary,
-                      size: 20,
+                  const PopupMenuItem(
+                    value: 'eliminar',
+                    child: Row(
+                      children: [
+                        Icon(LucideIcons.trash2, color: Colors.red, size: 20),
+                        SizedBox(width: 10),
+                        Text(
+                          "Eliminar mascota",
+                          style: TextStyle(
+                            fontFamily: 'Nunito',
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(width: 10),
-                    Text(
-                      "Editar mascota",
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const PopupMenuItem(
-                value: 'eliminar',
-                child: Row(
-                  children: [
-                    Icon(LucideIcons.trash2, color: Colors.red, size: 20),
-                    SizedBox(width: 10),
-                    Text(
-                      "Eliminar mascota",
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              const SizedBox(width: 10),
             ],
           ),
-          const SizedBox(width: 10),
-        ],
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Contenido con Padding
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 10),
-                          // Perfil "Unido": Avatar grande y Container de nombre pegado
-                          _buildJoinedProfileHeader(ageString),
-
-                          if (mascota.especie.isNotEmpty &&
-                              mascota.raza.isNotEmpty &&
-                              !(mascota.especie == 'Otro' &&
-                                  mascota.raza == 'Otro')) ...[
-                            const SizedBox(height: 20),
-                            _buildSpeciesBreedCard(),
-                          ],
-
-                          const SizedBox(height: 40),
-
-                          // Fila de Info Rápida con iconos del formulario
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Contenido con Padding
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildQuickInfoItem(
-                                Icons.monitor_weight,
-                                "${mascota.peso} Kg",
-                                AppColors.secondary,
-                                onTap: () => _showWeightModal(context),
-                              ),
-                              _buildQuickInfoItem(
-                                mascota.genero == 'Macho'
-                                    ? Icons.male
-                                    : Icons.female,
-                                mascota.genero,
-                                mascota.genero == 'Macho'
-                                    ? AppColors.male
-                                    : AppColors.female,
-                              ),
-                              _buildQuickInfoItem(
-                                LucideIcons.scissors,
-                                mascota.esterilizado
-                                    ? 'Esterilizado'
-                                    : 'Sin Esterilizar',
-                                Colors.black,
-                              ),
+                              const SizedBox(height: 10),
+                              // Perfil "Unido": Avatar grande y Container de nombre pegado
+                              _buildJoinedProfileHeader(ageString, mascota),
+
+                              if (mascota.especie.isNotEmpty &&
+                                  mascota.raza.isNotEmpty &&
+                                  !(mascota.especie == 'Otro' &&
+                                      mascota.raza == 'Otro')) ...[
+                                const SizedBox(height: 20),
+                                _buildSpeciesBreedCard(mascota),
+
+                                const SizedBox(height: 40),
+
+                                // Fila de Info Rápida con iconos del formulario
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: [
+                                    _buildQuickInfoItem(
+                                      Icons.monitor_weight,
+                                      "${mascota.peso} Kg",
+                                      AppColors.secondary,
+                                      onTap: () => _showWeightModal(context),
+                                    ),
+                                    _buildQuickInfoItem(
+                                      mascota.genero == 'Macho'
+                                          ? Icons.male
+                                          : Icons.female,
+                                      mascota.genero,
+                                      mascota.genero == 'Macho'
+                                          ? AppColors.male
+                                          : AppColors.female,
+                                    ),
+                                    _buildQuickInfoItem(
+                                      LucideIcons.scissors,
+                                      mascota.esterilizado
+                                          ? 'Esterilizado'
+                                          : 'Sin Esterilizar',
+                                      Colors.black,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 40),
+
+                                // Chips de navegación usando ChatBubbleClipper
+                                _buildNavigationBubbleChip(
+                                  title: "Comida",
+                                  subtitle: "Dieta y horarios",
+                                  icon: LucideIcons.utensils,
+                                  isRight: false,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => DashboardComidaScreen(
+                                          mascota: mascota,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+                                _buildNavigationBubbleChip(
+                                  title: "Veterinario",
+                                  subtitle: "Cuidados y vacunas",
+                                  icon: LucideIcons.stethoscope,
+                                  isRight: true,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            VeterinarioScreen(mascota: mascota),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+                                _buildNavigationBubbleChip(
+                                  title: "Paseos",
+                                  subtitle: "Bienestar y salud",
+                                  icon: IconData(
+                                    0xe4a1,
+                                    fontFamily: 'MaterialIcons',
+                                  ),
+                                  isRight: false,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => PaseoScreen(m: mascota),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+                                _buildObservationChip(
+                                  title: "Observaciones",
+                                  subtitle: mascota.observaciones.isEmpty
+                                      ? "Añadir notas"
+                                      : "Toca para ver notas",
+                                  icon: LucideIcons.stickyNote,
+                                  onTap: () => _showObservationsModal(context),
+                                ),
+                                const SizedBox(
+                                  height: 20,
+                                ), // Added spacing before footer
+                              ],
                             ],
                           ),
-                          const SizedBox(height: 40),
+                        ),
 
-                          // Chips de navegación usando ChatBubbleClipper
-                          _buildNavigationBubbleChip(
-                            title: "Comida",
-                            subtitle: "Dieta y horarios",
-                            icon: LucideIcons.utensils,
-                            isRight: false,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      DashboardComidaScreen(mascota: mascota),
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          _buildNavigationBubbleChip(
-                            title: "Veterinario",
-                            subtitle: "Cuidados y vacunas",
-                            icon: LucideIcons.stethoscope,
-                            isRight: true,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      VeterinarioScreen(mascota: mascota),
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          _buildNavigationBubbleChip(
-                            title: "Paseos",
-                            subtitle: "Bienestar y salud",
-                            icon: IconData(0xe4a1, fontFamily: 'MaterialIcons'),
-                            isRight: false,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => PaseoScreen(m: mascota),
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          _buildObservationChip(
-                            title: "Observaciones",
-                            subtitle: mascota.observaciones.isEmpty
-                                ? "Añadir notas"
-                                : "Toca para ver notas",
-                            icon: LucideIcons.stickyNote,
-                            onTap: () => _showObservationsModal(context),
-                          ),
-                          const SizedBox(
-                            height: 20,
-                          ), // Added spacing before footer
-                        ],
-                      ),
+                        const Spacer(),
+
+                        // Footer (IGUAL al de perfil_screen, pegado al final y extremos)
+                        const BottomLogo(),
+                      ],
                     ),
-
-                    const Spacer(),
-
-                    // Footer (IGUAL al de perfil_screen, pegado al final y extremos)
-                    const BottomLogo(),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          );
-        },
-      ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -808,7 +840,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
     );
   }
 
-  Widget _buildJoinedProfileHeader(String ageString) {
+  Widget _buildJoinedProfileHeader(String ageString, Mascota mascota) {
     return Stack(
       alignment: Alignment.centerLeft,
       children: [
@@ -856,13 +888,26 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                       color: Colors.grey,
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      "${_formatDate(mascota.fechaNacimiento)} ($ageString)",
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          _formatDate(mascota.fechaNacimiento),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(width: 5),
+                        Text(
+                          "($ageString)",
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -927,7 +972,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
     );
   }
 
-  Widget _buildSpeciesBreedCard() {
+  Widget _buildSpeciesBreedCard(Mascota mascota) {
     // Si la raza es 'Otro', solo mostrar la especie
     final String displayInfo = (mascota.raza.toLowerCase() == 'otro')
         ? mascota.especie
