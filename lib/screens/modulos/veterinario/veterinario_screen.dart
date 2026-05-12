@@ -15,15 +15,30 @@ import 'package:pawner_app/services/cloudinary_service.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-enum NotifTiming { horasBefore1, horasBefore5, diaBefore, semanaBefore, personalizado }
+enum NotifTiming {
+  horasBefore1,
+  horasBefore5,
+  diaBefore,
+  semanaBefore,
+  personalizado,
+}
 
-DateTime? computeNotifDateTime(NotifTiming timing, DateTime citaDateTime, {DateTime? custom}) {
+DateTime? computeNotifDateTime(
+  NotifTiming timing,
+  DateTime citaDateTime, {
+  DateTime? custom,
+}) {
   switch (timing) {
-    case NotifTiming.horasBefore1:  return citaDateTime.subtract(const Duration(hours: 1));
-    case NotifTiming.horasBefore5:  return citaDateTime.subtract(const Duration(hours: 5));
-    case NotifTiming.diaBefore:     return citaDateTime.subtract(const Duration(days: 1));
-    case NotifTiming.semanaBefore:  return citaDateTime.subtract(const Duration(days: 7));
-    case NotifTiming.personalizado: return custom;
+    case NotifTiming.horasBefore1:
+      return citaDateTime.subtract(const Duration(hours: 1));
+    case NotifTiming.horasBefore5:
+      return citaDateTime.subtract(const Duration(hours: 5));
+    case NotifTiming.diaBefore:
+      return citaDateTime.subtract(const Duration(days: 1));
+    case NotifTiming.semanaBefore:
+      return citaDateTime.subtract(const Duration(days: 7));
+    case NotifTiming.personalizado:
+      return custom;
   }
 }
 
@@ -33,9 +48,9 @@ class _VetEntry {
   final TextEditingController colegiadoCtrl;
 
   _VetEntry({String nombre = '', String tel = '', String colegiado = ''})
-      : nombreCtrl = TextEditingController(text: nombre),
-        telCtrl = TextEditingController(text: tel),
-        colegiadoCtrl = TextEditingController(text: colegiado);
+    : nombreCtrl = TextEditingController(text: nombre),
+      telCtrl = TextEditingController(text: tel),
+      colegiadoCtrl = TextEditingController(text: colegiado);
 
   void dispose() {
     nombreCtrl.dispose();
@@ -53,7 +68,8 @@ class VeterinarioScreen extends StatefulWidget {
   State<VeterinarioScreen> createState() => _VeterinarioScreenState();
 }
 
-class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTickerProviderStateMixin {
+class _VeterinarioScreenState extends State<VeterinarioScreen>
+    with SingleTickerProviderStateMixin {
   final FirestoreService _fs = FirestoreService();
   final NotificationService _notifications = NotificationService();
   late TabController _tabController;
@@ -82,7 +98,9 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
       if (notifTime == null || !notifTime.isAfter(DateTime.now())) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('No es posible activar el aviso: la fecha del recordatorio ya ha pasado.'),
+            content: Text(
+              'No es posible activar el aviso: la fecha del recordatorio ya ha pasado.',
+            ),
             backgroundColor: Colors.orange,
             behavior: SnackBarBehavior.floating,
           ),
@@ -92,12 +110,14 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
       setState(() => cita.notificacionActiva = true);
       _fs.updateCitaVeterinaria(mascota.familiaID, mascota.mascotaID, cita);
       if (cita.idNotificacion != null) {
-        _notifications.scheduleOneTimeNotification(
-          id: cita.idNotificacion!,
-          scheduledFor: notifTime,
-          title: '🐾 Cita: ${mascota.nombre}',
-          body: cita.motivo,
-        ).catchError((_) {});
+        _notifications
+            .scheduleOneTimeNotification(
+              id: cita.idNotificacion!,
+              scheduledFor: notifTime,
+              title: '🐾 Cita: ${mascota.nombre}',
+              body: cita.motivo,
+            )
+            .catchError((_) {});
       }
     } else {
       setState(() => cita.notificacionActiva = false);
@@ -112,29 +132,52 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Eliminar Cita", style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold)),
-        content: const Text("¿Estás seguro de que quieres eliminar esta cita?", style: TextStyle(fontFamily: 'Nunito')),
+        title: const Text(
+          "Eliminar Cita",
+          style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          "¿Estás seguro de que quieres eliminar esta cita?",
+          style: TextStyle(fontFamily: 'Nunito'),
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancelar", style: TextStyle(fontFamily: 'Nunito', color: Colors.grey)),
+            child: const Text(
+              "Cancelar",
+              style: TextStyle(fontFamily: 'Nunito', color: Colors.grey),
+            ),
           ),
           TextButton(
             onPressed: () {
               if (cita.recordatorioID != null) {
                 _fs.deleteCitaVeterinariaWithReminder(
-                  mascota.familiaID, mascota.mascotaID, cita.id, cita.recordatorioID!,
+                  mascota.familiaID,
+                  mascota.mascotaID,
+                  cita.id,
+                  cita.recordatorioID!,
                 );
               } else {
-                _fs.deleteCitaVeterinaria(mascota.familiaID, mascota.mascotaID, cita.id);
+                _fs.deleteCitaVeterinaria(
+                  mascota.familiaID,
+                  mascota.mascotaID,
+                  cita.id,
+                );
               }
               if (cita.idNotificacion != null) {
                 _notifications.cancel(cita.idNotificacion!);
               }
               Navigator.pop(context);
             },
-            child: const Text("Eliminar", style: TextStyle(fontFamily: 'Nunito', color: Colors.redAccent, fontWeight: FontWeight.bold)),
+            child: const Text(
+              "Eliminar",
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                color: Colors.redAccent,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -145,20 +188,40 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Eliminar Evento", style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold)),
-        content: const Text("¿Estás seguro de que quieres eliminar este evento?", style: TextStyle(fontFamily: 'Nunito')),
+        title: const Text(
+          "Eliminar Evento",
+          style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          "¿Estás seguro de que quieres eliminar este evento?",
+          style: TextStyle(fontFamily: 'Nunito'),
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancelar", style: TextStyle(fontFamily: 'Nunito', color: Colors.grey)),
+            child: const Text(
+              "Cancelar",
+              style: TextStyle(fontFamily: 'Nunito', color: Colors.grey),
+            ),
           ),
           TextButton(
             onPressed: () {
-              _fs.deleteEventoSalud(mascota.familiaID, mascota.mascotaID, eventoId);
+              _fs.deleteEventoSalud(
+                mascota.familiaID,
+                mascota.mascotaID,
+                eventoId,
+              );
               Navigator.pop(context);
             },
-            child: const Text("Eliminar", style: TextStyle(fontFamily: 'Nunito', color: Colors.redAccent, fontWeight: FontWeight.bold)),
+            child: const Text(
+              "Eliminar",
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                color: Colors.redAccent,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -170,7 +233,10 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<Mascota>(
-      stream: _fs.streamMascota(widget.mascota.familiaID, widget.mascota.mascotaID),
+      stream: _fs.streamMascota(
+        widget.mascota.familiaID,
+        widget.mascota.mascotaID,
+      ),
       builder: (context, snapshotMascota) {
         final currentMascota = snapshotMascota.data ?? widget.mascota;
 
@@ -181,7 +247,11 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
             elevation: 0,
             surfaceTintColor: Colors.transparent,
             leading: IconButton(
-              icon: const Icon(LucideIcons.chevronLeft, color: Colors.black, size: 30),
+              icon: const Icon(
+                LucideIcons.chevronLeft,
+                color: Colors.black,
+                size: 30,
+              ),
               onPressed: () => Navigator.pop(context),
             ),
             title: Row(
@@ -193,7 +263,11 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
                     color: AppColors.lightSecondary.withAlpha(70),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(LucideIcons.stethoscope, size: 16, color: AppColors.secondary),
+                  child: const Icon(
+                    LucideIcons.stethoscope,
+                    size: 16,
+                    color: AppColors.secondary,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Text(
@@ -214,8 +288,15 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
               indicatorColor: AppColors.secondary,
               indicatorWeight: 3,
               dividerColor: Colors.transparent,
-              labelStyle: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold, fontSize: 14),
-              unselectedLabelStyle: const TextStyle(fontFamily: 'Nunito', fontSize: 14),
+              labelStyle: const TextStyle(
+                fontFamily: 'Nunito',
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 14,
+              ),
               tabs: const [
                 Tab(text: "Citas"),
                 Tab(text: "Historial"),
@@ -260,16 +341,21 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
         currentMascota.mascotaID,
       ),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-        
+        if (!snapshot.hasData)
+          return const Center(child: CircularProgressIndicator());
+
         final citas = snapshot.data!.where((c) => !c.completada).toList();
-        
+
         if (citas.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(LucideIcons.calendarCheck, size: 64, color: Colors.grey.shade300),
+                Icon(
+                  LucideIcons.calendarCheck,
+                  size: 64,
+                  color: Colors.grey.shade300,
+                ),
                 const SizedBox(height: 16),
                 const Text(
                   "¡Todo en orden!\nNo tienes visitas pendientes.",
@@ -315,7 +401,8 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => CitaDetailSheet(cita: cita, mascota: currentMascota),
+      builder: (context) =>
+          CitaDetailSheet(cita: cita, mascota: currentMascota),
     );
   }
 
@@ -328,7 +415,11 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
-            BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 12, offset: const Offset(0, 4)),
+            BoxShadow(
+              color: Colors.black.withAlpha(13),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
           ],
         ),
         child: Column(
@@ -387,7 +478,11 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
                         const SizedBox(height: 3),
                         Row(
                           children: [
-                            const Icon(LucideIcons.clock4, size: 13, color: AppColors.secondary),
+                            const Icon(
+                              LucideIcons.clock4,
+                              size: 13,
+                              color: AppColors.secondary,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               DateFormat('HH:mm').format(cita.fecha),
@@ -404,7 +499,11 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              const Icon(LucideIcons.mapPin, size: 12, color: Colors.grey),
+                              const Icon(
+                                LucideIcons.mapPin,
+                                size: 12,
+                                color: Colors.grey,
+                              ),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
@@ -425,12 +524,24 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
                   ),
                   // Marcar completada
                   IconButton(
-                    icon: Icon(LucideIcons.checkCircle, color: Colors.green.shade400, size: 26),
+                    icon: Icon(
+                      LucideIcons.checkCircle,
+                      color: Colors.green.shade400,
+                      size: 26,
+                    ),
                     onPressed: () {
                       cita.completada = true;
-                      _fs.updateCitaVeterinaria(currentMascota.familiaID, currentMascota.mascotaID, cita);
+                      _fs.updateCitaVeterinaria(
+                        currentMascota.familiaID,
+                        currentMascota.mascotaID,
+                        cita,
+                      );
                       if (cita.recordatorioID != null) {
-                        _fs.toggleRecordatorioCompletado(currentMascota.familiaID, cita.recordatorioID!, true);
+                        _fs.toggleRecordatorioCompletado(
+                          currentMascota.familiaID,
+                          cita.recordatorioID!,
+                          true,
+                        );
                       }
                     },
                   ),
@@ -441,7 +552,9 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
             Container(
               decoration: BoxDecoration(
                 color: AppColors.homeScreenBackground,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(24),
+                ),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
               child: Row(
@@ -450,17 +563,25 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
                   Row(
                     children: [
                       Icon(
-                        cita.notificacionActiva ? LucideIcons.bell : LucideIcons.bellOff,
+                        cita.notificacionActiva
+                            ? LucideIcons.bell
+                            : LucideIcons.bellOff,
                         size: 14,
-                        color: cita.notificacionActiva ? AppColors.secondary : Colors.grey,
+                        color: cita.notificacionActiva
+                            ? AppColors.secondary
+                            : Colors.grey,
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        cita.notificacionActiva ? "Recordatorio activo" : "Sin aviso",
+                        cita.notificacionActiva
+                            ? "Recordatorio activo"
+                            : "Sin aviso",
                         style: TextStyle(
                           fontFamily: 'Nunito',
                           fontSize: 12,
-                          color: cita.notificacionActiva ? AppColors.secondary : Colors.grey,
+                          color: cita.notificacionActiva
+                              ? AppColors.secondary
+                              : Colors.grey,
                         ),
                       ),
                     ],
@@ -472,9 +593,11 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
                         scale: 0.75,
                         child: Switch(
                           value: cita.notificacionActiva,
-                          onChanged: (v) => _toggleNotificacion(cita, v, currentMascota),
-                          activeColor: AppColors.secondary,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          onChanged: (v) =>
+                              _toggleNotificacion(cita, v, currentMascota),
+                          activeThumbColor: AppColors.secondary,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),
                       InkWell(
@@ -482,7 +605,11 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
                         borderRadius: BorderRadius.circular(8),
                         child: const Padding(
                           padding: EdgeInsets.all(6),
-                          child: Icon(LucideIcons.trash2, color: Colors.redAccent, size: 16),
+                          child: Icon(
+                            LucideIcons.trash2,
+                            color: Colors.redAccent,
+                            size: 16,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -523,23 +650,35 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
 
   Widget _buildHistorialTab(Mascota currentMascota) {
     return StreamBuilder<List<EventoSalud>>(
-      stream: _fs.streamEventosSalud(currentMascota.familiaID, currentMascota.mascotaID),
+      stream: _fs.streamEventosSalud(
+        currentMascota.familiaID,
+        currentMascota.mascotaID,
+      ),
       builder: (context, snapshotEv) {
         return StreamBuilder<List<CitaVeterinaria>>(
-          stream: _fs.streamCitasVeterinarias(currentMascota.familiaID, currentMascota.mascotaID),
+          stream: _fs.streamCitasVeterinarias(
+            currentMascota.familiaID,
+            currentMascota.mascotaID,
+          ),
           builder: (context, snapshotCi) {
             if (!snapshotEv.hasData || !snapshotCi.hasData) {
               return const Center(child: CircularProgressIndicator());
             }
 
             final eventos = snapshotEv.data!;
-            final citasCompletadas = snapshotCi.data!.where((c) => c.completada).toList();
+            final citasCompletadas = snapshotCi.data!
+                .where((c) => c.completada)
+                .toList();
 
             // Combinar y ordenar por fecha descendente
             final List<dynamic> items = [...eventos, ...citasCompletadas];
             items.sort((a, b) {
-              final dateA = a is EventoSalud ? a.fecha : (a as CitaVeterinaria).fecha;
-              final dateB = b is EventoSalud ? b.fecha : (b as CitaVeterinaria).fecha;
+              final dateA = a is EventoSalud
+                  ? a.fecha
+                  : (a as CitaVeterinaria).fecha;
+              final dateB = b is EventoSalud
+                  ? b.fecha
+                  : (b as CitaVeterinaria).fecha;
               return dateB.compareTo(dateA);
             });
 
@@ -548,11 +687,18 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(LucideIcons.history, size: 64, color: Colors.grey.shade300),
+                    Icon(
+                      LucideIcons.history,
+                      size: 64,
+                      color: Colors.grey.shade300,
+                    ),
                     const SizedBox(height: 16),
                     const Text(
                       "No hay historial registrado.",
-                      style: TextStyle(fontFamily: 'Nunito', color: Colors.grey),
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        color: Colors.grey,
+                      ),
                     ),
                   ],
                 ),
@@ -582,7 +728,10 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
                 return InkWell(
                   onTap: () {
                     if (!isEvento) {
-                      _showCitaDetailSheet(item as CitaVeterinaria, currentMascota);
+                      _showCitaDetailSheet(
+                        item as CitaVeterinaria,
+                        currentMascota,
+                      );
                     }
                   },
                   child: _buildTimelineItem(item, isEvento, currentMascota),
@@ -595,12 +744,24 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
     );
   }
 
-  Widget _buildTimelineItem(dynamic item, bool isEvento, Mascota currentMascota) {
-    final String titulo = isEvento ? (item as EventoSalud).tipo : (item as CitaVeterinaria).motivo;
-    final String desc = isEvento ? (item as EventoSalud).descripcion : (item as CitaVeterinaria).notas ?? "Cita completada";
-    final DateTime fecha = isEvento ? (item as EventoSalud).fecha : (item as CitaVeterinaria).fecha;
+  Widget _buildTimelineItem(
+    dynamic item,
+    bool isEvento,
+    Mascota currentMascota,
+  ) {
+    final String titulo = isEvento
+        ? (item as EventoSalud).tipo
+        : (item as CitaVeterinaria).motivo;
+    final String desc = isEvento
+        ? (item as EventoSalud).descripcion
+        : (item as CitaVeterinaria).notas ?? "Cita completada";
+    final DateTime fecha = isEvento
+        ? (item as EventoSalud).fecha
+        : (item as CitaVeterinaria).fecha;
     final String? imgUrl = isEvento ? (item as EventoSalud).adjuntoUrl : null;
-    final String id = isEvento ? (item as EventoSalud).id : (item as CitaVeterinaria).id;
+    final String id = isEvento
+        ? (item as EventoSalud).id
+        : (item as CitaVeterinaria).id;
 
     return IntrinsicHeight(
       child: Row(
@@ -610,11 +771,12 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
               Container(
                 width: 12,
                 height: 12,
-                decoration: const BoxDecoration(color: AppColors.secondary, shape: BoxShape.circle),
+                decoration: const BoxDecoration(
+                  color: AppColors.secondary,
+                  shape: BoxShape.circle,
+                ),
               ),
-              Expanded(
-                child: Container(width: 2, color: Colors.grey.shade300),
-              ),
+              Expanded(child: Container(width: 2, color: Colors.grey.shade300)),
             ],
           ),
           const SizedBox(width: 20),
@@ -665,17 +827,28 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
                             Row(
                               children: [
                                 if (!isEvento)
-                                  const Icon(LucideIcons.checkCircle, color: Colors.green, size: 16),
+                                  const Icon(
+                                    LucideIcons.checkCircle,
+                                    color: Colors.green,
+                                    size: 16,
+                                  ),
                                 const SizedBox(width: 8),
                                 IconButton(
-                                  icon: const Icon(LucideIcons.trash2, size: 16, color: Colors.redAccent),
+                                  icon: const Icon(
+                                    LucideIcons.trash2,
+                                    size: 16,
+                                    color: Colors.redAccent,
+                                  ),
                                   padding: EdgeInsets.zero,
                                   constraints: const BoxConstraints(),
                                   onPressed: () {
                                     if (isEvento) {
                                       _eliminarEvento(id, currentMascota);
                                     } else {
-                                      _eliminarCita(item as CitaVeterinaria, currentMascota);
+                                      _eliminarCita(
+                                        item as CitaVeterinaria,
+                                        currentMascota,
+                                      );
                                     }
                                   },
                                 ),
@@ -731,10 +904,14 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
 
   Widget _buildPerfilTab(Mascota currentMascota) {
     return StreamBuilder<ModuloVetConfig?>(
-      stream: _fs.streamModuloVetConfig(currentMascota.familiaID, currentMascota.mascotaID),
+      stream: _fs.streamModuloVetConfig(
+        currentMascota.familiaID,
+        currentMascota.mascotaID,
+      ),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-        
+        if (snapshot.connectionState == ConnectionState.waiting)
+          return const Center(child: CircularProgressIndicator());
+
         final config = snapshot.data;
 
         return SingleChildScrollView(
@@ -744,14 +921,29 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
             children: [
               _buildMascotaHeaderCard(currentMascota),
               const SizedBox(height: 24),
-              _buildSectionHeader("Información Crítica", () => _showEditPerfilSheet(config, currentMascota)),
+              _buildSectionHeader(
+                "Información Crítica",
+                () => _showEditPerfilSheet(config, currentMascota),
+              ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _buildInfoCard("Peso Actual", "${currentMascota.peso} kg", LucideIcons.scale)),
+                  Expanded(
+                    child: _buildInfoCard(
+                      "Peso Actual",
+                      "${currentMascota.peso} kg",
+                      LucideIcons.scale,
+                    ),
+                  ),
                   if (config?.seguroMedico?.isNotEmpty == true) ...[
                     const SizedBox(width: 12),
-                    Expanded(child: _buildInfoCard("Seguro", config!.seguroMedico!, LucideIcons.shieldCheck)),
+                    Expanded(
+                      child: _buildInfoCard(
+                        "Seguro",
+                        config!.seguroMedico!,
+                        LucideIcons.shieldCheck,
+                      ),
+                    ),
                   ],
                 ],
               ),
@@ -779,7 +971,11 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 12, offset: const Offset(0, 4)),
+          BoxShadow(
+            color: Colors.black.withAlpha(13),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Row(
@@ -790,7 +986,11 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
               color: AppColors.lightSecondary.withAlpha(77),
               shape: BoxShape.circle,
             ),
-            child: const Icon(LucideIcons.stethoscope, color: AppColors.secondary, size: 28),
+            child: const Icon(
+              LucideIcons.stethoscope,
+              color: AppColors.secondary,
+              size: 28,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -808,7 +1008,11 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
                 ),
                 Text(
                   '${mascota.especie} · ${mascota.raza}',
-                  style: const TextStyle(fontFamily: 'Nunito', fontSize: 14, color: Colors.grey),
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
                 ),
               ],
             ),
@@ -827,7 +1031,11 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
               ),
               const Text(
                 'peso actual',
-                style: TextStyle(fontFamily: 'Nunito', fontSize: 11, color: Colors.grey),
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 11,
+                  color: Colors.grey,
+                ),
               ),
             ],
           ),
@@ -842,11 +1050,20 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
       children: [
         Text(
           title,
-          style: const TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.secondary),
+          style: const TextStyle(
+            fontFamily: 'Nunito',
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.secondary,
+          ),
         ),
         if (onEdit != null)
           IconButton(
-            icon: const Icon(LucideIcons.edit3, color: AppColors.secondary, size: 20),
+            icon: const Icon(
+              LucideIcons.edit3,
+              color: AppColors.secondary,
+              size: 20,
+            ),
             onPressed: onEdit,
           ),
       ],
@@ -856,14 +1073,34 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
   Widget _buildInfoCard(String label, String value, IconData icon) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 10)]),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 10),
+        ],
+      ),
       child: Column(
         children: [
           Icon(icon, color: AppColors.secondary, size: 24),
           const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, color: Colors.grey)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 12,
+              color: Colors.grey,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(
+            value,
+            style: const TextStyle(
+              fontFamily: 'Nunito',
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
         ],
       ),
     );
@@ -873,7 +1110,13 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 10)]),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 10),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -881,20 +1124,42 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
             children: [
               Icon(LucideIcons.alertTriangle, color: Colors.orange, size: 20),
               SizedBox(width: 8),
-              Text("Alergias y Contraindicaciones", style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold)),
+              Text(
+                "Alergias y Contraindicaciones",
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
           if (alergias.isEmpty)
-            const Text("Sin alergias registradas", style: TextStyle(fontFamily: 'Nunito', color: Colors.grey))
+            const Text(
+              "Sin alergias registradas",
+              style: TextStyle(fontFamily: 'Nunito', color: Colors.grey),
+            )
           else
             Wrap(
               spacing: 8,
-              children: alergias.map((a) => Chip(
-                label: Text(a, style: const TextStyle(fontFamily: 'Nunito', color: Colors.white, fontSize: 12)),
-                backgroundColor: Colors.redAccent.withAlpha(204),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              )).toList(),
+              children: alergias
+                  .map(
+                    (a) => Chip(
+                      label: Text(
+                        a,
+                        style: const TextStyle(
+                          fontFamily: 'Nunito',
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      ),
+                      backgroundColor: Colors.redAccent.withAlpha(204),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  )
+                  .toList(),
             ),
         ],
       ),
@@ -906,9 +1171,18 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 10)]),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 10),
+        ],
+      ),
       child: vetes.isEmpty
-          ? const Text("Sin veterinarios registrados", style: TextStyle(fontFamily: 'Nunito', color: Colors.grey))
+          ? const Text(
+              "Sin veterinarios registrados",
+              style: TextStyle(fontFamily: 'Nunito', color: Colors.grey),
+            )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -972,7 +1246,13 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
       children: [
         Icon(icon, size: 20, color: AppColors.secondary),
         const SizedBox(width: 12),
-        Text(text, style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w600)),
+        Text(
+          text,
+          style: const TextStyle(
+            fontFamily: 'Nunito',
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
@@ -994,7 +1274,9 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
             }
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Teléfono de urgencias no configurado")),
+              const SnackBar(
+                content: Text("Teléfono de urgencias no configurado"),
+              ),
             );
           }
         },
@@ -1010,7 +1292,9 @@ class _VeterinarioScreenState extends State<VeterinarioScreen> with SingleTicker
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.redAccent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           elevation: 8,
           shadowColor: Colors.redAccent.withAlpha(128),
         ),
@@ -1037,11 +1321,21 @@ class _AddEventoSheetState extends State<_AddEventoSheet> {
   File? _image;
   bool _isUploading = false;
 
-  final List<String> _tipos = ['Vacuna', 'Desparasitación', 'Diagnóstico', 'Cirugía', 'Control', 'Otro'];
+  final List<String> _tipos = [
+    'Vacuna',
+    'Desparasitación',
+    'Diagnóstico',
+    'Cirugía',
+    'Control',
+    'Otro',
+  ];
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
     if (picked != null) {
       setState(() => _image = File(picked.path));
     }
@@ -1099,31 +1393,57 @@ class _AddEventoSheetState extends State<_AddEventoSheet> {
                 child: Container(
                   width: 40,
                   height: 4,
-                  decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
               const Text(
                 "Nuevo Evento de Salud",
-                style: TextStyle(fontFamily: 'Nunito', fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.secondary),
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.secondary,
+                ),
               ),
               const SizedBox(height: 20),
-              const Text("Tipo de evento", style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold, fontSize: 14)),
+              const Text(
+                "Tipo de evento",
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
               const SizedBox(height: 8),
               SizedBox(
                 height: 45,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
-                  children: _tipos.map((t) => Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(t, style: TextStyle(fontFamily: 'Nunito', color: _tipo == t ? Colors.white : Colors.black)),
-                      selected: _tipo == t,
-                      onSelected: (val) => setState(() => _tipo = t),
-                      selectedColor: AppColors.secondary,
-                      backgroundColor: AppColors.inputBackground.withAlpha(100),
-                    ),
-                  )).toList(),
+                  children: _tipos
+                      .map(
+                        (t) => Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text(
+                              t,
+                              style: TextStyle(
+                                fontFamily: 'Nunito',
+                                color: _tipo == t ? Colors.white : Colors.black,
+                              ),
+                            ),
+                            selected: _tipo == t,
+                            onSelected: (val) => setState(() => _tipo = t),
+                            selectedColor: AppColors.secondary,
+                            backgroundColor: AppColors.inputBackground
+                                .withAlpha(100),
+                          ),
+                        ),
+                      )
+                      .toList(),
                 ),
               ),
               const SizedBox(height: 16),
@@ -1134,9 +1454,13 @@ class _AddEventoSheetState extends State<_AddEventoSheet> {
                   hintText: "Descripción (ej: Vacuna de la rabia)",
                   filled: true,
                   fillColor: AppColors.inputBackground.withAlpha(100),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
-                validator: (v) => v == null || v.isEmpty ? "Campo obligatorio" : null,
+                validator: (v) =>
+                    v == null || v.isEmpty ? "Campo obligatorio" : null,
               ),
               const SizedBox(height: 16),
               InkWell(
@@ -1144,25 +1468,44 @@ class _AddEventoSheetState extends State<_AddEventoSheet> {
                   final d = await showDatePicker(
                     context: context,
                     initialDate: _fecha,
-                    firstDate: DateTime.now().subtract(const Duration(days: 365 * 5)),
+                    firstDate: DateTime.now().subtract(
+                      const Duration(days: 365 * 5),
+                    ),
                     lastDate: DateTime.now(),
                   );
                   if (d != null) setState(() => _fecha = d);
                 },
                 child: Container(
                   padding: const EdgeInsets.all(15),
-                  decoration: BoxDecoration(color: AppColors.inputBackground.withAlpha(100), borderRadius: BorderRadius.circular(15)),
+                  decoration: BoxDecoration(
+                    color: AppColors.inputBackground.withAlpha(100),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
                   child: Row(
                     children: [
-                      const Icon(LucideIcons.calendar, size: 18, color: AppColors.secondary),
+                      const Icon(
+                        LucideIcons.calendar,
+                        size: 18,
+                        color: AppColors.secondary,
+                      ),
                       const SizedBox(width: 10),
-                      Text(DateFormat('dd/MM/yyyy').format(_fecha), style: const TextStyle(fontFamily: 'Nunito')),
+                      Text(
+                        DateFormat('dd/MM/yyyy').format(_fecha),
+                        style: const TextStyle(fontFamily: 'Nunito'),
+                      ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 16),
-              const Text("Adjuntar foto (receta, carnet...)", style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold, fontSize: 14)),
+              const Text(
+                "Adjuntar foto (receta, carnet...)",
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
               const SizedBox(height: 8),
               InkWell(
                 onTap: _pickImage,
@@ -1172,15 +1515,30 @@ class _AddEventoSheetState extends State<_AddEventoSheet> {
                   decoration: BoxDecoration(
                     color: AppColors.inputBackground.withAlpha(50),
                     borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: AppColors.secondary.withAlpha(50), style: BorderStyle.solid),
+                    border: Border.all(
+                      color: AppColors.secondary.withAlpha(50),
+                      style: BorderStyle.solid,
+                    ),
                   ),
-                  child: _image != null 
-                      ? ClipRRect(borderRadius: BorderRadius.circular(15), child: Image.file(_image!, fit: BoxFit.cover))
+                  child: _image != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(15),
+                          child: Image.file(_image!, fit: BoxFit.cover),
+                        )
                       : const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(LucideIcons.camera, color: AppColors.secondary),
-                            Text("Añadir imagen", style: TextStyle(fontFamily: 'Nunito', color: AppColors.secondary)),
+                            Icon(
+                              LucideIcons.camera,
+                              color: AppColors.secondary,
+                            ),
+                            Text(
+                              "Añadir imagen",
+                              style: TextStyle(
+                                fontFamily: 'Nunito',
+                                color: AppColors.secondary,
+                              ),
+                            ),
                           ],
                         ),
                 ),
@@ -1193,11 +1551,21 @@ class _AddEventoSheetState extends State<_AddEventoSheet> {
                   onPressed: _isUploading ? null : _guardar,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.secondary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
-                  child: _isUploading 
+                  child: _isUploading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("Guardar en Historial", style: TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                      : const Text(
+                          "Guardar en Historial",
+                          style: TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 30),
@@ -1214,7 +1582,11 @@ class AddCitaSheet extends StatefulWidget {
   final VoidCallback onSaved;
   final FirestoreService? fsOverride;
 
-  const AddCitaSheet({required this.mascota, required this.onSaved, this.fsOverride});
+  const AddCitaSheet({
+    required this.mascota,
+    required this.onSaved,
+    this.fsOverride,
+  });
 
   @override
   State<AddCitaSheet> createState() => _AddCitaSheetState();
@@ -1239,26 +1611,49 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
     super.initState();
     _fs
         .getModuloVetConfig(widget.mascota.familiaID, widget.mascota.mascotaID)
-        .then((c) { if (mounted) setState(() => _vetConfig = c); });
+        .then((c) {
+          if (mounted) setState(() => _vetConfig = c);
+        });
   }
 
   String _timingLabel(NotifTiming t) {
     switch (t) {
-      case NotifTiming.horasBefore1:  return '1h antes';
-      case NotifTiming.horasBefore5:  return '5h antes';
-      case NotifTiming.diaBefore:     return '1 día antes';
-      case NotifTiming.semanaBefore:  return '1 semana antes';
-      case NotifTiming.personalizado: return 'Personalizado';
+      case NotifTiming.horasBefore1:
+        return '1h antes';
+      case NotifTiming.horasBefore5:
+        return '5h antes';
+      case NotifTiming.diaBefore:
+        return '1 día antes';
+      case NotifTiming.semanaBefore:
+        return '1 semana antes';
+      case NotifTiming.personalizado:
+        return 'Personalizado';
     }
   }
 
   DateTime? _computeNotifDateTime() {
-    final citaDateTime = DateTime(_fecha.year, _fecha.month, _fecha.day, _hora.hour, _hora.minute);
-    return computeNotifDateTime(_notifTiming, citaDateTime, custom: _customNotifDateTime);
+    final citaDateTime = DateTime(
+      _fecha.year,
+      _fecha.month,
+      _fecha.day,
+      _hora.hour,
+      _hora.minute,
+    );
+    return computeNotifDateTime(
+      _notifTiming,
+      citaDateTime,
+      custom: _customNotifDateTime,
+    );
   }
 
   Future<void> _pickCustomNotifDateTime() async {
-    final citaDateTime = DateTime(_fecha.year, _fecha.month, _fecha.day, _hora.hour, _hora.minute);
+    final citaDateTime = DateTime(
+      _fecha.year,
+      _fecha.month,
+      _fecha.day,
+      _hora.hour,
+      _hora.minute,
+    );
     final date = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -1266,10 +1661,19 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
       lastDate: citaDateTime,
     );
     if (date == null || !mounted) return;
-    final time = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
     if (time == null || !mounted) return;
     setState(() {
-      _customNotifDateTime = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      _customNotifDateTime = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
     });
   }
 
@@ -1277,7 +1681,13 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
-    final fechaHora = DateTime(_fecha.year, _fecha.month, _fecha.day, _hora.hour, _hora.minute);
+    final fechaHora = DateTime(
+      _fecha.year,
+      _fecha.month,
+      _fecha.day,
+      _hora.hour,
+      _hora.minute,
+    );
 
     // Calcular cuándo se disparará la notificación
     DateTime? notifDateTime;
@@ -1304,7 +1714,9 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
       id: '',
       fecha: fechaHora,
       motivo: motivo,
-      veterinario: _veterinarioController.text.trim().isEmpty ? null : _veterinarioController.text.trim(),
+      veterinario: _veterinarioController.text.trim().isEmpty
+          ? null
+          : _veterinarioController.text.trim(),
       notas: notas.isEmpty ? null : notas,
       notificacionActiva: _notificacionActiva && notifDateTime != null,
       idNotificacion: idNotif,
@@ -1321,18 +1733,24 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
       if (!mounted) return;
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error al agendar la cita. Inténtalo de nuevo."), backgroundColor: Colors.redAccent, behavior: SnackBarBehavior.floating),
+        const SnackBar(
+          content: Text("Error al agendar la cita. Inténtalo de nuevo."),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return;
     }
 
     if (_notificacionActiva && idNotif != null && notifDateTime != null) {
-      NotificationService().scheduleOneTimeNotification(
-        id: idNotif,
-        scheduledFor: notifDateTime,
-        title: '🐾 Cita: ${widget.mascota.nombre}',
-        body: notifBody,
-      ).catchError((_) {});
+      NotificationService()
+          .scheduleOneTimeNotification(
+            id: idNotif,
+            scheduledFor: notifDateTime,
+            title: '🐾 Cita: ${widget.mascota.nombre}',
+            body: notifBody,
+          )
+          .catchError((_) {});
     }
 
     if (!mounted) return;
@@ -1342,7 +1760,13 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
     final msg = (_notificacionActiva && notifDateTime == null)
         ? '¡Cita agendada! El recordatorio no se programó (fecha ya pasada)'
         : '¡Cita agendada con éxito!';
-    messenger.showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.green, behavior: SnackBarBehavior.floating));
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
@@ -1386,10 +1810,15 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
                 ),
               ),
               const SizedBox(height: 20),
-              _buildInput("Motivo (ej: Vacuna, Revisión)", _motivoController, isRequired: true),
+              _buildInput(
+                "Motivo (ej: Vacuna, Revisión)",
+                _motivoController,
+                isRequired: true,
+              ),
               const SizedBox(height: 16),
               _buildInput("Clínica / Veterinario", _veterinarioController),
-              if (_vetConfig != null && _vetConfig!.veterinarios.isNotEmpty) ...[
+              if (_vetConfig != null &&
+                  _vetConfig!.veterinarios.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -1398,8 +1827,17 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
                     for (final vet in _vetConfig!.veterinarios)
                       ActionChip(
                         avatar: const Icon(Icons.local_hospital, size: 14),
-                        label: Text(vet['nombre'] ?? '', style: const TextStyle(fontFamily: 'Nunito', fontSize: 12)),
-                        onPressed: () => setState(() => _veterinarioController.text = vet['nombre'] ?? ''),
+                        label: Text(
+                          vet['nombre'] ?? '',
+                          style: const TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 12,
+                          ),
+                        ),
+                        onPressed: () => setState(
+                          () =>
+                              _veterinarioController.text = vet['nombre'] ?? '',
+                        ),
                         backgroundColor: AppColors.lightSecondary.withAlpha(80),
                         side: BorderSide.none,
                       ),
@@ -1418,7 +1856,9 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
                           context: context,
                           initialDate: _fecha,
                           firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                          lastDate: DateTime.now().add(
+                            const Duration(days: 365),
+                          ),
                         );
                         if (d != null) setState(() => _fecha = d);
                       },
@@ -1430,7 +1870,10 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
                       LucideIcons.clock,
                       _hora.format(context),
                       () async {
-                        final t = await showTimePicker(context: context, initialTime: _hora);
+                        final t = await showTimePicker(
+                          context: context,
+                          initialTime: _hora,
+                        );
                         if (t != null) setState(() => _hora = t);
                       },
                     ),
@@ -1442,25 +1885,56 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
               const SizedBox(height: 10),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text("Recordatorio automático", style: TextStyle(fontFamily: 'Nunito')),
-                secondary: const Icon(LucideIcons.bell, color: AppColors.secondary),
+                title: const Text(
+                  "Recordatorio automático",
+                  style: TextStyle(fontFamily: 'Nunito'),
+                ),
+                secondary: const Icon(
+                  LucideIcons.bell,
+                  color: AppColors.secondary,
+                ),
                 value: _notificacionActiva,
                 onChanged: (v) => setState(() => _notificacionActiva = v),
                 activeThumbColor: AppColors.secondary,
               ),
               if (_notificacionActiva) ...[
-                const Text("¿Cuándo recordarte?", style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold, fontSize: 14)),
+                const Text(
+                  "¿Cuándo recordarte?",
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
-                  children: NotifTiming.values.map((t) => ChoiceChip(
-                    label: Text(_timingLabel(t), style: TextStyle(fontFamily: 'Nunito', fontSize: 13, color: _notifTiming == t ? Colors.white : Colors.black87)),
-                    selected: _notifTiming == t,
-                    onSelected: (_) => setState(() { _notifTiming = t; _customNotifDateTime = null; }),
-                    selectedColor: AppColors.secondary,
-                    backgroundColor: AppColors.inputBackground.withAlpha(100),
-                    side: BorderSide.none,
-                  )).toList(),
+                  children: NotifTiming.values
+                      .map(
+                        (t) => ChoiceChip(
+                          label: Text(
+                            _timingLabel(t),
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 13,
+                              color: _notifTiming == t
+                                  ? Colors.white
+                                  : Colors.black87,
+                            ),
+                          ),
+                          selected: _notifTiming == t,
+                          onSelected: (_) => setState(() {
+                            _notifTiming = t;
+                            _customNotifDateTime = null;
+                          }),
+                          selectedColor: AppColors.secondary,
+                          backgroundColor: AppColors.inputBackground.withAlpha(
+                            100,
+                          ),
+                          side: BorderSide.none,
+                        ),
+                      )
+                      .toList(),
                 ),
                 if (_notifTiming == NotifTiming.personalizado) ...[
                   const SizedBox(height: 12),
@@ -1469,16 +1943,30 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
                     borderRadius: BorderRadius.circular(15),
                     child: Container(
                       padding: const EdgeInsets.all(15),
-                      decoration: BoxDecoration(color: AppColors.inputBackground.withAlpha(100), borderRadius: BorderRadius.circular(15)),
+                      decoration: BoxDecoration(
+                        color: AppColors.inputBackground.withAlpha(100),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
                       child: Row(
                         children: [
-                          const Icon(LucideIcons.calendarClock, size: 18, color: AppColors.secondary),
+                          const Icon(
+                            LucideIcons.calendarClock,
+                            size: 18,
+                            color: AppColors.secondary,
+                          ),
                           const SizedBox(width: 10),
                           Text(
                             _customNotifDateTime != null
-                                ? DateFormat('dd/MM/yyyy · HH:mm').format(_customNotifDateTime!)
+                                ? DateFormat(
+                                    'dd/MM/yyyy · HH:mm',
+                                  ).format(_customNotifDateTime!)
                                 : 'Seleccionar fecha y hora',
-                            style: TextStyle(fontFamily: 'Nunito', color: _customNotifDateTime != null ? Colors.black87 : Colors.grey),
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
+                              color: _customNotifDateTime != null
+                                  ? Colors.black87
+                                  : Colors.grey,
+                            ),
                           ),
                         ],
                       ),
@@ -1495,13 +1983,20 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
                   onPressed: _isLoading ? null : _guardar,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.secondary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
                           "Agendar Cita",
-                          style: TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                 ),
               ),
@@ -1513,7 +2008,12 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
     );
   }
 
-  Widget _buildInput(String hint, TextEditingController controller, {bool isRequired = false, int maxLines = 1}) {
+  Widget _buildInput(
+    String hint,
+    TextEditingController controller, {
+    bool isRequired = false,
+    int maxLines = 1,
+  }) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
@@ -1521,9 +2021,13 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
         hintText: hint,
         filled: true,
         fillColor: AppColors.inputBackground.withAlpha(100),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide.none,
+        ),
       ),
-      validator: (v) => isRequired && (v == null || v.isEmpty) ? "Campo obligatorio" : null,
+      validator: (v) =>
+          isRequired && (v == null || v.isEmpty) ? "Campo obligatorio" : null,
     );
   }
 
@@ -1541,7 +2045,13 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
           children: [
             Icon(icon, size: 18, color: AppColors.secondary),
             const SizedBox(width: 10),
-            Text(text, style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w600)),
+            Text(
+              text,
+              style: const TextStyle(
+                fontFamily: 'Nunito',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
@@ -1554,7 +2064,11 @@ class _EditPerfilSheet extends StatefulWidget {
   final ModuloVetConfig? config;
   final VoidCallback onSaved;
 
-  const _EditPerfilSheet({required this.mascota, this.config, required this.onSaved});
+  const _EditPerfilSheet({
+    required this.mascota,
+    this.config,
+    required this.onSaved,
+  });
 
   @override
   State<_EditPerfilSheet> createState() => _EditPerfilSheetState();
@@ -1571,17 +2085,27 @@ class _EditPerfilSheetState extends State<_EditPerfilSheet> {
   @override
   void initState() {
     super.initState();
-    _pesoController = TextEditingController(text: widget.mascota.peso.toString());
-    _alergiasController = TextEditingController(text: widget.config?.alergias.join(', ') ?? '');
-    _urgenciasController = TextEditingController(text: widget.config?.telUrgencias ?? '');
-    _seguroController = TextEditingController(text: widget.config?.seguroMedico ?? '');
+    _pesoController = TextEditingController(
+      text: widget.mascota.peso.toString(),
+    );
+    _alergiasController = TextEditingController(
+      text: widget.config?.alergias.join(', ') ?? '',
+    );
+    _urgenciasController = TextEditingController(
+      text: widget.config?.telUrgencias ?? '',
+    );
+    _seguroController = TextEditingController(
+      text: widget.config?.seguroMedico ?? '',
+    );
 
     _vetEntries = (widget.config?.veterinarios ?? [])
-        .map((v) => _VetEntry(
-              nombre: v['nombre'] ?? '',
-              tel: v['telefono'] ?? '',
-              colegiado: v['numColegiado'] ?? '',
-            ))
+        .map(
+          (v) => _VetEntry(
+            nombre: v['nombre'] ?? '',
+            tel: v['telefono'] ?? '',
+            colegiado: v['numColegiado'] ?? '',
+          ),
+        )
         .toList();
     if (_vetEntries.isEmpty) _vetEntries.add(_VetEntry());
   }
@@ -1621,11 +2145,13 @@ class _EditPerfilSheetState extends State<_EditPerfilSheet> {
 
     final vetes = _vetEntries
         .where((e) => e.nombreCtrl.text.trim().isNotEmpty)
-        .map((e) => {
-              'nombre': e.nombreCtrl.text.trim(),
-              'telefono': e.telCtrl.text.trim(),
-              'numColegiado': e.colegiadoCtrl.text.trim(),
-            })
+        .map(
+          (e) => {
+            'nombre': e.nombreCtrl.text.trim(),
+            'telefono': e.telCtrl.text.trim(),
+            'numColegiado': e.colegiadoCtrl.text.trim(),
+          },
+        )
         .toList();
 
     final config = ModuloVetConfig(
@@ -1656,7 +2182,10 @@ class _EditPerfilSheetState extends State<_EditPerfilSheet> {
         left: 24,
         right: 24,
       ),
-      decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -1664,15 +2193,40 @@ class _EditPerfilSheetState extends State<_EditPerfilSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
               const SizedBox(height: 20),
-              const Text("Editar Perfil Médico", style: TextStyle(fontFamily: 'Nunito', fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.secondary)),
+              const Text(
+                "Editar Perfil Médico",
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.secondary,
+                ),
+              ),
               const SizedBox(height: 20),
               Row(
                 children: [
-                  Expanded(child: _buildInput("Peso (kg)", _pesoController, keyboardType: TextInputType.number)),
+                  Expanded(
+                    child: _buildInput(
+                      "Peso (kg)",
+                      _pesoController,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildInput("Seguro Médico", _seguroController)),
+                  Expanded(
+                    child: _buildInput("Seguro Médico", _seguroController),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
@@ -1683,12 +2237,25 @@ class _EditPerfilSheetState extends State<_EditPerfilSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Veterinarios / Clínicas", style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.bold, fontSize: 14)),
+                  const Text(
+                    "Veterinarios / Clínicas",
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
                   TextButton.icon(
-                    onPressed: () => setState(() => _vetEntries.add(_VetEntry())),
+                    onPressed: () =>
+                        setState(() => _vetEntries.add(_VetEntry())),
                     icon: const Icon(Icons.add, size: 18),
-                    label: const Text("Añadir", style: TextStyle(fontFamily: 'Nunito')),
-                    style: TextButton.styleFrom(foregroundColor: AppColors.secondary),
+                    label: const Text(
+                      "Añadir",
+                      style: TextStyle(fontFamily: 'Nunito'),
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.secondary,
+                    ),
                   ),
                 ],
               ),
@@ -1699,15 +2266,32 @@ class _EditPerfilSheetState extends State<_EditPerfilSheet> {
               ],
 
               const SizedBox(height: 8),
-              _buildInput("TELÉFONO URGENCIAS 24H", _urgenciasController, keyboardType: TextInputType.phone),
+              _buildInput(
+                "TELÉFONO URGENCIAS 24H",
+                _urgenciasController,
+                keyboardType: TextInputType.phone,
+              ),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
                   onPressed: _guardar,
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.secondary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
-                  child: const Text("Guardar Cambios", style: TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.secondary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  child: const Text(
+                    "Guardar Cambios",
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 30),
@@ -1731,9 +2315,15 @@ class _EditPerfilSheetState extends State<_EditPerfilSheet> {
         children: [
           Row(
             children: [
-              Expanded(child: _buildInput("Clínica / Veterinario *", e.nombreCtrl)),
+              Expanded(
+                child: _buildInput("Clínica / Veterinario *", e.nombreCtrl),
+              ),
               IconButton(
-                icon: const Icon(Icons.close, color: Colors.redAccent, size: 20),
+                icon: const Icon(
+                  Icons.close,
+                  color: Colors.redAccent,
+                  size: 20,
+                ),
                 onPressed: _vetEntries.length > 1
                     ? () => setState(() => _vetEntries.removeAt(index))
                     : null,
@@ -1743,7 +2333,13 @@ class _EditPerfilSheetState extends State<_EditPerfilSheet> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(child: _buildInput("Teléfono", e.telCtrl, keyboardType: TextInputType.phone)),
+              Expanded(
+                child: _buildInput(
+                  "Teléfono",
+                  e.telCtrl,
+                  keyboardType: TextInputType.phone,
+                ),
+              ),
               const SizedBox(width: 8),
               Expanded(child: _buildInput("Nº Colegiado", e.colegiadoCtrl)),
             ],
@@ -1753,7 +2349,11 @@ class _EditPerfilSheetState extends State<_EditPerfilSheet> {
     );
   }
 
-  Widget _buildInput(String hint, TextEditingController controller, {TextInputType? keyboardType}) {
+  Widget _buildInput(
+    String hint,
+    TextEditingController controller, {
+    TextInputType? keyboardType,
+  }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
@@ -1761,8 +2361,14 @@ class _EditPerfilSheetState extends State<_EditPerfilSheet> {
         hintText: hint,
         filled: true,
         fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
       ),
       style: const TextStyle(fontFamily: 'Nunito', fontSize: 14),
     );
@@ -1787,24 +2393,54 @@ class CitaDetailSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)))),
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
           const SizedBox(height: 20),
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: AppColors.lightSecondary.withAlpha(51), shape: BoxShape.circle),
-                child: const Icon(LucideIcons.stethoscope, color: AppColors.secondary, size: 28),
+                decoration: BoxDecoration(
+                  color: AppColors.lightSecondary.withAlpha(51),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  LucideIcons.stethoscope,
+                  color: AppColors.secondary,
+                  size: 28,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(cita.motivo, style: const TextStyle(fontFamily: 'Nunito', fontSize: 20, fontWeight: FontWeight.bold)),
                     Text(
-                      DateFormat('EEEE, d MMMM yyyy · HH:mm', 'es').format(cita.fecha),
-                      style: const TextStyle(fontFamily: 'Nunito', color: AppColors.secondary, fontWeight: FontWeight.w600),
+                      cita.motivo,
+                      style: const TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      DateFormat(
+                        'EEEE, d MMMM yyyy · HH:mm',
+                        'es',
+                      ).format(cita.fecha),
+                      style: const TextStyle(
+                        fontFamily: 'Nunito',
+                        color: AppColors.secondary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -1812,8 +2448,14 @@ class CitaDetailSheet extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          if (cita.veterinario != null) _buildDetailRow(LucideIcons.mapPin, "Veterinario / Clínica", cita.veterinario!),
-          if (cita.notas != null) _buildDetailRow(LucideIcons.fileText, "Notas", cita.notas!),
+          if (cita.veterinario != null)
+            _buildDetailRow(
+              LucideIcons.mapPin,
+              "Veterinario / Clínica",
+              cita.veterinario!,
+            ),
+          if (cita.notas != null)
+            _buildDetailRow(LucideIcons.fileText, "Notas", cita.notas!),
           _buildDetailRow(
             LucideIcons.bell,
             "Recordatorio",
@@ -1832,8 +2474,21 @@ class CitaDetailSheet extends StatelessWidget {
             height: 55,
             child: ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.secondary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
-              child: const Text("Cerrar", style: TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.secondary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Text(
+                "Cerrar",
+                style: TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -1842,7 +2497,12 @@ class CitaDetailSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String label, String value, {Color? color}) {
+  Widget _buildDetailRow(
+    IconData icon,
+    String label,
+    String value, {
+    Color? color,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
@@ -1854,8 +2514,23 @@ class CitaDetailSheet extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, color: Colors.grey)),
-                Text(value, style: TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.bold, color: color ?? Colors.black87)),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: color ?? Colors.black87,
+                  ),
+                ),
               ],
             ),
           ),

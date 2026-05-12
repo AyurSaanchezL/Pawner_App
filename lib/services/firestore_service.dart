@@ -5,6 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:pawner_app/core/constants.dart';
+import 'package:pawner_app/core/model/modulo_paseos/model_paseo.dart';
+import 'package:pawner_app/core/model/modulo_paseos/modulo_paseo_config.dart';
 import 'package:pawner_app/core/model/usuario.dart';
 import 'package:pawner_app/core/model/familia.dart';
 import 'package:pawner_app/core/model/mascota.dart';
@@ -769,6 +771,102 @@ class FirestoreService {
       familiaID,
       mascotaID,
     ).collection('EventosSalud').doc(eventoId).delete();
+  }
+
+  // --- MÓDULO PASEOS ---
+
+  DocumentReference _modPaseoDoc(String familiaID, String mascotaID) => _db
+      .collection('Familias')
+      .doc(familiaID)
+      .collection('Mascotas')
+      .doc(mascotaID)
+      .collection('Modulos')
+      .doc('mod_paseo');
+
+  Future<void> saveModulePaseosConfig(
+    String familiaID,
+    mascotaID,
+    PaseoConfig paseoConfig,
+  ) async {
+    final paseoConfigDoc = _modPaseoDoc(familiaID, mascotaID);
+
+    await paseoConfigDoc.set(paseoConfig.toJson(), SetOptions(merge: true));
+  }
+
+  Stream<PaseoConfig?> getPaseoConfig(String familiaID, mascotaID) {
+    return _modPaseoDoc(familiaID, mascotaID).snapshots().map(
+      (doc) => doc.exists
+          ? PaseoConfig.fromJson(doc.data() as Map<String, dynamic>)
+          : null,
+    );
+  }
+
+  // Crear nuevo paseo
+  Future<void> addPaseo(Paseo paseo, String familiaID, String mascotaID) async {
+    var docPaseo = _modPaseoDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Paseos').doc();
+
+    paseo.paseoID = docPaseo.id;
+
+    final json = paseo.toJson();
+
+    await docPaseo.set(json);
+  }
+
+  Future<void> updatePaseo(
+    Paseo paseo,
+    String familiaID,
+    String mascotaID,
+  ) async {
+    final docPaseo = _modPaseoDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Paseos').doc(paseo.paseoID);
+
+    await docPaseo.set(paseo.toJson(), SetOptions(merge: true));
+  }
+
+  // Leer paseos
+  Stream<List<Paseo>> readPaseos(String familiaID, String mascotaID) =>
+      _modPaseoDoc(familiaID, mascotaID)
+          .collection('Paseos')
+          .snapshots()
+          .map(
+            (snapshot) => snapshot.docs
+                .map((doc) => Paseo.fromJson(doc.data(), doc.id))
+                .toList(),
+          );
+
+  Future<int> countPaseosToday(String familiaID, String mascotaID) async {
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    final query = _modPaseoDoc(familiaID, mascotaID)
+        .collection('Paseos')
+        .where(
+          'fechaHora',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+        )
+        .where('fechaHora', isLessThan: Timestamp.fromDate(endOfDay));
+
+    final snapshot = await query.get();
+    return snapshot.docs.length;
+  }
+
+  Future<void> deletePaseo(
+    String familiaID,
+    String mascotaID,
+    Paseo paseo,
+  ) async {
+    final docPaseo = _modPaseoDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Paseos').doc(paseo.paseoID);
+
+    await docPaseo.delete();
   }
 
   // --- RECORDATORIOS (nivel Familia) ---
