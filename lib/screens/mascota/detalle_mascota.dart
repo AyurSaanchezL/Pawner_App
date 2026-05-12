@@ -877,7 +877,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        "Chip: ${mascota.chip}",
+                        "Chip: \n${mascota.chip}",
                         style: const TextStyle(
                           fontSize: 13,
                           color: Colors.grey,

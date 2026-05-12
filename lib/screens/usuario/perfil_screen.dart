@@ -7,6 +7,7 @@ import 'package:pawner_app/core/constants.dart';
 import 'package:pawner_app/core/model/usuario.dart';
 import 'package:pawner_app/screens/session/change_email_screen.dart';
 import 'package:pawner_app/screens/session/change_password_screen.dart';
+import 'package:pawner_app/screens/session/delete_account_screen.dart';
 import 'package:pawner_app/services/firestore_service.dart';
 
 class PerfilUsuarioScreen extends StatefulWidget {
@@ -51,6 +52,26 @@ class _PerfilUsuarioScreenState extends State<PerfilUsuarioScreen> {
           },
           icon: Icon(Icons.arrow_back),
         ),
+        actionsPadding: .only(right: 10),
+        actions: [
+          IconButton.filled(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DeleteAccountScreen(usuario: widget.u),
+                ),
+              );
+            },
+            icon: Icon(LucideIcons.trash),
+            style: ButtonStyle(
+              backgroundColor: .all(Colors.redAccent.withAlpha(155)),
+              iconColor: .all(AppColors.cardWhite),
+              iconSize: .all(20),
+              side: .all(BorderSide(color: Colors.redAccent)),
+            ),
+          ),
+        ],
       ),
       backgroundColor: AppColors.lightSecondary,
       body: _buildBody(widget.u),
