@@ -200,104 +200,100 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                                       mascota.raza == 'Otro')) ...[
                                 const SizedBox(height: 20),
                                 _buildSpeciesBreedCard(mascota),
-
-                                const SizedBox(height: 40),
-
-                                // Fila de Info Rápida con iconos del formulario
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children: [
-                                    _buildQuickInfoItem(
-                                      Icons.monitor_weight,
-                                      "${mascota.peso} Kg",
-                                      AppColors.secondary,
-                                      onTap: () => _showWeightModal(context),
-                                    ),
-                                    _buildQuickInfoItem(
-                                      mascota.genero == 'Macho'
-                                          ? Icons.male
-                                          : Icons.female,
-                                      mascota.genero,
-                                      mascota.genero == 'Macho'
-                                          ? AppColors.male
-                                          : AppColors.female,
-                                    ),
-                                    _buildQuickInfoItem(
-                                      LucideIcons.scissors,
-                                      mascota.esterilizado
-                                          ? 'Esterilizado'
-                                          : 'Sin Esterilizar',
-                                      Colors.black,
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 40),
-
-                                // Chips de navegación usando ChatBubbleClipper
-                                _buildNavigationBubbleChip(
-                                  title: "Comida",
-                                  subtitle: "Dieta y horarios",
-                                  icon: LucideIcons.utensils,
-                                  isRight: false,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => DashboardComidaScreen(
-                                          mascota: mascota,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 20),
-                                _buildNavigationBubbleChip(
-                                  title: "Veterinario",
-                                  subtitle: "Cuidados y vacunas",
-                                  icon: LucideIcons.stethoscope,
-                                  isRight: true,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            VeterinarioScreen(mascota: mascota),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 20),
-                                _buildNavigationBubbleChip(
-                                  title: "Paseos",
-                                  subtitle: "Bienestar y salud",
-                                  icon: IconData(
-                                    0xe4a1,
-                                    fontFamily: 'MaterialIcons',
-                                  ),
-                                  isRight: false,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => PaseoScreen(m: mascota),
-                                      ),
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 20),
-                                _buildObservationChip(
-                                  title: "Observaciones",
-                                  subtitle: mascota.observaciones.isEmpty
-                                      ? "Añadir notas"
-                                      : "Toca para ver notas",
-                                  icon: LucideIcons.stickyNote,
-                                  onTap: () => _showObservationsModal(context),
-                                ),
-                                const SizedBox(
-                                  height: 20,
-                                ), // Added spacing before footer
                               ],
+
+                              const SizedBox(height: 40),
+
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  _buildQuickInfoItem(
+                                    Icons.monitor_weight,
+                                    "${mascota.peso} Kg",
+                                    AppColors.secondary,
+                                    onTap: () => _showWeightModal(context),
+                                  ),
+                                  _buildQuickInfoItem(
+                                    mascota.genero == 'Macho'
+                                        ? Icons.male
+                                        : Icons.female,
+                                    mascota.genero,
+                                    mascota.genero == 'Macho'
+                                        ? AppColors.male
+                                        : AppColors.female,
+                                  ),
+                                  _buildQuickInfoItem(
+                                    LucideIcons.scissors,
+                                    mascota.esterilizado
+                                        ? 'Esterilizado'
+                                        : 'Sin Esterilizar',
+                                    Colors.black,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 40),
+
+                              _buildNavigationBubbleChip(
+                                title: "Comida",
+                                subtitle: "Dieta y horarios",
+                                icon: LucideIcons.utensils,
+                                isRight: false,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => DashboardComidaScreen(
+                                        mascota: mascota,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 20),
+                              _buildNavigationBubbleChip(
+                                title: "Veterinario",
+                                subtitle: "Cuidados y vacunas",
+                                icon: LucideIcons.stethoscope,
+                                isRight: true,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          VeterinarioScreen(mascota: mascota),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 20),
+                              _buildNavigationBubbleChip(
+                                title: "Paseos",
+                                subtitle: "Bienestar y salud",
+                                icon: IconData(
+                                  0xe4a1,
+                                  fontFamily: 'MaterialIcons',
+                                ),
+                                isRight: false,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => PaseoScreen(m: mascota),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 20),
+                              _buildObservationChip(
+                                title: "Observaciones",
+                                subtitle: mascota.observaciones.isEmpty
+                                    ? "Añadir notas"
+                                    : "Toca para ver notas",
+                                icon: LucideIcons.stickyNote,
+                                onTap: () => _showObservationsModal(context),
+                              ),
+                              const SizedBox(height: 20),
                             ],
                           ),
                         ),
