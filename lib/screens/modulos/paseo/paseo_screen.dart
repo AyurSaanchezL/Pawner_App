@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -13,6 +12,7 @@ import 'package:pawner_app/core/model/modulo_paseos/modulo_paseo_config.dart';
 import 'package:pawner_app/screens/modulos/paseo/config_objetivo_paseos.dart';
 import 'package:pawner_app/services/cloudinary_service.dart';
 import 'package:pawner_app/services/firestore_service.dart';
+import 'package:pawner_app/services/notification_service.dart';
 
 class PaseoScreen extends StatefulWidget {
   final Mascota m;
@@ -27,8 +27,38 @@ class _PaseoScreenState extends State<PaseoScreen> {
   String titulo = "";
 
   @override
+  void initState() {
+    super.initState();
+    _syncPaseoNotifications();
+  }
+
+  Future<void> _syncPaseoNotifications() async {
+    final config = await FirestoreService()
+        .getPaseoConfig(widget.m.familiaID, widget.m.mascotaID)
+        .first;
+    if (config == null) return;
+
+    final count = await FirestoreService().countPaseosToday(
+      widget.m.familiaID,
+      widget.m.mascotaID,
+    );
+
+    if (!mounted) return;
+
+    if (count < config.numPaseosObjetivo) {
+      await NotificationService().schedulePaseoReminders(
+        objetivo: config.numPaseosObjetivo,
+        completadosHoy: count,
+        intervaloHoras: config.intervaloRecordatoriosHoras,
+      );
+    } else {
+      await NotificationService().cancelPaseoReminders();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // 1. Primer Stream: Obtenemos la configuración (objetivo de paseos)
+    // 1. Primer Stream: configuración (objetivo de paseos)
     return StreamBuilder<PaseoConfig?>(
       stream: FirestoreService().getPaseoConfig(
         widget.m.familiaID,
@@ -37,7 +67,7 @@ class _PaseoScreenState extends State<PaseoScreen> {
       builder: (context, configSnapshot) {
         final config = configSnapshot.data;
 
-        // 2. Segundo Stream: Obtenemos la lista de paseos
+        // 2. Segundo Stream: lista de paseos
         return StreamBuilder<List<Paseo>>(
           stream: FirestoreService().readPaseos(
             widget.m.familiaID,
@@ -54,10 +84,8 @@ class _PaseoScreenState extends State<PaseoScreen> {
               return _cargando();
             }
 
-            // Guardamos los datos en la variable de la clase para que _buildPage la use
             paseos = snapshot.data ?? [];
 
-            // 3. Calculamos el contador de HOY localmente (sin llamadas extra a Firebase)
             final hoy = DateTime.now();
             final paseosHoy = paseos.where((p) {
               final fecha = p.fechaHora.toDate();
@@ -66,7 +94,6 @@ class _PaseoScreenState extends State<PaseoScreen> {
                   fecha.day == hoy.day;
             }).length;
 
-            // 4. Construimos el título dinámico
             String tituloDinamico = "Paseos de ${widget.m.nombre}";
             if (config != null) {
               tituloDinamico += " ($paseosHoy / ${config.numPaseosObjetivo})";
@@ -85,7 +112,7 @@ class _PaseoScreenState extends State<PaseoScreen> {
                   onPressed: () => Navigator.pop(context),
                 ),
                 title: Text(
-                  tituloDinamico, // Usamos el título con el contador
+                  tituloDinamico,
                   style: const TextStyle(
                     fontFamily: 'Nunito',
                     fontWeight: FontWeight.bold,
@@ -388,6 +415,8 @@ class _AddPaseoState extends State<AddPaseo> {
         );
       }
 
+      await _refreshPaseoReminders();
+
       if (!mounted) return;
       navigator.pop();
     } catch (e) {
@@ -398,6 +427,28 @@ class _AddPaseoState extends State<AddPaseo> {
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _refreshPaseoReminders() async {
+    final config = await FirestoreService()
+        .getPaseoConfig(widget.mascota.familiaID, widget.mascota.mascotaID)
+        .first;
+    if (config == null) return;
+
+    final count = await FirestoreService().countPaseosToday(
+      widget.mascota.familiaID,
+      widget.mascota.mascotaID,
+    );
+
+    if (count < config.numPaseosObjetivo) {
+      await NotificationService().schedulePaseoReminders(
+        objetivo: config.numPaseosObjetivo,
+        completadosHoy: count,
+        intervaloHoras: config.intervaloRecordatoriosHoras,
+      );
+    } else {
+      await NotificationService().cancelPaseoReminders();
     }
   }
 
@@ -424,6 +475,17 @@ class _AddPaseoState extends State<AddPaseo> {
       child: SingleChildScrollView(
         child: Column(
           children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
             Text(
               isEditing ? 'Editar Paseo' : 'Nuevo Paseo',
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
@@ -435,7 +497,7 @@ class _AddPaseoState extends State<AddPaseo> {
               decoration: InputDecoration(
                 hintText: "Observaciones...",
                 filled: true,
-                fillColor: Colors.grey,
+                fillColor: AppColors.inputBackground.withAlpha(180),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                   borderSide: BorderSide.none,
@@ -473,20 +535,31 @@ class _AddPaseoState extends State<AddPaseo> {
                 height: 150,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.grey,
+                  color: AppColors.inputBackground.withAlpha(180),
                   borderRadius: BorderRadius.circular(20),
                   image: _imageFile != null
                       ? DecorationImage(
                           image: FileImage(_imageFile!),
                           fit: BoxFit.cover,
                         )
+                      : (isEditing &&
+                            widget.paseo?.urlFoto != null &&
+                            widget.paseo!.urlFoto!.isNotEmpty)
+                      ? DecorationImage(
+                          image: NetworkImage(widget.paseo!.urlFoto!),
+                          fit: BoxFit.cover,
+                        )
                       : null,
                 ),
-                child: _imageFile == null
+                child:
+                    (_imageFile == null &&
+                        !(isEditing &&
+                            widget.paseo?.urlFoto != null &&
+                            widget.paseo!.urlFoto!.isNotEmpty))
                     ? const Icon(
                         Icons.add_a_photo,
                         size: 40,
-                        color: Colors.grey,
+                        color: AppColors.inputBackground,
                       )
                     : null,
               ),
@@ -495,7 +568,11 @@ class _AddPaseoState extends State<AddPaseo> {
             ElevatedButton(
               onPressed: _isSaving ? null : _guardarPaseo,
               child: _isSaving
-                  ? const CircularProgressIndicator()
+                  ? SizedBox(
+                      height: 30,
+                      width: 30,
+                      child: CircularProgressIndicator(),
+                    )
                   : const Text("GUARDAR PASEO"),
             ),
             const SizedBox(height: 20),
@@ -521,6 +598,11 @@ class _AddPaseoState extends State<AddPaseo> {
           value: val,
           onChanged: onChanged,
           itemHeight: 40,
+          selectedTextStyle: const TextStyle(
+            color: AppColors.accent,
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+          ),
         ),
       ],
     );

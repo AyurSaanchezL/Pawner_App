@@ -115,6 +115,7 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
         observaciones: _observacionesController.text.trim(),
         fotoUrl: fotoUrl,
         familiaID: usuarioActual.familiaID!,
+        modulos: [],
       );
 
       await FirestoreService().crearMascota(nuevaMascota);

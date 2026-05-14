@@ -1,9 +1,11 @@
+import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/components/bottom_logo.dart';
 import 'package:pawner_app/core/components/chat_bubble_clipper.dart';
+import 'package:pawner_app/core/constants.dart';
 import 'package:pawner_app/core/model/mascota.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/screens/mascota/editar_mascota.dart';
@@ -188,7 +190,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24.0),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               const SizedBox(height: 10),
                               // Perfil "Unido": Avatar grande y Container de nombre pegado
@@ -233,58 +235,34 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                                 ],
                               ),
                               const SizedBox(height: 40),
-
-                              _buildNavigationBubbleChip(
-                                title: "Comida",
-                                subtitle: "Dieta y horarios",
-                                icon: LucideIcons.utensils,
-                                isRight: false,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => DashboardComidaScreen(
-                                        mascota: mascota,
-                                      ),
-                                    ),
-                                  );
+                              _buildModulos(),
+                              IconButton(
+                                onPressed: () {
+                                  _modulosDialog(context);
                                 },
-                              ),
-                              const SizedBox(height: 20),
-                              _buildNavigationBubbleChip(
-                                title: "Veterinario",
-                                subtitle: "Cuidados y vacunas",
-                                icon: LucideIcons.stethoscope,
-                                isRight: true,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          VeterinarioScreen(mascota: mascota),
-                                    ),
-                                  );
-                                },
-                              ),
-                              const SizedBox(height: 20),
-                              _buildNavigationBubbleChip(
-                                title: "Paseos",
-                                subtitle: "Bienestar y salud",
-                                icon: IconData(
-                                  0xe4a1,
-                                  fontFamily: 'MaterialIcons',
+                                icon: const Icon(
+                                  LucideIcons.plus,
+                                  size: 22,
+                                  fontWeight: .w600,
                                 ),
-                                isRight: false,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => PaseoScreen(m: mascota),
+                                style: TextButton.styleFrom(
+                                  fixedSize: Size(50, 50),
+                                  backgroundColor: AppColors.cardWhite
+                                      .withAlpha(120),
+                                  foregroundColor: AppColors.secondary,
+                                  textStyle: const TextStyle(
+                                    fontFamily: 'Nunito',
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: .circular(15),
+                                    side: BorderSide(
+                                      color: AppColors.cardWhite,
                                     ),
-                                  );
-                                },
+                                  ),
+                                ),
                               ),
-                              const SizedBox(height: 20),
+                              SizedBox(height: 45),
                               _buildObservationChip(
                                 title: "Observaciones",
                                 subtitle: mascota.observaciones.isEmpty
@@ -314,6 +292,230 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
     );
   }
 
+  void _modulosDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors
+          .transparent, // Para que se vea el borde redondeado del contenedor
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          List<String> allNames = AppModules.values
+              .map((e) => AppModules.getName(e.name))
+              .toList();
+
+          List<String> availableModules = allNames
+              .where((name) => !mascota.modulos.contains(name))
+              .toList();
+
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: DraggableScrollableSheet(
+              initialChildSize: 0.6,
+              minChildSize: 0.4,
+              maxChildSize: 0.9,
+              expand: false,
+              builder: (_, controller) => Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "Gestionar Módulos",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Nunito',
+                      color: AppColors.secondary,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: ListView(
+                      controller: controller,
+                      children: [
+                        _buildSectionTitle("Módulos Activos"),
+                        if (mascota.modulos.isEmpty)
+                          _buildEmptyState("No hay módulos activos")
+                        else
+                          ...mascota.modulos.map(
+                            (modulo) => _buildModuleActionCard(
+                              title: modulo,
+                              icon: LucideIcons.x,
+                              iconColor: Colors.redAccent,
+                              onAction: () async {
+                                setModalState(
+                                  () => mascota.modulos.remove(modulo),
+                                );
+                                await _firestoreService.actualizarMascota(
+                                  mascota,
+                                );
+                                setState(() {});
+                              },
+                            ),
+                          ),
+                        const SizedBox(height: 20),
+                        const Divider(thickness: 1, height: 1),
+                        const SizedBox(height: 20),
+                        _buildSectionTitle("Disponibles para añadir"),
+                        if (availableModules.isEmpty)
+                          _buildEmptyState("Has activado todos los módulos")
+                        else
+                          ...availableModules.map(
+                            (modulo) => _buildModuleActionCard(
+                              title: modulo,
+                              icon: LucideIcons.plus,
+                              iconColor: AppColors.secondary,
+                              onAction: () async {
+                                setModalState(
+                                  () => mascota.modulos.add(modulo),
+                                );
+                                await _firestoreService.actualizarMascota(
+                                  mascota,
+                                );
+                                setState(() {});
+                              },
+                            ),
+                          ),
+                        const SizedBox(height: 30),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // --- WIDGETS AUXILIARES PARA EL DIÁLOGO ---
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, left: 5),
+      child: Text(
+        title.toUpperCase(),
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey,
+          letterSpacing: 1.1,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModuleActionCard({
+    required String title,
+    required IconData icon,
+    required Color iconColor,
+    required VoidCallback onAction,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: AppColors.cardWhite,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.grey.withAlpha(25)),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Nunito',
+            color: AppColors.textPrimary,
+          ),
+        ),
+        trailing: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: iconColor.withAlpha(25),
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          onPressed: onAction,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontStyle: FontStyle.italic,
+          color: Colors.grey,
+          fontFamily: 'Nunito',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModulos() {
+    if (mascota.modulos.isEmpty) {
+      return Container(
+        padding: .only(bottom: 20),
+        height: 90,
+        width: MediaQuery.of(context).size.width * 0.9,
+        child: Column(
+          mainAxisSize: .min,
+          children: [
+            Text(
+              "No hay módulos activos\n¡Prueba a añadir uno!",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.secondary,
+                fontFamily: 'Nunito',
+              ),
+            ),
+            Icon(LucideIcons.arrowDown, color: AppColors.secondary, size: 18),
+          ],
+        ),
+      );
+    } else {
+      bool isRight = true;
+      return Column(
+        children: mascota.modulos.map((mod) {
+          isRight = !isRight;
+          log(mod);
+
+          List<dynamic> info = AppModules.getModuleInfo(mod, mascota, context);
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: _buildNavigationBubbleChip(
+              title: info[0],
+              subtitle: info[1],
+              icon: info[2],
+              isRight: isRight,
+              onTap: () => Navigator.push(context, info[3]),
+            ),
+          );
+        }).toList(),
+      );
+    }
+  }
+
   void _confirmarEliminacion(BuildContext context) {
     showDialog(
       context: context,
@@ -326,7 +528,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
           "¿Estás seguro de que quieres eliminar a ${mascota.nombre}? Esta acción no se puede deshacer.",
           style: const TextStyle(fontFamily: 'Nunito'),
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -379,7 +581,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         decoration: BoxDecoration(
           color: AppColors.secondary, // El mismo azul del título
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(15),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(25),
@@ -439,7 +641,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
         builder: (context, setModalState) => Container(
           decoration: const BoxDecoration(
             color: AppColors.cardWhite,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
           ),
           padding: const EdgeInsets.all(30),
           child: Column(
@@ -514,6 +716,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                       observaciones: mascota.observaciones,
                       fotoUrl: mascota.fotoUrl,
                       familiaID: mascota.familiaID,
+                      modulos: mascota.modulos,
                     );
                     await FirestoreService().actualizarMascota(updatedMascota);
                     setState(() => mascota = updatedMascota);
@@ -522,7 +725,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.secondary,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(15),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 15),
                   ),
@@ -560,7 +763,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
           child: Container(
             decoration: const BoxDecoration(
               color: AppColors.cardWhite,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
             child: Column(
@@ -573,7 +776,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                     height: 4,
                     decoration: BoxDecoration(
                       color: Colors.grey.withAlpha(76),
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(15),
                     ),
                   ),
                 ),
@@ -657,6 +860,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                           observaciones: obsController.text.trim(),
                           fotoUrl: mascota.fotoUrl,
                           familiaID: mascota.familiaID,
+                          modulos: mascota.modulos,
                         );
                         await FirestoreService().actualizarMascota(
                           updatedMascota,
@@ -675,7 +879,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(15),
                       ),
                       elevation: 0,
                     ),
@@ -722,6 +926,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
             observaciones: mascota.observaciones,
             fotoUrl: newUrl,
             familiaID: mascota.familiaID,
+            modulos: mascota.modulos,
           );
           await FirestoreService().actualizarMascota(updatedMascota);
           setState(() {
@@ -746,7 +951,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
       builder: (context) => Container(
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -853,7 +1058,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
             ), // Reducido padding vertical y ajustado el izquierdo
             decoration: BoxDecoration(
               color: AppColors.cardWhite,
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(15),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withAlpha(13),
@@ -979,7 +1184,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       decoration: BoxDecoration(
         color: AppColors.cardWhite,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(13),

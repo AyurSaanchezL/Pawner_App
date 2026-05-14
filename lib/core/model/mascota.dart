@@ -6,6 +6,7 @@ class Mascota {
   double peso;
   DateTime fechaNacimiento;
   String familiaID;
+  List<String> modulos = [];
 
   Mascota({
     required this.mascotaID,
@@ -20,6 +21,7 @@ class Mascota {
     required this.observaciones,
     required this.fotoUrl,
     required this.familiaID,
+    required this.modulos,
   });
 
   Map<String, dynamic> toJson() => {
@@ -35,6 +37,7 @@ class Mascota {
     'observaciones': observaciones,
     'fotoUrl': fotoUrl,
     'familiaID': familiaID,
+    'modulos': modulos,
   };
 
   factory Mascota.fromJson(Map<String, dynamic> json, String id) {
@@ -51,6 +54,7 @@ class Mascota {
       observaciones: json['observaciones'] ?? '',
       fotoUrl: json['fotoUrl'] ?? '',
       familiaID: json['familiaID'] ?? '',
+      modulos: List<String>.from(json['modulos'] ?? []),
     );
   }
 }

@@ -2139,6 +2139,7 @@ class _EditPerfilSheetState extends State<_EditPerfilSheet> {
         observaciones: widget.mascota.observaciones,
         fotoUrl: widget.mascota.fotoUrl,
         familiaID: widget.mascota.familiaID,
+        modulos: widget.mascota.modulos,
       );
       await FirestoreService().actualizarMascota(updatedMascota);
     }

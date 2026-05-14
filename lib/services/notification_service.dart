@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
@@ -8,6 +9,9 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
+  static const int _paseoReminderBaseId = 1000;
+  static const int _paseoReminderMaxCount = 24;
+
   final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
@@ -15,8 +19,7 @@ class NotificationService {
     tz.initializeTimeZones();
 
     // DETECTAR ZONA HORARIA LOCAL USANDO time_zone_plus con fallback a UTC
-    final String timeZoneName =
-        await TimeZonePlus.getCurrentTimeZone() ?? 'UTC';
+    final String timeZoneName = TimeZonePlus.getCurrentTimeZone() ?? 'UTC';
     tz.setLocalLocation(tz.getLocation(timeZoneName));
 
     const AndroidInitializationSettings initializationSettingsAndroid =
@@ -38,7 +41,7 @@ class NotificationService {
     await _notificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (details) {
-        print("Notificación presionada: ${details.payload}");
+        debugPrint("Notificación presionada: ${details.payload}");
       },
     );
   }
@@ -66,14 +69,82 @@ class NotificationService {
   // --- MÉTODOS DE PRODUCCIÓN ---
 
   Future<void> scheduleIntervalNotification({required int hours}) async {
-    await _notificationsPlugin.periodicallyShow(
-      0,
-      '¡Recordatorio!',
-      'Es hora de alimentar a tu mascota (cada $hours horas)',
-      RepeatInterval.values.firstWhere((e) => e.index == (hours == 1 ? 2 : 3)),
-      _getNotificationDetails(),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    if (hours == 1) {
+      await _notificationsPlugin.periodicallyShow(
+        0,
+        '¡Recordatorio!',
+        'Es hora de alimentar a tu mascota cada hora.',
+        RepeatInterval.hourly,
+        _getNotificationDetails(),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+      return;
+    }
+
+    if (hours == 24) {
+      await _notificationsPlugin.periodicallyShow(
+        0,
+        '¡Recordatorio!',
+        'Es hora de alimentar a tu mascota.',
+        RepeatInterval.daily,
+        _getNotificationDetails(),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+      return;
+    }
+
+    final scheduledDate = DateTime.now().add(Duration(hours: hours));
+    await scheduleOneTimeNotification(
+      id: 0,
+      scheduledFor: scheduledDate,
+      title: '¡Recordatorio!',
+      body: 'Es hora de alimentar a tu mascota.',
     );
+  }
+
+  Future<void> schedulePaseoReminders({
+    required int objetivo,
+    required int completadosHoy,
+    required int intervaloHoras,
+  }) async {
+    await cancelPaseoReminders();
+
+    final faltan = objetivo - completadosHoy;
+    if (faltan <= 0) return;
+
+    final now = DateTime.now();
+    final endOfDay = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).add(const Duration(days: 1));
+    DateTime nextReminder = now.add(Duration(hours: intervaloHoras));
+    final message = faltan == 1
+        ? 'Te falta 1 paseo para completar tu objetivo diario.'
+        : 'Te faltan $faltan paseos para completar tu objetivo diario.';
+
+    for (
+      var index = 0;
+      nextReminder.isBefore(endOfDay) && index < _paseoReminderMaxCount;
+      index++, nextReminder = nextReminder.add(Duration(hours: intervaloHoras))
+    ) {
+      await scheduleOneTimeNotification(
+        id: _paseoReminderBaseId + index,
+        scheduledFor: nextReminder,
+        title: 'Recordatorio de paseo',
+        body: message,
+      );
+    }
+  }
+
+  Future<void> cancelPaseoReminders() async {
+    for (
+      var id = _paseoReminderBaseId;
+      id < _paseoReminderBaseId + _paseoReminderMaxCount;
+      id++
+    ) {
+      await cancel(id);
+    }
   }
 
   Future<void> scheduleFixedTimeNotification({
@@ -118,7 +189,7 @@ class NotificationService {
   // --- MÉTODOS DE DIAGNÓSTICO ---
 
   Future<void> showImmediateNotification() async {
-    print("--- PRUEBA INSTANTÁNEA ---");
+    debugPrint("--- PRUEBA INSTANTÁNEA ---");
     await _notificationsPlugin.show(
       99,
       '¡Prueba OK!',
@@ -130,10 +201,10 @@ class NotificationService {
   Future<void> checkPendingNotifications() async {
     final List<PendingNotificationRequest> pendingRequests =
         await _notificationsPlugin.pendingNotificationRequests();
-    print("--- PENDIENTES EN EL SISTEMA ---");
-    print("Total: ${pendingRequests.length}");
+    debugPrint("--- PENDIENTES EN EL SISTEMA ---");
+    debugPrint("Total: ${pendingRequests.length}");
     for (var r in pendingRequests) {
-      print("- [ID ${r.id}] ${r.title}");
+      debugPrint("- [ID ${r.id}] ${r.title}");
     }
   }
 
@@ -177,8 +248,9 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
-    if (androidPlugin != null)
+    if (androidPlugin != null) {
       await androidPlugin.requestExactAlarmsPermission();
+    }
   }
 
   // --- LÓGICA DE TIEMPO ---
@@ -203,11 +275,11 @@ class NotificationService {
 
   Future<void> cancel(int id) async {
     await _notificationsPlugin.cancel(id);
-    print("Notificación cancelada: ID $id");
+    debugPrint("Notificación cancelada: ID $id");
   }
 
   Future<void> cancelAll() async {
     await _notificationsPlugin.cancelAll();
-    print("Limpieza completa.");
+    debugPrint("Limpieza completa.");
   }
 }

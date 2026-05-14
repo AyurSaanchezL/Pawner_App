@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:pawner_app/core/model/mascota.dart';
+import 'package:pawner_app/screens/modulos/comida/dashboard_comida_screen.dart';
+import 'package:pawner_app/screens/modulos/paseo/paseo_screen.dart';
+import 'package:pawner_app/screens/modulos/veterinario/veterinario_screen.dart';
 
 class Constants {
   static final TextStyle inputStyle = TextStyle(
@@ -130,6 +135,61 @@ class Constants {
     ],
     'Otro': ['Otro'],
   };
+}
+
+enum AppModules {
+  paseos,
+  veterinario,
+  comida;
+
+  static String getName(String mod) {
+    switch (mod) {
+      case 'paseos':
+        return 'Paseos';
+      case 'veterinario':
+        return 'Veterinario';
+      case 'comida':
+        return 'Comida';
+      default:
+        return mod;
+    }
+  }
+
+  static List<dynamic> getModuleInfo(
+    String modulo,
+    Mascota mascota,
+    BuildContext context,
+  ) {
+    switch (modulo) {
+      case 'Veterinario':
+        return [
+          'Veterinario',
+          'Cuidados y vacunas',
+          LucideIcons.stethoscope,
+          MaterialPageRoute(
+            builder: (context) => VeterinarioScreen(mascota: mascota),
+          ),
+        ];
+      case 'Paseos':
+        return [
+          'Paseos',
+          'Bienestar y salud',
+          const IconData(0xe4a1, fontFamily: 'MaterialIcons'),
+          MaterialPageRoute(builder: (context) => PaseoScreen(m: mascota)),
+        ];
+      case 'Comida':
+        return [
+          'Comida',
+          'Alimentación y dieta',
+          LucideIcons.utensils,
+          MaterialPageRoute(
+            builder: (context) => DashboardComidaScreen(mascota: mascota),
+          ),
+        ];
+      default:
+        return ['Desconocido', '', ''];
+    }
+  }
 }
 
 enum UserRol { admin, miembro }
