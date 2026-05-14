@@ -21,7 +21,7 @@ class EditarMascotaScreen extends StatefulWidget {
 
 class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   late TextEditingController _nombreController;
   late TextEditingController _chipController;
   late TextEditingController _pesoController;
@@ -44,17 +44,23 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
     super.initState();
     _nombreController = TextEditingController(text: widget.mascota.nombre);
     _chipController = TextEditingController(text: widget.mascota.chip);
-    _pesoController = TextEditingController(text: widget.mascota.peso.toString());
+    _pesoController = TextEditingController(
+      text: widget.mascota.peso.toString(),
+    );
     _selectedDate = widget.mascota.fechaNacimiento;
-    _fechaController = TextEditingController(text: "${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}");
-    _observacionesController = TextEditingController(text: widget.mascota.observaciones);
+    _fechaController = TextEditingController(
+      text: "${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}",
+    );
+    _observacionesController = TextEditingController(
+      text: widget.mascota.observaciones,
+    );
     _esterilizado = widget.mascota.esterilizado;
     _genero = widget.mascota.genero;
     _especie = widget.mascota.especie;
     if (!Constants.especiesYRazas.containsKey(_especie)) {
       _especie = 'Otro';
     }
-    
+
     _raza = widget.mascota.raza;
     if (!Constants.especiesYRazas[_especie]!.contains(_raza)) {
       _raza = Constants.especiesYRazas[_especie]!.first;
@@ -63,7 +69,9 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
 
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+    );
 
     if (pickedFile != null) {
       setState(() {
@@ -81,9 +89,7 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: AppColors.secondary,
-            ),
+            colorScheme: ColorScheme.light(primary: AppColors.secondary),
           ),
           child: child!,
         );
@@ -121,13 +127,17 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
         observaciones: _observacionesController.text.trim(),
         fotoUrl: fotoUrl,
         familiaID: widget.mascota.familiaID,
+        modulos: widget.mascota.modulos,
       );
 
       await FirestoreService().actualizarMascota(mascotaActualizada);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("¡Mascota actualizada con éxito!"), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text("¡Mascota actualizada con éxito!"),
+            backgroundColor: Colors.green,
+          ),
         );
         Navigator.pop(context, mascotaActualizada);
       }
@@ -150,10 +160,17 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text("Editar Mascota", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Editar Mascota",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(LucideIcons.chevronLeft, color: Colors.black, size: 30),
+          icon: const Icon(
+            LucideIcons.chevronLeft,
+            color: Colors.black,
+            size: 30,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -185,20 +202,31 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
                             offset: const Offset(0, 5),
                           ),
                         ],
-                        image: _image != null 
-                          ? DecorationImage(image: FileImage(_image!), fit: BoxFit.cover)
-                          : (widget.mascota.fotoUrl.isNotEmpty 
-                              ? DecorationImage(
-                                  image: widget.mascota.fotoUrl.startsWith('http')
-                                      ? NetworkImage(widget.mascota.fotoUrl)
-                                      : AssetImage(widget.mascota.fotoUrl) as ImageProvider,
-                                  fit: BoxFit.cover,
-                                )
-                              : null),
+                        image: _image != null
+                            ? DecorationImage(
+                                image: FileImage(_image!),
+                                fit: BoxFit.cover,
+                              )
+                            : (widget.mascota.fotoUrl.isNotEmpty
+                                  ? DecorationImage(
+                                      image:
+                                          widget.mascota.fotoUrl.startsWith(
+                                            'http',
+                                          )
+                                          ? NetworkImage(widget.mascota.fotoUrl)
+                                          : AssetImage(widget.mascota.fotoUrl)
+                                                as ImageProvider,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null),
                       ),
                       child: (_image == null && widget.mascota.fotoUrl.isEmpty)
-                        ? const Icon(LucideIcons.plus, size: 50, color: Colors.black54)
-                        : null,
+                          ? const Icon(
+                              LucideIcons.plus,
+                              size: 50,
+                              color: Colors.black54,
+                            )
+                          : null,
                     ),
                   ),
                   if (_image != null || widget.mascota.fotoUrl.isNotEmpty)
@@ -210,15 +238,23 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
                           color: AppColors.secondary,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(LucideIcons.pencil, size: 20, color: Colors.white),
+                        child: const Icon(
+                          LucideIcons.pencil,
+                          size: 20,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                 ],
               ),
               const SizedBox(height: 30),
-              
+
               _buildLabel("Nombre"),
-              _buildTextField(_nombreController, "Nombre de tu mascota", maxLength: 20),
+              _buildTextField(
+                _nombreController,
+                "Nombre de tu mascota",
+                maxLength: 20,
+              ),
 
               const SizedBox(height: 15),
               Row(
@@ -297,34 +333,39 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
 
               const SizedBox(height: 20),
               _buildLabel("Observaciones"),
-              _buildTextField(_observacionesController, "Notas sobre tu mascota...", maxLines: 4, isOptional: true),
+              _buildTextField(
+                _observacionesController,
+                "Notas sobre tu mascota...",
+                maxLines: 4,
+                isOptional: true,
+              ),
 
               const SizedBox(height: 40),
               // Botón Guardar
               _isLoading
-                ? const CircularProgressIndicator()
-                : SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: _actualizarMascota,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.homeScreenOrange,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                  ? const CircularProgressIndicator()
+                  : SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: ElevatedButton(
+                        onPressed: _actualizarMascota,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.homeScreenOrange,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          elevation: 4,
                         ),
-                        elevation: 4,
-                      ),
-                      child: const Text(
-                        "Guardar Cambios",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                        child: const Text(
+                          "Guardar Cambios",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
               const SizedBox(height: 40),
             ],
           ),
@@ -397,7 +438,11 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
     );
   }
 
-  Widget _buildDropdown({required String value, required List<String> items, required ValueChanged<String?> onChanged}) {
+  Widget _buildDropdown({
+    required String value,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -423,14 +468,25 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint, {bool isNumber = false, int maxLines = 1, bool isOptional = false, int? maxLength}) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String hint, {
+    bool isNumber = false,
+    int maxLines = 1,
+    bool isOptional = false,
+    int? maxLength,
+  }) {
     return TextFormField(
       controller: controller,
-      keyboardType: isNumber ? TextInputType.number : (maxLines > 1 ? TextInputType.multiline : TextInputType.text),
+      keyboardType: isNumber
+          ? TextInputType.number
+          : (maxLines > 1 ? TextInputType.multiline : TextInputType.text),
       maxLines: maxLines,
       textAlign: TextAlign.center,
       style: Constants.inputStyle,
-      inputFormatters: maxLength != null ? [LengthLimitingTextInputFormatter(maxLength)] : null,
+      inputFormatters: maxLength != null
+          ? [LengthLimitingTextInputFormatter(maxLength)]
+          : null,
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
@@ -439,7 +495,10 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
           borderRadius: BorderRadius.circular(25),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 15,
+        ),
       ),
       validator: (value) {
         if (isOptional) return null;
@@ -463,9 +522,13 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
           borderRadius: BorderRadius.circular(25),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 15,
+        ),
       ),
-      validator: (value) => value == null || value.isEmpty ? "Campo requerido" : null,
+      validator: (value) =>
+          value == null || value.isEmpty ? "Campo requerido" : null,
     );
   }
 
@@ -484,11 +547,18 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isSelected ? color : AppColors.inputBackground, // todo -> revisar
+              color: isSelected
+                  ? color
+                  : AppColors.inputBackground, // todo -> revisar
               shape: BoxShape.circle,
-              border: isSelected ? Border.all(color: Colors.white, width: 2) : null,
+              border: isSelected
+                  ? Border.all(color: Colors.white, width: 2)
+                  : null,
             ),
-            child: Icon(icon, color: isSelected ? Colors.white : Colors.black54),
+            child: Icon(
+              icon,
+              color: isSelected ? Colors.white : Colors.black54,
+            ),
           ),
           if (showCheck)
             Positioned(
@@ -496,7 +566,10 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
               top: 0,
               child: Container(
                 padding: const EdgeInsets.all(2),
-                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
                 child: const Icon(Icons.check, size: 12, color: Colors.green),
               ),
             ),
@@ -506,7 +579,10 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
               top: 0,
               child: Container(
                 padding: const EdgeInsets.all(2),
-                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
                 child: const Icon(Icons.close, size: 12, color: Colors.red),
               ),
             ),

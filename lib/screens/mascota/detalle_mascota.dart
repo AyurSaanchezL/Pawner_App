@@ -1,9 +1,11 @@
+import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/components/bottom_logo.dart';
 import 'package:pawner_app/core/components/chat_bubble_clipper.dart';
+import 'package:pawner_app/core/constants.dart';
 import 'package:pawner_app/core/model/mascota.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/screens/mascota/editar_mascota.dart';
@@ -188,7 +190,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24.0),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               const SizedBox(height: 10),
                               // Perfil "Unido": Avatar grande y Container de nombre pegado
@@ -233,58 +235,34 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                                 ],
                               ),
                               const SizedBox(height: 40),
-
-                              _buildNavigationBubbleChip(
-                                title: "Comida",
-                                subtitle: "Dieta y horarios",
-                                icon: LucideIcons.utensils,
-                                isRight: false,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => DashboardComidaScreen(
-                                        mascota: mascota,
-                                      ),
-                                    ),
-                                  );
+                              _buildModulos(),
+                              IconButton(
+                                onPressed: () {
+                                  _modulosDialog(context);
                                 },
-                              ),
-                              const SizedBox(height: 20),
-                              _buildNavigationBubbleChip(
-                                title: "Veterinario",
-                                subtitle: "Cuidados y vacunas",
-                                icon: LucideIcons.stethoscope,
-                                isRight: true,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          VeterinarioScreen(mascota: mascota),
-                                    ),
-                                  );
-                                },
-                              ),
-                              const SizedBox(height: 20),
-                              _buildNavigationBubbleChip(
-                                title: "Paseos",
-                                subtitle: "Bienestar y salud",
-                                icon: IconData(
-                                  0xe4a1,
-                                  fontFamily: 'MaterialIcons',
+                                icon: const Icon(
+                                  LucideIcons.plus,
+                                  size: 22,
+                                  fontWeight: .w600,
                                 ),
-                                isRight: false,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => PaseoScreen(m: mascota),
+                                style: TextButton.styleFrom(
+                                  fixedSize: Size(50, 50),
+                                  backgroundColor: AppColors.cardWhite
+                                      .withAlpha(120),
+                                  foregroundColor: AppColors.secondary,
+                                  textStyle: const TextStyle(
+                                    fontFamily: 'Nunito',
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: .circular(15),
+                                    side: BorderSide(
+                                      color: AppColors.cardWhite,
                                     ),
-                                  );
-                                },
+                                  ),
+                                ),
                               ),
-                              const SizedBox(height: 20),
+                              SizedBox(height: 45),
                               _buildObservationChip(
                                 title: "Observaciones",
                                 subtitle: mascota.observaciones.isEmpty
@@ -314,6 +292,205 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
     );
   }
 
+  void _modulosDialog(BuildContext context) {
+    // Lista que contiene los módulos que no tiene la mascota
+    List<String> availableModules = AppModules.values
+        .map((e) => AppModules.getName(e.toString().split('.').last))
+        .toList();
+    log(availableModules.toString());
+    for (String modulo in mascota.modulos) {
+      availableModules.remove(modulo);
+    }
+    log(availableModules.toString());
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          decoration: const BoxDecoration(
+            color: AppColors.cardWhite,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+          child: Column(
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withAlpha(76),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                ),
+              ),
+              Column(
+                crossAxisAlignment: .center,
+                children: mascota.modulos.map((modulo) {
+                  log("Modulo :$modulo");
+                  return Container(
+                    margin: const EdgeInsets.only(top: 20),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    width: MediaQuery.of(context).size.width * 0.85,
+                    decoration: BoxDecoration(
+                      color: AppColors.background.withAlpha(200),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: .spaceBetween,
+                      children: [
+                        Text(
+                          modulo,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: AppColors.textPrimary,
+                            fontFamily: 'Nunito',
+                            height: 1.5,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () async {
+                            setModalState(() {
+                              mascota.modulos.remove(modulo);
+                            });
+                            await _firestoreService.actualizarMascota(mascota);
+                          },
+                          style: ButtonStyle(
+                            backgroundColor: .all(
+                              AppColors.homeScreenBackground.withAlpha(150),
+                            ),
+                            shape: .all(
+                              CircleBorder(
+                                side: BorderSide(
+                                  color: AppColors.homeScreenBackground,
+                                ),
+                              ),
+                            ),
+                          ),
+                          icon: Icon(
+                            LucideIcons.x,
+                            size: 18,
+                            fontWeight: .w600,
+                            color: Colors.redAccent,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+              Column(
+                children: availableModules.map((mod) {
+                  return Container(
+                    margin: const EdgeInsets.only(top: 20),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    width: MediaQuery.of(context).size.width * 0.85,
+                    decoration: BoxDecoration(
+                      color: AppColors.complementary.withAlpha(200),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: .spaceBetween,
+                      children: [
+                        Text(
+                          mod,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: AppColors.textPrimary,
+                            fontFamily: 'Nunito',
+                            height: 1.5,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () async {
+                            setModalState(() {
+                              mascota.modulos.add(mod);
+                            });
+                            await _firestoreService.actualizarMascota(mascota);
+                          },
+                          style: ButtonStyle(
+                            backgroundColor: .all(
+                              AppColors.homeScreenBackground.withAlpha(150),
+                            ),
+                            shape: .all(
+                              CircleBorder(
+                                side: BorderSide(
+                                  color: AppColors.homeScreenBackground,
+                                ),
+                              ),
+                            ),
+                          ),
+                          icon: Icon(
+                            LucideIcons.plus,
+                            size: 18,
+                            fontWeight: .w600,
+                            color: AppColors.secondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModulos() {
+    if (mascota.modulos.isEmpty) {
+      return Container(
+        padding: .only(bottom: 20),
+        height: 90,
+        width: MediaQuery.of(context).size.width * 0.9,
+        child: Column(
+          mainAxisSize: .min,
+          children: [
+            Text(
+              "No hay módulos activos\n¡Prueba a añadir uno!",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.secondary,
+                fontFamily: 'Nunito',
+              ),
+            ),
+            Icon(LucideIcons.arrowDown, color: AppColors.secondary, size: 18),
+          ],
+        ),
+      );
+    } else {
+      bool isRight = true;
+      return Column(
+        children: mascota.modulos.map((mod) {
+          isRight = !isRight;
+          log(mod);
+
+          List<dynamic> info = AppModules.getModuleInfo(mod, mascota, context);
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: _buildNavigationBubbleChip(
+              title: info[0],
+              subtitle: info[1],
+              icon: info[2],
+              isRight: isRight,
+              onTap: () => Navigator.push(context, info[3]),
+            ),
+          );
+        }).toList(),
+      );
+    }
+  }
+
   void _confirmarEliminacion(BuildContext context) {
     showDialog(
       context: context,
@@ -326,7 +503,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
           "¿Estás seguro de que quieres eliminar a ${mascota.nombre}? Esta acción no se puede deshacer.",
           style: const TextStyle(fontFamily: 'Nunito'),
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -379,7 +556,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         decoration: BoxDecoration(
           color: AppColors.secondary, // El mismo azul del título
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(15),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(25),
@@ -439,7 +616,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
         builder: (context, setModalState) => Container(
           decoration: const BoxDecoration(
             color: AppColors.cardWhite,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
           ),
           padding: const EdgeInsets.all(30),
           child: Column(
@@ -514,6 +691,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                       observaciones: mascota.observaciones,
                       fotoUrl: mascota.fotoUrl,
                       familiaID: mascota.familiaID,
+                      modulos: mascota.modulos,
                     );
                     await FirestoreService().actualizarMascota(updatedMascota);
                     setState(() => mascota = updatedMascota);
@@ -522,7 +700,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.secondary,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(15),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 15),
                   ),
@@ -560,7 +738,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
           child: Container(
             decoration: const BoxDecoration(
               color: AppColors.cardWhite,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
             child: Column(
@@ -573,7 +751,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                     height: 4,
                     decoration: BoxDecoration(
                       color: Colors.grey.withAlpha(76),
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(15),
                     ),
                   ),
                 ),
@@ -657,6 +835,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                           observaciones: obsController.text.trim(),
                           fotoUrl: mascota.fotoUrl,
                           familiaID: mascota.familiaID,
+                          modulos: mascota.modulos,
                         );
                         await FirestoreService().actualizarMascota(
                           updatedMascota,
@@ -675,7 +854,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(15),
                       ),
                       elevation: 0,
                     ),
@@ -722,6 +901,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
             observaciones: mascota.observaciones,
             fotoUrl: newUrl,
             familiaID: mascota.familiaID,
+            modulos: mascota.modulos,
           );
           await FirestoreService().actualizarMascota(updatedMascota);
           setState(() {
@@ -746,7 +926,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
       builder: (context) => Container(
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -853,7 +1033,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
             ), // Reducido padding vertical y ajustado el izquierdo
             decoration: BoxDecoration(
               color: AppColors.cardWhite,
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(15),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withAlpha(13),
@@ -979,7 +1159,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       decoration: BoxDecoration(
         color: AppColors.cardWhite,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(13),
