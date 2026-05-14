@@ -88,13 +88,13 @@ class _ConfigObjetivoPaseosState extends State<ConfigObjetivoPaseos> {
       widget.mascotaID,
     );
     if (count < numPaseosObjetivo) {
-      // Programar notificaciones cada intervaloHoras
-      await NotificationService().scheduleIntervalNotification(
-        hours: intervaloHoras,
+      await NotificationService().schedulePaseoReminders(
+        objetivo: numPaseosObjetivo,
+        completadosHoy: count,
+        intervaloHoras: intervaloHoras,
       );
     } else {
-      // Cancelar si ya alcanzado
-      await NotificationService().cancel(0);
+      await NotificationService().cancelPaseoReminders();
     }
   }
 

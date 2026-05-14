@@ -138,7 +138,7 @@ class Constants {
 }
 
 enum AppModules {
-  paseo,
+  paseos,
   veterinario,
   comida;
 

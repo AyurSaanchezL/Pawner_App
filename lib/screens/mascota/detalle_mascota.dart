@@ -293,153 +293,178 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
   }
 
   void _modulosDialog(BuildContext context) {
-    // Lista que contiene los módulos que no tiene la mascota
-    List<String> availableModules = AppModules.values
-        .map((e) => AppModules.getName(e.toString().split('.').last))
-        .toList();
-    log(availableModules.toString());
-    for (String modulo in mascota.modulos) {
-      availableModules.remove(modulo);
-    }
-    log(availableModules.toString());
-
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors
+          .transparent, // Para que se vea el borde redondeado del contenedor
       builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          decoration: const BoxDecoration(
-            color: AppColors.cardWhite,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
-          child: Column(
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withAlpha(76),
-                    borderRadius: BorderRadius.circular(15),
+        builder: (context, setModalState) {
+          List<String> allNames = AppModules.values
+              .map((e) => AppModules.getName(e.name))
+              .toList();
+
+          List<String> availableModules = allNames
+              .where((name) => !mascota.modulos.contains(name))
+              .toList();
+
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: DraggableScrollableSheet(
+              initialChildSize: 0.6,
+              minChildSize: 0.4,
+              maxChildSize: 0.9,
+              expand: false,
+              builder: (_, controller) => Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                ),
-              ),
-              Column(
-                crossAxisAlignment: .center,
-                children: mascota.modulos.map((modulo) {
-                  log("Modulo :$modulo");
-                  return Container(
-                    margin: const EdgeInsets.only(top: 20),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
+                  const SizedBox(height: 20),
+                  const Text(
+                    "Gestionar Módulos",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Nunito',
+                      color: AppColors.secondary,
                     ),
-                    width: MediaQuery.of(context).size.width * 0.85,
-                    decoration: BoxDecoration(
-                      color: AppColors.background.withAlpha(200),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: .spaceBetween,
+                  ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: ListView(
+                      controller: controller,
                       children: [
-                        Text(
-                          modulo,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: AppColors.textPrimary,
-                            fontFamily: 'Nunito',
-                            height: 1.5,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () async {
-                            setModalState(() {
-                              mascota.modulos.remove(modulo);
-                            });
-                            await _firestoreService.actualizarMascota(mascota);
-                          },
-                          style: ButtonStyle(
-                            backgroundColor: .all(
-                              AppColors.homeScreenBackground.withAlpha(150),
-                            ),
-                            shape: .all(
-                              CircleBorder(
-                                side: BorderSide(
-                                  color: AppColors.homeScreenBackground,
-                                ),
-                              ),
+                        _buildSectionTitle("Módulos Activos"),
+                        if (mascota.modulos.isEmpty)
+                          _buildEmptyState("No hay módulos activos")
+                        else
+                          ...mascota.modulos.map(
+                            (modulo) => _buildModuleActionCard(
+                              title: modulo,
+                              icon: LucideIcons.x,
+                              iconColor: Colors.redAccent,
+                              onAction: () async {
+                                setModalState(
+                                  () => mascota.modulos.remove(modulo),
+                                );
+                                await _firestoreService.actualizarMascota(
+                                  mascota,
+                                );
+                                setState(() {});
+                              },
                             ),
                           ),
-                          icon: Icon(
-                            LucideIcons.x,
-                            size: 18,
-                            fontWeight: .w600,
-                            color: Colors.redAccent,
+                        const SizedBox(height: 20),
+                        const Divider(thickness: 1, height: 1),
+                        const SizedBox(height: 20),
+                        _buildSectionTitle("Disponibles para añadir"),
+                        if (availableModules.isEmpty)
+                          _buildEmptyState("Has activado todos los módulos")
+                        else
+                          ...availableModules.map(
+                            (modulo) => _buildModuleActionCard(
+                              title: modulo,
+                              icon: LucideIcons.plus,
+                              iconColor: AppColors.secondary,
+                              onAction: () async {
+                                setModalState(
+                                  () => mascota.modulos.add(modulo),
+                                );
+                                await _firestoreService.actualizarMascota(
+                                  mascota,
+                                );
+                                setState(() {});
+                              },
+                            ),
                           ),
-                        ),
+                        const SizedBox(height: 30),
                       ],
                     ),
-                  );
-                }).toList(),
+                  ),
+                ],
               ),
-              Column(
-                children: availableModules.map((mod) {
-                  return Container(
-                    margin: const EdgeInsets.only(top: 20),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
-                    width: MediaQuery.of(context).size.width * 0.85,
-                    decoration: BoxDecoration(
-                      color: AppColors.complementary.withAlpha(200),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: .spaceBetween,
-                      children: [
-                        Text(
-                          mod,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: AppColors.textPrimary,
-                            fontFamily: 'Nunito',
-                            height: 1.5,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () async {
-                            setModalState(() {
-                              mascota.modulos.add(mod);
-                            });
-                            await _firestoreService.actualizarMascota(mascota);
-                          },
-                          style: ButtonStyle(
-                            backgroundColor: .all(
-                              AppColors.homeScreenBackground.withAlpha(150),
-                            ),
-                            shape: .all(
-                              CircleBorder(
-                                side: BorderSide(
-                                  color: AppColors.homeScreenBackground,
-                                ),
-                              ),
-                            ),
-                          ),
-                          icon: Icon(
-                            LucideIcons.plus,
-                            size: 18,
-                            fontWeight: .w600,
-                            color: AppColors.secondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // --- WIDGETS AUXILIARES PARA EL DIÁLOGO ---
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, left: 5),
+      child: Text(
+        title.toUpperCase(),
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey,
+          letterSpacing: 1.1,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModuleActionCard({
+    required String title,
+    required IconData icon,
+    required Color iconColor,
+    required VoidCallback onAction,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: AppColors.cardWhite,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.grey.withAlpha(25)),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Nunito',
+            color: AppColors.textPrimary,
           ),
+        ),
+        trailing: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: iconColor.withAlpha(25),
+            ),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          onPressed: onAction,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontStyle: FontStyle.italic,
+          color: Colors.grey,
+          fontFamily: 'Nunito',
         ),
       ),
     );
