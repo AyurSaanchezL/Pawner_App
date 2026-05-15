@@ -145,7 +145,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
 
         for (final horario in horarios) {
-          if (!horario.activo) continue;
+          if (!horario.activo) {
+            await ns.cancel(horario.idNotificacion).catchError((_) {});
+            continue;
+          }
 
           final parts = horario.hora.split(':');
           if (parts.length != 2) continue;
@@ -155,8 +158,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 id: horario.idNotificacion,
                 hour: int.parse(parts[0]),
                 minute: int.parse(parts[1]),
+                mascotaNombre: mascota.nombre,
               )
               .catchError((_) {});
+        }
+
+        // Paseos
+        final paseoConfig = await fs
+            .getPaseoConfig(mascota.familiaID, mascota.mascotaID)
+            .first;
+        if (paseoConfig != null) {
+          final count = await fs.countPaseosToday(
+            mascota.familiaID,
+            mascota.mascotaID,
+          );
+          if (count < paseoConfig.numPaseosObjetivo) {
+            await ns
+                .schedulePaseoReminders(
+                  objetivo: paseoConfig.numPaseosObjetivo,
+                  completadosHoy: count,
+                  intervaloHoras: paseoConfig.intervaloRecordatoriosHoras,
+                  mascotaNombre: mascota.nombre,
+                )
+                .catchError((_) {});
+          } else {
+            await ns.cancelPaseoReminders().catchError((_) {});
+          }
         }
       }
     } catch (_) {

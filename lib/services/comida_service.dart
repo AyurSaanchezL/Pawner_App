@@ -78,12 +78,11 @@ class ComidaService {
     });
   }
 
-  Future<void> addHorario(String familiaId, String mascotaId, HorarioComida horario) async {
+  Future<void> addHorario(String familiaId, String mascotaId, HorarioComida horario, {required String mascotaNombre}) async {
     final docRef = _getModComidaRef(familiaId, mascotaId).collection('Horarios').doc();
     horario.id = docRef.id;
     await docRef.set(horario.toMap());
-    
-    // Si se añade activo, programar notificación
+
     if (horario.activo) {
       final partes = horario.hora.split(':');
       if (partes.length == 2) {
@@ -93,12 +92,13 @@ class ComidaService {
           id: horario.idNotificacion,
           hour: hour,
           minute: minute,
+          mascotaNombre: mascotaNombre,
         );
       }
     }
   }
 
-  Future<void> toggleHorario(String familiaId, String mascotaId, HorarioComida horario) async {
+  Future<void> toggleHorario(String familiaId, String mascotaId, HorarioComida horario, {required String mascotaNombre}) async {
     horario.activo = !horario.activo;
 
     await _getModComidaRef(familiaId, mascotaId)
@@ -115,6 +115,7 @@ class ComidaService {
           id: horario.idNotificacion,
           hour: hour,
           minute: minute,
+          mascotaNombre: mascotaNombre,
         );
       }
     } else {

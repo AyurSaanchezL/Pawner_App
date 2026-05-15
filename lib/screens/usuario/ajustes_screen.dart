@@ -9,9 +9,89 @@ import 'package:pawner_app/screens/usuario/dashboard_screen.dart';
 import 'package:pawner_app/screens/usuario/perfil_screen.dart';
 import 'package:pawner_app/services/auth_service.dart';
 import 'package:pawner_app/screens/familia/detalle_familia_screen.dart';
+import 'package:pawner_app/services/notification_service.dart';
 
 class AjustesScreen extends StatelessWidget {
   const AjustesScreen({super.key});
+
+  // ── DEBUG: muestra las notificaciones pendientes en el sistema ──────────────
+  Future<void> _mostrarNotificacionesPendientes(BuildContext context) async {
+    final pendientes = await NotificationService().getPendingNotifications();
+    if (!context.mounted) return;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Row(
+          children: const [
+            Icon(LucideIcons.bell, size: 18),
+            SizedBox(width: 8),
+            Text(
+              'Notificaciones pendientes',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: pendientes.isEmpty
+              ? const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    'Sin notificaciones pendientes.',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                )
+              : ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: pendientes.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (_, i) {
+                    final n = pendientes[i];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'ID ${n.id}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: AppColors.secondary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            n.title ?? '(sin título)',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          Text(
+                            n.body ?? '(sin cuerpo)',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+        ),
+        actions: [
+          Text(
+            '${pendientes.length} pendiente${pendientes.length == 1 ? '' : 's'}',
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          const Spacer(),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,14 +99,12 @@ class AjustesScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Fondo igual a elegir_familia.dart
           Image.asset("assets/images/background_01.png", fit: BoxFit.cover),
 
           SafeArea(
             bottom: false,
             child: Column(
               children: [
-                // Barra Superior
                 Align(
                   alignment: Alignment.topLeft,
                   child: IconButton(
@@ -44,7 +122,6 @@ class AjustesScreen extends StatelessWidget {
                   ),
                 ),
 
-                // Espaciado para bajar los elementos hacia el centro
                 const Spacer(flex: 1),
 
                 Expanded(
@@ -54,7 +131,6 @@ class AjustesScreen extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        // Chip de Perfil - Ahora de primero y con fondo lavanda
                         _buildBubble(
                           text: "Perfil",
                           color: AppColors.secondary,
@@ -76,12 +152,11 @@ class AjustesScreen extends StatelessWidget {
                           },
                         ),
                         const SizedBox(height: 25),
-                        // Chip de Familia - Ahora de segundo
                         _buildBubble(
                           text: "Familia",
                           color: AppColors.accent,
                           icon: LucideIcons.users,
-                          isRightTail: false, // Cambiado para alternar
+                          isRightTail: false,
                           iconColor: Colors.orange,
                           onTap: () async {
                             Usuario usuario = await authService.value
@@ -120,6 +195,17 @@ class AjustesScreen extends StatelessWidget {
                             );
                           },
                         ),
+                        const SizedBox(height: 25),
+                        // ── TEMPORAL — eliminar tras pruebas de notificaciones ──
+                        _buildBubble(
+                          text: "Debug Notifs",
+                          color: const Color(0xFFFFC107),
+                          icon: LucideIcons.bell,
+                          isRightTail: false,
+                          textColor: Colors.black87,
+                          iconColor: Colors.black87,
+                          onTap: () => _mostrarNotificacionesPendientes(context),
+                        ),
                       ],
                     ),
                   ),
@@ -127,7 +213,6 @@ class AjustesScreen extends StatelessWidget {
 
                 const Spacer(),
 
-                // Panel Inferior
                 _buildDarkPanel(),
               ],
             ),
@@ -157,12 +242,7 @@ class AjustesScreen extends StatelessWidget {
         child: Container(
           width: double.infinity,
           height: 90,
-          padding: const EdgeInsets.fromLTRB(
-            25,
-            10,
-            25,
-            20,
-          ), // Aumentado padding inferior para centrar texto
+          padding: const EdgeInsets.fromLTRB(25, 10, 25, 20),
           color: color,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -216,7 +296,6 @@ class AjustesScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 30),
-
           _buildSmallBubble("Ayuda", isRightTail: false),
           const SizedBox(height: 20),
           _buildSmallBubble("Sobre nosotros", isRightTail: true),

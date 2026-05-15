@@ -45,15 +45,21 @@ class _PaseoScreenState extends State<PaseoScreen> {
 
     if (!mounted) return;
 
-    if (count < config.numPaseosObjetivo) {
-      await NotificationService().schedulePaseoReminders(
-        objetivo: config.numPaseosObjetivo,
-        completadosHoy: count,
-        intervaloHoras: config.intervaloRecordatoriosHoras,
-      );
-    } else {
+    if (count >= config.numPaseosObjetivo) {
       await NotificationService().cancelPaseoReminders();
+      return;
     }
+
+    // No reprogramar si ya hay recordatorios pendientes: evita resetear el intervalo
+    final hasPending = await NotificationService().hasPendingPaseoReminders();
+    if (hasPending) return;
+
+    await NotificationService().schedulePaseoReminders(
+      objetivo: config.numPaseosObjetivo,
+      completadosHoy: count,
+      intervaloHoras: config.intervaloRecordatoriosHoras,
+      mascotaNombre: widget.m.nombre,
+    );
   }
 
   @override
@@ -347,6 +353,7 @@ class _PaseoScreenState extends State<PaseoScreen> {
       builder: (context) => ConfigObjetivoPaseos(
         familiaID: widget.m.familiaID,
         mascotaID: widget.m.mascotaID,
+        mascotaNombre: widget.m.nombre,
       ),
     );
   }
@@ -446,6 +453,7 @@ class _AddPaseoState extends State<AddPaseo> {
         objetivo: config.numPaseosObjetivo,
         completadosHoy: count,
         intervaloHoras: config.intervaloRecordatoriosHoras,
+        mascotaNombre: widget.mascota.nombre,
       );
     } else {
       await NotificationService().cancelPaseoReminders();
@@ -556,10 +564,24 @@ class _AddPaseoState extends State<AddPaseo> {
                         !(isEditing &&
                             widget.paseo?.urlFoto != null &&
                             widget.paseo!.urlFoto!.isNotEmpty))
-                    ? const Icon(
-                        Icons.add_a_photo,
-                        size: 40,
-                        color: AppColors.inputBackground,
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            LucideIcons.camera,
+                            size: 40,
+                            color: Colors.grey.shade400,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Añadir foto',
+                            style: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 13,
+                              fontFamily: 'Nunito',
+                            ),
+                          ),
+                        ],
                       )
                     : null,
               ),

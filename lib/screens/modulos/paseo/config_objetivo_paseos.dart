@@ -8,11 +8,13 @@ import 'package:pawner_app/services/notification_service.dart';
 class ConfigObjetivoPaseos extends StatefulWidget {
   final String familiaID;
   final String mascotaID;
+  final String mascotaNombre;
 
   const ConfigObjetivoPaseos({
     super.key,
     required this.familiaID,
     required this.mascotaID,
+    required this.mascotaNombre,
   });
 
   @override
@@ -92,6 +94,7 @@ class _ConfigObjetivoPaseosState extends State<ConfigObjetivoPaseos> {
         objetivo: numPaseosObjetivo,
         completadosHoy: count,
         intervaloHoras: intervaloHoras,
+        mascotaNombre: widget.mascotaNombre,
       );
     } else {
       await NotificationService().cancelPaseoReminders();

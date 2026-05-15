@@ -31,7 +31,16 @@ class ElegirFamiliaLayout extends StatelessWidget {
                 crossAxisAlignment:
                     CrossAxisAlignment.start, // Align header left
                 children: [
-                  const SizedBox(height: 40), // Space from SafeArea top
+                  const SizedBox(height: 10),
+                  IconButton(
+                    icon: const Icon(
+                      LucideIcons.chevronLeft,
+                      color: Colors.black,
+                      size: 28,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const SizedBox(height: 10),
                   // Header
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

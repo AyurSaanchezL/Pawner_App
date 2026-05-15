@@ -51,6 +51,7 @@ class _HorariosScreenState extends State<HorariosScreen> {
             id: h.idNotificacion,
             hour: int.parse(parts[0]),
             minute: int.parse(parts[1]),
+            mascotaNombre: widget.mascota.nombre,
           )
           .catchError((_) {});
     }
@@ -86,6 +87,7 @@ class _HorariosScreenState extends State<HorariosScreen> {
             id: h.idNotificacion,
             hour: int.parse(parts[0]),
             minute: int.parse(parts[1]),
+            mascotaNombre: widget.mascota.nombre,
           )
           .catchError((_) {});
     }
