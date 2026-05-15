@@ -118,12 +118,12 @@ class NotificationService {
       now.month,
       now.day,
     ).add(const Duration(days: 1));
-    DateTime nextReminder = now.add(Duration(minutes: intervaloHoras));
+    DateTime nextReminder = now.add(Duration(hours: intervaloHoras));
 
     for (
       var index = 0;
       nextReminder.isBefore(endOfDay) && index < _paseoReminderMaxCount;
-      index++, nextReminder = nextReminder.add(Duration(minutes: intervaloHoras))
+      index++, nextReminder = nextReminder.add(Duration(hours: intervaloHoras))
     ) {
       await scheduleOneTimeNotification(
         id: _paseoReminderBaseId + index,
@@ -233,20 +233,6 @@ class NotificationService {
     if (androidPlugin == null) return true;
     return (await androidPlugin.requestNotificationsPermission()) ?? false;
   }
-
-  /*  Future<void> testInexactScheduling() async {
-    final scheduledTime = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 15));
-    await _notificationsPlugin.zonedSchedule(
-      88,
-      'Prueba Inexacta',
-      'Lanzada a los 15 segundos.',
-      scheduledTime,
-      _getNotificationDetails(),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-    );
-    print("Inexacta registrada para: $scheduledTime");
-  }*/
 
   Future<void> openAlarmSettings() async {
     final androidPlugin = _notificationsPlugin

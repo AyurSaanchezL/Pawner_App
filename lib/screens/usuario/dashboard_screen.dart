@@ -597,7 +597,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           MaterialPageRoute(
             builder: (context) => PetProfileScreen(mascota: mascota),
           ),
-        );
+        ).then((_) {
+          if (_usuarioActual?.familiaID != null) {
+            _sincronizarNotificaciones(_usuarioActual!.familiaID!);
+          }
+        });
       },
       child: Padding(
         padding: const EdgeInsets.only(right: 15.0),

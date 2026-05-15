@@ -147,7 +147,6 @@ class _CrearFamiliaLayoutState extends State<CrearFamiliaLayout> {
                             minimumSize: const Size(double.infinity, 60),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15),
-                              //     side: const BorderSide(color: AppColors.secondary, width: 1),
                             ),
                             elevation: 0,
                           ),

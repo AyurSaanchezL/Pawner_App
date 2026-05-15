@@ -36,9 +36,6 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
   bool _isLoading = false;
   File? _image;
 
-  // late Color _lavenderInput = const Color(0xFFE1D5F9); // Replaced with AppColors.inputBackground
-  // late Color _orangeButton = const Color(0xFFFFCC80); // Replaced with AppColors.primaryButton
-
   @override
   void initState() {
     super.initState();
