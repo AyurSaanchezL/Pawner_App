@@ -19,47 +19,37 @@ class _HorariosScreenState extends State<HorariosScreen> {
   final FirestoreService _fs = FirestoreService();
   final NotificationService _notifications = NotificationService();
 
-  TimeOfDay _horaDesayuno = const TimeOfDay(hour: 8, minute: 0);
-  TimeOfDay _horaAlmuerzo = const TimeOfDay(hour: 14, minute: 0);
-  TimeOfDay _horaCena = const TimeOfDay(hour: 20, minute: 0);
+  TimeOfDay _horaSeleccionada = const TimeOfDay(hour: 8, minute: 0);
 
   String _formatTime(TimeOfDay t) =>
       '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 
-  HorarioComida _buildHorario(TimeOfDay hora) {
-    final horaStr = _formatTime(hora);
+  Future<void> _agregarHorario() async {
+    final horaStr = _formatTime(_horaSeleccionada);
     final idNotif = DateTime.now().millisecondsSinceEpoch % 100000;
-    return HorarioComida(
+    final horario = HorarioComida(
       id: '${horaStr}_${DateTime.now().millisecondsSinceEpoch}',
       hora: horaStr,
       idNotificacion: idNotif,
       activo: true,
     );
-  }
 
-  Future<void> _guardarHorarios() async {
-    final horarios = [
-      _buildHorario(_horaDesayuno),
-      _buildHorario(_horaAlmuerzo),
-      _buildHorario(_horaCena),
-    ];
-    for (final h in horarios) {
-      await _fs.saveHorario(widget.mascota.familiaID, widget.mascota.mascotaID, h);
-      final parts = h.hora.split(':');
-      await _notifications
-          .scheduleFixedTimeNotification(
-            id: h.idNotificacion,
-            hour: int.parse(parts[0]),
-            minute: int.parse(parts[1]),
-            mascotaNombre: widget.mascota.nombre,
-          )
-          .catchError((_) {});
-    }
+    await _fs.saveHorario(widget.mascota.familiaID, widget.mascota.mascotaID, horario);
+    final parts = horaStr.split(':');
+    await _notifications
+        .scheduleFixedTimeNotification(
+          id: horario.idNotificacion,
+          hour: int.parse(parts[0]),
+          minute: int.parse(parts[1]),
+          mascotaNombre: widget.mascota.nombre,
+        )
+        .catchError((_) {});
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            'Horarios guardados',
+            'Horario añadido',
             style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w600),
           ),
           backgroundColor: AppColors.secondary,
@@ -203,30 +193,21 @@ class _HorariosScreenState extends State<HorariosScreen> {
             ),
             const SizedBox(height: 16),
             _buildTimeRow(
-              label: 'Desayuno',
-              value: _horaDesayuno,
-              onTap: () => _pickTime(_horaDesayuno, (t) => setState(() => _horaDesayuno = t)),
-            ),
-            const SizedBox(height: 10),
-            _buildTimeRow(
-              label: 'Almuerzo',
-              value: _horaAlmuerzo,
-              onTap: () => _pickTime(_horaAlmuerzo, (t) => setState(() => _horaAlmuerzo = t)),
-            ),
-            const SizedBox(height: 10),
-            _buildTimeRow(
-              label: 'Cena',
-              value: _horaCena,
-              onTap: () => _pickTime(_horaCena, (t) => setState(() => _horaCena = t)),
+              label: 'Hora',
+              value: _horaSeleccionada,
+              onTap: () => _pickTime(
+                _horaSeleccionada,
+                (t) => setState(() => _horaSeleccionada = t),
+              ),
             ),
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: _guardarHorarios,
+                onPressed: _agregarHorario,
                 icon: const Icon(LucideIcons.bell, size: 16, color: Colors.white),
                 label: const Text(
-                  'Añadir horarios',
+                  'Añadir horario',
                   style: TextStyle(
                     fontFamily: 'Nunito',
                     fontWeight: FontWeight.bold,

@@ -530,14 +530,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 );
               }
             },
-            child: const CircleAvatar(
-              radius: 18,
-              backgroundColor: Colors.grey, // Placeholder for profile image
-              child: Icon(Icons.person, color: Colors.white),
-            ),
+            child: _buildUserAvatar(),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildUserAvatar() {
+    final url = _usuarioActual?.fotoUrl ?? '';
+    final path = url.isNotEmpty ? FotosPerfil.getProfileImage(url) : '';
+    return CircleAvatar(
+      radius: 18,
+      backgroundColor: AppColors.lightSecondary,
+      backgroundImage: path.isNotEmpty ? AssetImage(path) : null,
+      child: path.isEmpty
+          ? const Icon(Icons.person, color: Colors.white, size: 20)
+          : null,
     );
   }
 
@@ -615,11 +624,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 shape: BoxShape.circle,
                 color: Colors.white,
                 image: DecorationImage(
-                  image: mascota.fotoUrl.isNotEmpty
-                      ? NetworkImage(mascota.fotoUrl) as ImageProvider
-                      : AssetImage(
-                          _getDefaultAssetForMascota(mascota.mascotaID),
-                        ),
+                  image: mascota.fotoUrl.isEmpty
+                      ? AssetImage(_getDefaultAssetForMascota(mascota.mascotaID))
+                      : mascota.fotoUrl.startsWith('http')
+                          ? NetworkImage(mascota.fotoUrl) as ImageProvider
+                          : AssetImage(mascota.fotoUrl),
                   fit: BoxFit.cover,
                 ),
                 border: Border.all(color: AppColors.darkBlue, width: 2),
