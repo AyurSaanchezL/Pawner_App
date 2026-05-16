@@ -943,6 +943,27 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
     }
   }
 
+  static const List<String> _petAvatarAssets = [
+    'assets/images/fotos_perfil/buho.png',
+    'assets/images/fotos_perfil/cheeta.png',
+    'assets/images/fotos_perfil/ciervo.png',
+    'assets/images/fotos_perfil/conejo.png',
+    'assets/images/fotos_perfil/elefante.png',
+    'assets/images/fotos_perfil/flamenco.png',
+    'assets/images/fotos_perfil/jabali.png',
+    'assets/images/fotos_perfil/jirafa.png',
+    'assets/images/fotos_perfil/koala.png',
+    'assets/images/fotos_perfil/lemur.png',
+    'assets/images/fotos_perfil/lobo.png',
+    'assets/images/fotos_perfil/mapache.png',
+    'assets/images/fotos_perfil/nutria.png',
+    'assets/images/fotos_perfil/oso.png',
+    'assets/images/fotos_perfil/panda.png',
+    'assets/images/fotos_perfil/tejon.png',
+    'assets/images/fotos_perfil/tucan.png',
+    'assets/images/fotos_perfil/zorro.png',
+  ];
+
   void _showPhotoOptions() {
     final bool hasPhoto = mascota.fotoUrl.isNotEmpty;
     showModalBottomSheet(
@@ -1000,7 +1021,119 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                   _pickAndUploadImage();
                 },
               ),
+            ListTile(
+              leading: const Icon(
+                LucideIcons.smile,
+                color: AppColors.secondary,
+              ),
+              title: const Text(
+                "Elegir avatar",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _showAvatarPicker();
+              },
+            ),
             const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAvatarPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.55,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.black12,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Elige un avatar',
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  mainAxisSpacing: 14,
+                  crossAxisSpacing: 14,
+                ),
+                itemCount: _petAvatarAssets.length,
+                itemBuilder: (context, i) {
+                  final asset = _petAvatarAssets[i];
+                  final isSelected = mascota.fotoUrl == asset;
+                  return GestureDetector(
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final updated = Mascota(
+                        mascotaID: mascota.mascotaID,
+                        nombre: mascota.nombre,
+                        especie: mascota.especie,
+                        raza: mascota.raza,
+                        chip: mascota.chip,
+                        peso: mascota.peso,
+                        fechaNacimiento: mascota.fechaNacimiento,
+                        genero: mascota.genero,
+                        esterilizado: mascota.esterilizado,
+                        observaciones: mascota.observaciones,
+                        fotoUrl: asset,
+                        familiaID: mascota.familiaID,
+                        modulos: mascota.modulos,
+                      );
+                      await FirestoreService().actualizarMascota(updated);
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.secondary
+                              : Colors.transparent,
+                          width: 3,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: AppColors.secondary.withAlpha(60),
+                                  blurRadius: 8,
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: ClipOval(
+                        child: Image.asset(asset, fit: BoxFit.cover),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),

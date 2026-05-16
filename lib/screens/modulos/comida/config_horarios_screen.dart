@@ -6,11 +6,13 @@ import 'package:pawner_app/services/comida_service.dart';
 class ConfigHorariosScreen extends StatelessWidget {
   final String familiaId;
   final String mascotaId;
+  final String mascotaNombre;
 
   const ConfigHorariosScreen({
     super.key,
     required this.familiaId,
     required this.mascotaId,
+    required this.mascotaNombre,
   });
 
   Future<void> _addHorarioManual(BuildContext context) async {
@@ -29,7 +31,7 @@ class ConfigHorariosScreen extends StatelessWidget {
         activo: true,
       );
 
-      await ComidaService().addHorario(familiaId, mascotaId, nuevoHorario);
+      await ComidaService().addHorario(familiaId, mascotaId, nuevoHorario, mascotaNombre: mascotaNombre);
     }
   }
 
@@ -75,7 +77,7 @@ class ConfigHorariosScreen extends StatelessWidget {
                     value: horario.activo,
                     activeColor: AppColors.secondary,
                     onChanged: (val) {
-                      ComidaService().toggleHorario(familiaId, mascotaId, horario);
+                      ComidaService().toggleHorario(familiaId, mascotaId, horario, mascotaNombre: mascotaNombre);
                     },
                   ),
                 ),

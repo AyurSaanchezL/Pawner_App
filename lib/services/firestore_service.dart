@@ -263,7 +263,7 @@ class FirestoreService {
     await docUsuario.delete();
   }
 
-  // --- NUEVOS MÉTODOS PARA DETALLE DE FAMILIA ---
+  // --- FAMILIA: DETALLE Y MIEMBROS ---
 
   // Obtener una familia por ID
   Future<Familia?> getFamilia(String familiaID) async {
@@ -586,6 +586,7 @@ class FirestoreService {
     return ModuloVetConfig.fromMap(doc.data() as Map<String, dynamic>);
   }
 
+  // Stream en tiempo real de la config del módulo veterinario (Perfil Médico)
   Stream<ModuloVetConfig?> streamModuloVetConfig(
     String familiaID,
     String mascotaID,
@@ -611,6 +612,7 @@ class FirestoreService {
         .toList();
   }
 
+  // Stream de citas veterinarias ordenadas por fecha ascendente
   Stream<List<CitaVeterinaria>> streamCitasVeterinarias(
     String familiaID,
     String mascotaID,
@@ -626,6 +628,7 @@ class FirestoreService {
         );
   }
 
+  // WriteBatch: crea la cita y su Recordatorio familiar de forma atómica
   Future<void> addCitaVeterinaria(
     String familiaID,
     String mascotaID,
@@ -657,6 +660,7 @@ class FirestoreService {
     await batch.commit();
   }
 
+  // WriteBatch: actualiza la cita y sincroniza su Recordatorio asociado; si no hay recordatorioID actualiza solo la cita
   Future<void> updateCitaVeterinaria(
     String familiaID,
     String mascotaID,
@@ -688,6 +692,7 @@ class FirestoreService {
     await batch.commit();
   }
 
+  // Elimina solo la cita sin tocar el Recordatorio; usar deleteCitaVeterinariaWithReminder para borrado completo
   Future<void> deleteCitaVeterinaria(
     String familiaID,
     String mascotaID,
@@ -797,6 +802,7 @@ class FirestoreService {
       .collection('Modulos')
       .doc('mod_paseo');
 
+  // Guarda la configuración de paseos (objetivo diario e intervalo de recordatorios) con merge:true
   Future<void> saveModulePaseosConfig(
     String familiaID,
     mascotaID,
@@ -807,6 +813,7 @@ class FirestoreService {
     await paseoConfigDoc.set(paseoConfig.toJson(), SetOptions(merge: true));
   }
 
+  // Stream en tiempo real de la configuración de paseos
   Stream<PaseoConfig?> getPaseoConfig(String familiaID, mascotaID) {
     return _modPaseoDoc(familiaID, mascotaID).snapshots().map(
       (doc) => doc.exists
@@ -829,6 +836,7 @@ class FirestoreService {
     await docPaseo.set(json);
   }
 
+  // Actualiza un paseo existente con merge (no sobreescribe campos ausentes)
   Future<void> updatePaseo(
     Paseo paseo,
     String familiaID,
@@ -853,6 +861,7 @@ class FirestoreService {
                 .toList(),
           );
 
+  // Cuenta los paseos realizados hoy (usado para decidir si quedan recordatorios pendientes)
   Future<int> countPaseosToday(String familiaID, String mascotaID) async {
     final now = DateTime.now();
     final startOfDay = DateTime(now.year, now.month, now.day);
@@ -870,6 +879,7 @@ class FirestoreService {
     return snapshot.docs.length;
   }
 
+  // Elimina un paseo por su ID
   Future<void> deletePaseo(
     String familiaID,
     String mascotaID,
@@ -885,6 +895,7 @@ class FirestoreService {
 
   // --- RECORDATORIOS (nivel Familia) ---
 
+  // Crea un recordatorio a nivel familia (sin vinculación a módulo específico)
   Future<void> addRecordatorio(
     String familiaID,
     Recordatorio recordatorio,
@@ -898,6 +909,7 @@ class FirestoreService {
     await doc.set(recordatorio.toJson());
   }
 
+  // Stream filtrado: excluye completados y los de más de 1 día en el pasado; ordena por fecha ascendente
   Stream<List<Recordatorio>> streamRecordatoriosFamilia(String familiaID) {
     return _db
         .collection('Familias')
@@ -920,6 +932,7 @@ class FirestoreService {
         );
   }
 
+  // Marca o desmarca un recordatorio como completado
   Future<void> toggleRecordatorioCompletado(
     String familiaID,
     String recordatorioID,
@@ -933,6 +946,7 @@ class FirestoreService {
         .update({'completado': completado});
   }
 
+  // Elimina un recordatorio de la familia
   Future<void> deleteRecordatorio(
     String familiaID,
     String recordatorioID,

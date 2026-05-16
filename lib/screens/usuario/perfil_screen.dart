@@ -379,7 +379,6 @@ class _PerfilUsuarioScreenState extends State<PerfilUsuarioScreen> {
     u.nombre = usernameController.text;
 
     try {
-      // AuthService().changeEmail(newEmail: u.email, userPassword: ??);
       await FirestoreService().updateUsuario(u);
     } catch (e) {
       // Si algo sale mal, revierte los cambios para no confundir

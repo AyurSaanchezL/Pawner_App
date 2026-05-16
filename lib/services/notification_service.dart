@@ -106,11 +106,11 @@ class NotificationService {
     required int objetivo,
     required int completadosHoy,
     required int intervaloHoras,
+    required String mascotaNombre,
   }) async {
     await cancelPaseoReminders();
 
-    final faltan = objetivo - completadosHoy;
-    if (faltan <= 0) return;
+    if (completadosHoy >= objetivo) return;
 
     final now = DateTime.now();
     final endOfDay = DateTime(
@@ -119,9 +119,6 @@ class NotificationService {
       now.day,
     ).add(const Duration(days: 1));
     DateTime nextReminder = now.add(Duration(hours: intervaloHoras));
-    final message = faltan == 1
-        ? 'Te falta 1 paseo para completar tu objetivo diario.'
-        : 'Te faltan $faltan paseos para completar tu objetivo diario.';
 
     for (
       var index = 0;
@@ -132,7 +129,7 @@ class NotificationService {
         id: _paseoReminderBaseId + index,
         scheduledFor: nextReminder,
         title: 'Recordatorio de paseo',
-        body: message,
+        body: '¡No olvides sacar a pasear a $mascotaNombre hoy!',
       );
     }
   }
@@ -151,13 +148,14 @@ class NotificationService {
     required int id,
     required int hour,
     required int minute,
+    required String mascotaNombre,
   }) async {
     final scheduledDate = _nextInstanceOfTime(hour, minute);
 
     await _notificationsPlugin.zonedSchedule(
       id,
-      '¡Atención!',
-      'Es hora de alimentar a tu mascota',
+      '¡Hora de comer!',
+      'Es hora de alimentar a $mascotaNombre',
       scheduledDate,
       _getNotificationDetails(),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
@@ -211,6 +209,13 @@ class NotificationService {
   Future<List<PendingNotificationRequest>> getPendingNotifications() =>
       _notificationsPlugin.pendingNotificationRequests();
 
+  Future<bool> hasPendingPaseoReminders() async {
+    final pending = await getPendingNotifications();
+    return pending.any(
+      (n) => n.id >= _paseoReminderBaseId && n.id < _paseoReminderBaseId + _paseoReminderMaxCount,
+    );
+  }
+
   Future<bool> hasExactAlarmPermission() async {
     final androidPlugin = _notificationsPlugin
         .resolvePlatformSpecificImplementation<
@@ -228,20 +233,6 @@ class NotificationService {
     if (androidPlugin == null) return true;
     return (await androidPlugin.requestNotificationsPermission()) ?? false;
   }
-
-  /*  Future<void> testInexactScheduling() async {
-    final scheduledTime = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 15));
-    await _notificationsPlugin.zonedSchedule(
-      88,
-      'Prueba Inexacta',
-      'Lanzada a los 15 segundos.',
-      scheduledTime,
-      _getNotificationDetails(),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-    );
-    print("Inexacta registrada para: $scheduledTime");
-  }*/
 
   Future<void> openAlarmSettings() async {
     final androidPlugin = _notificationsPlugin
