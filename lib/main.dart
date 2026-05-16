@@ -1,6 +1,9 @@
+import 'dart:developer';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -10,21 +13,51 @@ import 'package:pawner_app/services/notification_service.dart';
 import 'package:pawner_app/firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  log('FCM BACKGROUND: ${message.notification?.title}');
+}
+
 void main() async {
+  // 1. Obligatorio para arrancar servicios asíncronos en Flutter
   WidgetsFlutterBinding.ensureInitialized();
 
+  // 2. Cargar configuraciones locales iniciales (No dependen de Firebase)
   await dotenv.load(fileName: ".env");
   await initializeDateFormatting('es', null);
-  await NotificationService().init();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  FirebaseCrashlytics crashlytics = FirebaseCrashlytics.instance;
-  FlutterError.onError = crashlytics.recordFlutterFatalError;
 
-  firebaseController = CrashManager(crashlytics);
+  // Declaramos la variable de Crashlytics arriba vacía
+  FirebaseCrashlytics? crashlytics;
 
-  // Listener para sincronizar email en Firestore cuando cambie en Auth
-  _setupEmailSyncListener();
+  try {
+    // 3. ENCIENDE FIREBASE PRIMERO ◄── Aquí se soluciona tu error
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
+    // 4. Ahora que Firebase existe, ya podemos instanciar Crashlytics de forma segura
+    crashlytics = FirebaseCrashlytics.instance;
+    FlutterError.onError = crashlytics.recordFlutterFatalError;
+    firebaseController = CrashManager(crashlytics);
+
+    // 5. Inicializar resto de servicios dependientes de Firebase
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    await NotificationService().init();
+
+    // 6. Listener para sincronizar email (Metido dentro para que no salte si falla Firebase)
+    _setupEmailSyncListener();
+  } catch (e) {
+    // Si crashlytics ya se pudo inicializar bien antes del fallo, reportamos el crash
+    if (crashlytics != null) {
+      CrashManager(crashlytics).reportCrash(e);
+    } else {
+      debugPrint("Error crítico en el arranque de Firebase: $e");
+    }
+  }
+
+  // 7. Arrancamos la interfaz gráfica
   runApp(const MainApp());
 }
 

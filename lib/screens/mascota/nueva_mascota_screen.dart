@@ -11,6 +11,7 @@ import 'package:pawner_app/core/model/usuario.dart';
 import 'package:pawner_app/services/auth_service.dart';
 import 'package:pawner_app/services/cloudinary_service.dart';
 import 'package:pawner_app/services/firestore_service.dart';
+import 'package:pawner_app/services/push_notification_service.dart';
 
 class NuevaMascotaScreen extends StatefulWidget {
   const NuevaMascotaScreen({super.key});
@@ -119,6 +120,11 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
       );
 
       await FirestoreService().crearMascota(nuevaMascota);
+      await FCMService().enviarNotificacionFamiliar(
+        topic: usuarioActual.familiaID!,
+        title: "¡Nueva mascota!",
+        body: "${usuarioActual.nombre} añadió a ${nuevaMascota.nombre}",
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -24,107 +24,119 @@ class AjustesScreen extends StatelessWidget {
 
           SafeArea(
             bottom: false,
-            child: Column(
-              children: [
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: IconButton(
-                    icon: const Icon(
-                      LucideIcons.arrowLeft,
-                      color: Colors.black,
-                      size: 28,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
                     ),
-                    onPressed: () => Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DashboardScreen(),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        children: [
+                          Align(
+                            alignment: Alignment.topLeft,
+                            child: IconButton(
+                              icon: const Icon(
+                                LucideIcons.arrowLeft,
+                                color: Colors.black,
+                                size: 28,
+                              ),
+                              onPressed: () => Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => DashboardScreen(),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 30),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                _buildBubble(
+                                  text: "Perfil",
+                                  color: AppColors.secondary.withAlpha(245),
+                                  icon: LucideIcons.user,
+                                  isRightTail: true,
+                                  iconColor: AppColors.secondary,
+                                  onTap: () async {
+                                    Usuario usuario = await authService.value
+                                        .getCurrentUser();
+                                    if (context.mounted) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              PerfilUsuarioScreen(u: usuario),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                                const SizedBox(height: 25),
+                                _buildBubble(
+                                  text: "Familia",
+                                  color: AppColors.accent.withAlpha(245),
+                                  icon: LucideIcons.users,
+                                  isRightTail: false,
+                                  iconColor: Colors.orange,
+                                  onTap: () async {
+                                    Usuario usuario = await authService.value
+                                        .getCurrentUser();
+                                    if (context.mounted) {
+                                      if (usuario.familiaID != null &&
+                                          usuario.familiaID!.isNotEmpty) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                DetalleFamiliaScreen(
+                                                  familiaID: usuario.familiaID!,
+                                                ),
+                                          ),
+                                        );
+                                      } else {
+                                        log("El usuario no tiene familia");
+                                      }
+                                    }
+                                  },
+                                ),
+                                const SizedBox(height: 25),
+                                _buildBubble(
+                                  text: "Cerrar sesión",
+                                  color: Colors.redAccent.withAlpha(245),
+                                  icon: Icons.exit_to_app,
+                                  isRightTail: true,
+                                  iconColor: Colors.redAccent,
+                                  onTap: () async {
+                                    AuthService().signOut();
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => FirstScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const Spacer(),
+                          const SizedBox(height: 40),
+
+                          _buildDarkPanel(context),
+                        ],
                       ),
                     ),
                   ),
-                ),
-
-                const Spacer(flex: 1),
-
-                Expanded(
-                  flex: 8,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 30),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        _buildBubble(
-                          text: "Perfil",
-                          color: AppColors.secondary,
-                          icon: LucideIcons.user,
-                          isRightTail: true,
-                          iconColor: AppColors.secondary,
-                          onTap: () async {
-                            Usuario usuario = await authService.value
-                                .getCurrentUser();
-                            if (context.mounted) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      PerfilUsuarioScreen(u: usuario),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 25),
-                        _buildBubble(
-                          text: "Familia",
-                          color: AppColors.accent,
-                          icon: LucideIcons.users,
-                          isRightTail: false,
-                          iconColor: Colors.orange,
-                          onTap: () async {
-                            Usuario usuario = await authService.value
-                                .getCurrentUser();
-                            if (context.mounted) {
-                              if (usuario.familiaID != null &&
-                                  usuario.familiaID!.isNotEmpty) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => DetalleFamiliaScreen(
-                                      familiaID: usuario.familiaID!,
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                log("El usuario no tiene familia");
-                              }
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 25),
-                        _buildBubble(
-                          text: "Cerrar sesión",
-                          color: Colors.redAccent,
-                          icon: Icons.exit_to_app,
-                          isRightTail: true,
-                          iconColor: Colors.redAccent,
-                          onTap: () async {
-                            AuthService().signOut();
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => FirstScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const Spacer(),
-
-                _buildDarkPanel(context),
-              ],
+                );
+              },
             ),
           ),
         ],
@@ -354,8 +366,11 @@ class _ContactFormSheetState extends State<_ContactFormSheet> {
             const SizedBox(height: 24),
             const Row(
               children: [
-                Icon(LucideIcons.messageCircle,
-                    color: AppColors.secondary, size: 22),
+                Icon(
+                  LucideIcons.messageCircle,
+                  color: AppColors.secondary,
+                  size: 22,
+                ),
                 SizedBox(width: 10),
                 Text(
                   '¿Cómo podemos ayudarte?',
@@ -380,14 +395,20 @@ class _ContactFormSheetState extends State<_ContactFormSheet> {
             const SizedBox(height: 24),
             TextField(
               controller: _asuntoController,
-              style: const TextStyle(fontFamily: 'Nunito', color: AppColors.dark),
+              style: const TextStyle(
+                fontFamily: 'Nunito',
+                color: AppColors.dark,
+              ),
               decoration: _inputDecoration('Asunto', LucideIcons.tag),
             ),
             const SizedBox(height: 14),
             TextField(
               controller: _mensajeController,
               maxLines: 4,
-              style: const TextStyle(fontFamily: 'Nunito', color: AppColors.dark),
+              style: const TextStyle(
+                fontFamily: 'Nunito',
+                color: AppColors.dark,
+              ),
               decoration: _inputDecoration('Cuéntanos...', LucideIcons.pencil),
             ),
             const SizedBox(height: 24),

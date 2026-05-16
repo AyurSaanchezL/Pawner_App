@@ -141,7 +141,7 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
             child: const Text(
               'Salir de la familia',
               style: TextStyle(
-                color: Colors.grey,
+                color: Colors.redAccent,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -422,7 +422,10 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context); // Cerrar diálogo
-              final notifIds = await _fs.eliminarMascota(mascota.familiaID, mascota.mascotaID);
+              final notifIds = await _fs.eliminarMascota(
+                mascota.familiaID,
+                mascota.mascotaID,
+              );
               final ns = NotificationService();
               for (final id in notifIds) {
                 ns.cancel(id);
@@ -651,14 +654,32 @@ class _DetalleFamiliaScreenState extends State<DetalleFamiliaScreen> {
                             : null,
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        miembro.nombre,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.dark,
-                        ),
-                      ),
+                      miembro.rol!.name == 'admin'
+                          ? Row(
+                              children: [
+                                Icon(
+                                  LucideIcons.crown,
+                                  size: 12,
+                                  color: Colors.amber,
+                                ),
+                                Text(
+                                  miembro.nombre,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.dark,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Text(
+                              miembro.nombre,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.dark,
+                              ),
+                            ),
                     ],
                   ),
                 ),

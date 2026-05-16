@@ -30,6 +30,8 @@ dependencies:
   time_zone_plus: ^0.0.4
   app_settings: ^5.1.1
   numberpicker: ^2.1.2
+  firebase_messaging: ^16.2.0
+  googleapis_auth: ^2.3.1
 
 dev_dependencies:
   flutter_test:
@@ -47,6 +49,7 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
+    - assets/firebase_credentials.json
     - assets/images/
     - assets/images/fotos_perfil/
     - assets/fonts/

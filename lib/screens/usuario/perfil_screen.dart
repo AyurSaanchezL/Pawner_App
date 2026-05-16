@@ -322,7 +322,7 @@ class _PerfilUsuarioScreenState extends State<PerfilUsuarioScreen> {
               "Selecciona tu avatar:",
               style: TextStyle(color: AppColors.primary, fontWeight: .w700),
             ),
-            backgroundColor: AppColors.secondary.withAlpha(200),
+            backgroundColor: AppColors.secondary.withAlpha(227),
             content: SingleChildScrollView(
               child: SizedBox(
                 width: .maxFinite,

@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -13,6 +14,7 @@ import 'package:pawner_app/screens/modulos/paseo/config_objetivo_paseos.dart';
 import 'package:pawner_app/services/cloudinary_service.dart';
 import 'package:pawner_app/services/firestore_service.dart';
 import 'package:pawner_app/services/notification_service.dart';
+import 'package:pawner_app/services/push_notification_service.dart';
 
 class PaseoScreen extends StatefulWidget {
   final Mascota m;
@@ -91,6 +93,19 @@ class _PaseoScreenState extends State<PaseoScreen> {
             }
 
             paseos = snapshot.data ?? [];
+            List<Paseo> paseosAyer = [];
+            for (Paseo p in paseos) {
+              if (p.fechaHora.toDate().day != DateTime.now().day) {
+                paseosAyer.add(p);
+              }
+            }
+
+            if (paseosAyer.isNotEmpty) {
+              _deletePaseos(widget.m, paseosAyer);
+              for (Paseo p in paseosAyer) {
+                paseos.remove(p);
+              }
+            }
 
             final hoy = DateTime.now();
             final paseosHoy = paseos.where((p) {
@@ -280,6 +295,16 @@ class _PaseoScreenState extends State<PaseoScreen> {
     );
   }
 
+  Future<void> _deletePaseos(Mascota m, List<Paseo> paseos) async {
+    try {
+      for (Paseo p in paseos) {
+        await FirestoreService().deletePaseo(m.familiaID, m.mascotaID, p);
+      }
+    } catch (e) {
+      log("No fue posible eliminar todos los paseos de ayer");
+    }
+  }
+
   String _formatearTiempo(int totalMinutos) {
     if (totalMinutos < 60) return "$totalMinutos min";
     int h = totalMinutos ~/ 60;
@@ -419,6 +444,12 @@ class _AddPaseoState extends State<AddPaseo> {
           newPaseo,
           widget.mascota.familiaID,
           widget.mascota.mascotaID,
+        );
+        // await NotificationService().;
+        await FCMService().enviarNotificacionFamiliar(
+          topic: widget.mascota.familiaID,
+          title: "Nuevo paseo",
+          body: '${widget.mascota.nombre} ha dado un paseo!',
         );
       }
 

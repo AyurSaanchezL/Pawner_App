@@ -1,13 +1,24 @@
+import 'dart:convert';
+import 'dart:developer';
+
+import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:googleapis_auth/auth_io.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:time_zone_plus/time_zone_plus.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class NotificationService {
+  NotificationService._internal();
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
-  NotificationService._internal();
+
+  // Firebase Messaging
+  final _messaging = FirebaseMessaging.instance;
+  bool _isFlutterLocalNotificationsInitialized = false;
 
   static const int _paseoReminderBaseId = 1000;
   static const int _paseoReminderMaxCount = 24;
@@ -44,6 +55,34 @@ class NotificationService {
         debugPrint("Notificación presionada: ${details.payload}");
       },
     );
+
+    // === NUEVO: Escuchar mensajes cuando la app está abierta (Foreground) ===
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      log('MENSAJE FCM RECIBIDO');
+
+      final notification = message.notification;
+
+      if (notification != null) {
+        _notificationsPlugin.show(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          _getNotificationDetails(),
+        );
+      } else {
+        log('Mensaje sin notification: ${message.data}');
+      }
+    });
+
+    FirebaseMessaging.instance.getToken().then((token) {
+      log("FCM TOKEN: $token");
+    });
+  }
+
+  // === NUEVO: Método para inicializar el servicio y suscribir al usuario ===
+  Future<void> inicializarParaUsuario(String familiaID) async {
+    await setupFlutterNotifications();
+    await _requestPermission(familiaID);
   }
 
   NotificationDetails _getNotificationDetails() {
@@ -64,6 +103,46 @@ class NotificationService {
         presentSound: true,
       ),
     );
+  }
+
+  // MÉTODOS DE NOTIFICACIONES PUSH
+
+  Future<void> _requestPermission(String familiaID) async {
+    final settings = await _messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+      announcement: true,
+    );
+    log('FAMILIA ID USADA PARA SUBSCRIPCIÓN: $familiaID');
+
+    log('Auth status: ${settings.authorizationStatus}');
+
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      await _messaging.subscribeToTopic(familiaID).then((_) {
+        log('suscrito al tópico $familiaID');
+      });
+    }
+  }
+
+  Future<void> setupFlutterNotifications() async {
+    if (_isFlutterLocalNotificationsInitialized) {
+      return;
+    }
+
+    // Android
+    const channel = AndroidNotificationChannel(
+      'canal_super_importante',
+      'Canal Super Importante',
+      description: 'Canal para las notificaciones importantes',
+      importance: Importance.high,
+    );
+
+    await _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(channel);
   }
 
   // --- MÉTODOS DE PRODUCCIÓN ---
@@ -212,7 +291,9 @@ class NotificationService {
   Future<bool> hasPendingPaseoReminders() async {
     final pending = await getPendingNotifications();
     return pending.any(
-      (n) => n.id >= _paseoReminderBaseId && n.id < _paseoReminderBaseId + _paseoReminderMaxCount,
+      (n) =>
+          n.id >= _paseoReminderBaseId &&
+          n.id < _paseoReminderBaseId + _paseoReminderMaxCount,
     );
   }
 

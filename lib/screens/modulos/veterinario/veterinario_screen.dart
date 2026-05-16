@@ -13,6 +13,7 @@ import 'package:pawner_app/services/firestore_service.dart';
 import 'package:pawner_app/services/notification_service.dart';
 import 'package:pawner_app/services/cloudinary_service.dart';
 import 'package:intl/intl.dart';
+import 'package:pawner_app/services/push_notification_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 enum NotifTiming {
@@ -1766,6 +1767,13 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
       ),
+    );
+
+    FCMService().enviarNotificacionFamiliar(
+      topic: widget.mascota.familiaID,
+      title: "Nueva cita veterinaria",
+      body:
+          "${widget.mascota.nombre} tiene cita veterinaria por ${cita.motivo} el ${cita.fecha.day}/${cita.fecha.month}/${cita.fecha.year} a las ${cita.fecha.hour}:${cita.fecha.minute}",
     );
   }
 

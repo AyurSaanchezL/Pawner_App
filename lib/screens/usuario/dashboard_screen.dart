@@ -105,6 +105,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           }
         });
       }
+      await NotificationService().inicializarParaUsuario(
+        _usuarioActual!.familiaID!,
+      );
     }
   }
 
@@ -527,7 +530,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     builder: (context) =>
                         PerfilUsuarioScreen(u: _usuarioActual!),
                   ),
-                );
+                  // Recargamos los datos del usuario actual por si hemos hecho algún cambio
+                ).then((_) {
+                  _loadInitialData();
+                });
               }
             },
             child: _buildUserAvatar(),
@@ -625,10 +631,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 color: Colors.white,
                 image: DecorationImage(
                   image: mascota.fotoUrl.isEmpty
-                      ? AssetImage(_getDefaultAssetForMascota(mascota.mascotaID))
+                      ? AssetImage(
+                          _getDefaultAssetForMascota(mascota.mascotaID),
+                        )
                       : mascota.fotoUrl.startsWith('http')
-                          ? NetworkImage(mascota.fotoUrl) as ImageProvider
-                          : AssetImage(mascota.fotoUrl),
+                      ? NetworkImage(mascota.fotoUrl) as ImageProvider
+                      : AssetImage(mascota.fotoUrl),
                   fit: BoxFit.cover,
                 ),
                 border: Border.all(color: AppColors.darkBlue, width: 2),
