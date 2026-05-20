@@ -25,16 +25,18 @@ class _AddPlatoScreenState extends State<AddPlatoScreen> {
   final _nombreController = TextEditingController();
   final _ingredienteController = TextEditingController();
   final _preparacionController = TextEditingController();
-  
+
   String _tipoSeleccionado = 'Seca';
   final List<String> _tiposComida = ['Seca', 'Húmeda', 'Natural', 'Suplemento'];
-  
+
   List<String> _ingredientes = [];
   File? _imageFile;
   bool _isLoading = false;
 
   Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+    );
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);
@@ -128,7 +130,11 @@ class _AddPlatoScreenState extends State<AddPlatoScreen> {
                         ),
                         child: _imageFile == null
                             ? const Center(
-                                child: Icon(Icons.camera_alt, size: 50, color: Colors.grey),
+                                child: Icon(
+                                  Icons.camera_alt,
+                                  size: 50,
+                                  color: Colors.grey,
+                                ),
                               )
                             : null,
                       ),
@@ -155,10 +161,7 @@ class _AddPlatoScreenState extends State<AddPlatoScreen> {
                         border: OutlineInputBorder(),
                       ),
                       items: _tiposComida.map((tipo) {
-                        return DropdownMenuItem(
-                          value: tipo,
-                          child: Text(tipo),
-                        );
+                        return DropdownMenuItem(value: tipo, child: Text(tipo));
                       }).toList(),
                       onChanged: (value) {
                         if (value != null) {
@@ -182,7 +185,11 @@ class _AddPlatoScreenState extends State<AddPlatoScreen> {
                         ),
                         const SizedBox(width: 8),
                         IconButton(
-                          icon: const Icon(Icons.add_circle, color: AppColors.secondary, size: 36),
+                          icon: const Icon(
+                            Icons.add_circle,
+                            color: AppColors.secondary,
+                            size: 36,
+                          ),
                           onPressed: _addIngrediente,
                         ),
                       ],
@@ -204,7 +211,8 @@ class _AddPlatoScreenState extends State<AddPlatoScreen> {
                       minLines: 2,
                       decoration: const InputDecoration(
                         labelText: 'Preparación / especificaciones',
-                        hintText: 'Modo de preparación, temperatura, cantidad...',
+                        hintText:
+                            'Modo de preparación, temperatura, cantidad...',
                         border: OutlineInputBorder(),
                         alignLabelWithHint: true,
                       ),
@@ -220,7 +228,13 @@ class _AddPlatoScreenState extends State<AddPlatoScreen> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: const Text('GUARDAR PLATO', style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'GUARDAR PLATO',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
                     ),
                   ],
                 ),

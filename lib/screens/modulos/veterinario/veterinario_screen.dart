@@ -1990,6 +1990,7 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _guardar,
                   style: ElevatedButton.styleFrom(
+                    elevation: 3,
                     backgroundColor: AppColors.secondary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
@@ -2001,7 +2002,7 @@ class _AddCitaSheetState extends State<AddCitaSheet> {
                           "Agendar Cita",
                           style: TextStyle(
                             fontFamily: 'Nunito',
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
