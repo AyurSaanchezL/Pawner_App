@@ -223,6 +223,51 @@ class NotificationService {
     }
   }
 
+  // --- MÉTODOS DE HABITAT ---
+  static const int _habitatReminderId = 2000;
+
+  /// Programa la próxima alerta de limpieza basándose en el intervalo de días.
+  /// Se ejecuta por defecto a las 10:00 AM del día que corresponda.
+  Future<void> scheduleHabitatCleaningReminder({
+    required int intervaloDias,
+    required String mascotaNombre,
+    required String tipoHabitat,
+  }) async {
+    // Cada vez que se actualice el intervalo, cancelamos la alarma anterior para evitar duplicados
+    await cancel(_habitatReminderId);
+
+    if (intervaloDias <= 0) return;
+
+    final now = DateTime.now();
+
+    // Calcula el próximo día de limpieza a las 10:00 AM
+    DateTime scheduledDate = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).add(Duration(days: intervaloDias)).add(const Duration(hours: 10));
+
+    // Convierte la zona horaria local usando timezone
+    final scheduledTime = tz.TZDateTime.from(scheduledDate, tz.local);
+
+    // Se agenda la notificación con el título y cuerpo personalizados para el hábitat
+    await _notificationsPlugin.zonedSchedule(
+      _habitatReminderId,
+      '¡Toca limpieza! 🧼',
+      'Es hora de limpiar el ($tipoHabitat) de $mascotaNombre.',
+      scheduledTime,
+      _getNotificationDetails(),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+    );
+  }
+
+  /// Cancela explícitamente el recordatorio del hábitat si el módulo se desactiva
+  Future<void> cancelHabitatReminder() async {
+    await cancel(_habitatReminderId);
+  }
+
   Future<void> scheduleFixedTimeNotification({
     required int id,
     required int hour,

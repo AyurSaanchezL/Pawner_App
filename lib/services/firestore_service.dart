@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:pawner_app/core/constants.dart';
+import 'package:pawner_app/core/model/modulo_habitat/modulo_habitat_config.dart';
 import 'package:pawner_app/core/model/modulo_paseos/model_paseo.dart';
 import 'package:pawner_app/core/model/modulo_paseos/modulo_paseo_config.dart';
 import 'package:pawner_app/core/model/usuario.dart';
@@ -893,7 +894,34 @@ class FirestoreService {
     await docPaseo.delete();
   }
 
-  // --- RECORDATORIOS (nivel Familia) ---
+  // --- MÓDULO HÁBITATS ---
+
+  DocumentReference _modHabitatDoc(String familiaID, String mascotaID) => _db
+      .collection('Familias')
+      .doc(familiaID)
+      .collection('Mascotas')
+      .doc(mascotaID)
+      .collection('Modulos')
+      .doc('mod_habitat');
+
+  // Guarda la configuración de paseos (objetivo diario e intervalo de recordatorios) con merge:true
+  Future<void> saveModuleHabitatConfig(
+    String familiaID,
+    mascotaID,
+    HabitatConfig habitatConfig,
+  ) async {
+    final habitatConfigDoc = _modHabitatDoc(familiaID, mascotaID);
+
+    await habitatConfigDoc.set(habitatConfig.toJson());
+  }
+
+  Stream<HabitatConfig?> getHabitatConfig(String familiaID, String mascotaID) {
+    return _modHabitatDoc(familiaID, mascotaID).snapshots().map(
+      (doc) => doc.exists
+          ? HabitatConfig.fromJson(doc.data() as Map<String, dynamic>)
+          : null,
+    );
+  }
 
   // Crea un recordatorio a nivel familia (sin vinculación a módulo específico)
   Future<void> addRecordatorio(

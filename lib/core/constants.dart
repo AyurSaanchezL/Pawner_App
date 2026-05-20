@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/model/mascota.dart';
 import 'package:pawner_app/screens/modulos/comida/dashboard_comida_screen.dart';
+import 'package:pawner_app/screens/modulos/habitat/habitat_screen.dart';
 import 'package:pawner_app/screens/modulos/paseo/paseo_screen.dart';
 import 'package:pawner_app/screens/modulos/veterinario/veterinario_screen.dart';
+import 'package:pawner_app/screens/usuario/dashboard_screen.dart';
 
 class Constants {
   static final TextStyle inputStyle = TextStyle(
@@ -140,7 +142,8 @@ class Constants {
 enum AppModules {
   paseos,
   veterinario,
-  comida;
+  comida,
+  habitat;
 
   static String getName(String mod) {
     switch (mod) {
@@ -150,6 +153,8 @@ enum AppModules {
         return 'Veterinario';
       case 'comida':
         return 'Comida';
+      case 'habitat':
+        return 'Habitat';
       default:
         return mod;
     }
@@ -166,7 +171,7 @@ enum AppModules {
           'Veterinario',
           'Cuidados y vacunas',
           LucideIcons.stethoscope,
-          MaterialPageRoute(
+          () => MaterialPageRoute(
             builder: (context) => VeterinarioScreen(mascota: mascota),
           ),
         ];
@@ -175,19 +180,34 @@ enum AppModules {
           'Paseos',
           'Bienestar y salud',
           const IconData(0xe4a1, fontFamily: 'MaterialIcons'),
-          MaterialPageRoute(builder: (context) => PaseoScreen(m: mascota)),
+          () =>
+              MaterialPageRoute(builder: (context) => PaseoScreen(m: mascota)),
         ];
       case 'Comida':
         return [
           'Comida',
           'Alimentación y dieta',
           LucideIcons.utensils,
-          MaterialPageRoute(
+          () => MaterialPageRoute(
             builder: (context) => DashboardComidaScreen(mascota: mascota),
           ),
         ];
+      case 'Habitat':
+        return [
+          'Hábitat',
+          'Condiciones ideales',
+          LucideIcons.home,
+          () => MaterialPageRoute(
+            builder: (context) => HabitatScreen(m: mascota),
+          ),
+        ];
       default:
-        return ['Desconocido', '', ''];
+        return [
+          'Desconocido',
+          '',
+          Icons.error,
+          () => MaterialPageRoute(builder: (context) => DashboardScreen()),
+        ];
     }
   }
 }

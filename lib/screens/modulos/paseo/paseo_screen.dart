@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:pawner_app/core/app_colors.dart';
+import 'package:pawner_app/core/components/number_picker.dart';
 import 'package:pawner_app/core/model/mascota.dart';
 import 'package:pawner_app/core/model/modulo_paseos/model_paseo.dart';
 import 'package:pawner_app/core/model/modulo_paseos/modulo_paseo_config.dart';
@@ -121,6 +122,7 @@ class _PaseoScreenState extends State<PaseoScreen> {
             }
 
             return Scaffold(
+              backgroundColor: AppColors.homeScreenBackground,
               appBar: AppBar(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
@@ -547,23 +549,27 @@ class _AddPaseoState extends State<AddPaseo> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildPicker(
-                  "Horas",
-                  horas,
-                  0,
-                  23,
-                  (val) => setState(() => horas = val),
+                CustomNumberPicker(
+                  context: context,
+                  label: "Horas",
+                  backgroundColor: Colors.transparent,
+                  val: horas,
+                  min: 0,
+                  max: 23,
+                  onChanged: (val) => setState(() => horas = val),
                 ),
                 const Text(
                   ":",
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
-                _buildPicker(
-                  "Minutos",
-                  minutos,
-                  0,
-                  59,
-                  (val) => setState(() => minutos = val),
+                CustomNumberPicker(
+                  context: context,
+                  label: "Minutos",
+                  backgroundColor: Colors.transparent,
+                  val: minutos,
+                  min: 0,
+                  max: 59,
+                  onChanged: (val) => setState(() => minutos = val),
                 ),
               ],
             ),
@@ -618,46 +624,39 @@ class _AddPaseoState extends State<AddPaseo> {
               ),
             ),
             const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: _isSaving ? null : _guardarPaseo,
-              child: _isSaving
-                  ? SizedBox(
-                      height: 30,
-                      width: 30,
-                      child: CircularProgressIndicator(),
-                    )
-                  : const Text("GUARDAR PASEO"),
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: _isSaving ? null : _guardarPaseo,
+                style: ElevatedButton.styleFrom(
+                  elevation: 3,
+                  backgroundColor: AppColors.secondary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                child: _isSaving
+                    ? SizedBox(
+                        height: 30,
+                        width: 30,
+                        child: CircularProgressIndicator(),
+                      )
+                    : const Text(
+                        "GUARDAR PASEO",
+                        style: TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+              ),
             ),
             const SizedBox(height: 20),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildPicker(
-    String label,
-    int val,
-    int min,
-    int max,
-    Function(int) onChanged,
-  ) {
-    return Column(
-      children: [
-        Text(label),
-        NumberPicker(
-          minValue: min,
-          maxValue: max,
-          value: val,
-          onChanged: onChanged,
-          itemHeight: 40,
-          selectedTextStyle: const TextStyle(
-            color: AppColors.accent,
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
-        ),
-      ],
     );
   }
 }

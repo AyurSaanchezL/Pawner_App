@@ -355,9 +355,13 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                               icon: LucideIcons.x,
                               iconColor: Colors.redAccent,
                               onAction: () async {
-                                setModalState(
-                                  () => mascota.modulos.remove(modulo),
-                                );
+                                setModalState(() {
+                                  mascota.modulos.remove(modulo);
+                                  if (modulo == "Hábitat") {
+                                    NotificationService()
+                                        .cancelHabitatReminder();
+                                  }
+                                });
                                 await _firestoreService.actualizarMascota(
                                   mascota,
                                 );
@@ -508,7 +512,10 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
               subtitle: info[1],
               icon: info[2],
               isRight: isRight,
-              onTap: () => Navigator.push(context, info[3]),
+              onTap: () {
+                final routeBuilder = info[3] as Route<dynamic> Function();
+                Navigator.push(context, routeBuilder());
+              },
             ),
           );
         }).toList(),
@@ -1076,7 +1083,10 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
             const SizedBox(height: 12),
             Expanded(
               child: GridView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 4,
                   mainAxisSpacing: 14,
