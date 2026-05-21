@@ -6,6 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:pawner_app/core/constants.dart';
 import 'package:pawner_app/core/model/modulo_habitat/modulo_habitat_config.dart';
+import 'package:pawner_app/core/model/modulo_higiene/modulo_higiene_config.dart';
+import 'package:pawner_app/core/model/modulo_higiene/registro_bano.dart';
 import 'package:pawner_app/core/model/modulo_paseos/model_paseo.dart';
 import 'package:pawner_app/core/model/modulo_paseos/modulo_paseo_config.dart';
 import 'package:pawner_app/core/model/usuario.dart';
@@ -984,6 +986,85 @@ class FirestoreService {
         .doc(familiaID)
         .collection('Recordatorios')
         .doc(recordatorioID)
+        .delete();
+  }
+
+  // --- MÓDULO HIGIENE ---
+
+  DocumentReference _modHigieneDoc(String familiaID, String mascotaID) =>
+      _db.doc('Familias/$familiaID/Mascotas/$mascotaID/Modulos/mod_higiene');
+
+  Future<void> saveModuloHigieneConfig(
+    String familiaID,
+    String mascotaID,
+    ModuloHigieneConfig config,
+  ) async {
+    await _modHigieneDoc(familiaID, mascotaID)
+        .set(config.toMap(), SetOptions(merge: true));
+  }
+
+  Future<ModuloHigieneConfig?> getModuloHigieneConfig(
+    String familiaID,
+    String mascotaID,
+  ) async {
+    final snap = await _modHigieneDoc(familiaID, mascotaID).get();
+    if (!snap.exists) return null;
+    return ModuloHigieneConfig.fromMap(snap.data() as Map<String, dynamic>);
+  }
+
+  Stream<ModuloHigieneConfig?> streamModuloHigieneConfig(
+    String familiaID,
+    String mascotaID,
+  ) {
+    return _modHigieneDoc(familiaID, mascotaID).snapshots().map((snap) {
+      if (!snap.exists) return null;
+      return ModuloHigieneConfig.fromMap(snap.data() as Map<String, dynamic>);
+    });
+  }
+
+  Stream<List<RegistroBano>> streamBanos(
+    String familiaID,
+    String mascotaID,
+  ) {
+    return _modHigieneDoc(familiaID, mascotaID)
+        .collection('Banos')
+        .orderBy('fecha', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((d) => RegistroBano.fromMap(d.data(), d.id))
+            .toList());
+  }
+
+  Future<void> addBano(
+    String familiaID,
+    String mascotaID,
+    RegistroBano bano,
+  ) async {
+    final ref = _modHigieneDoc(familiaID, mascotaID).collection('Banos').doc();
+    final data = bano.toMap();
+    data['id'] = ref.id;
+    await ref.set(data);
+  }
+
+  Future<void> updateBano(
+    String familiaID,
+    String mascotaID,
+    RegistroBano bano,
+  ) async {
+    await _modHigieneDoc(familiaID, mascotaID)
+        .collection('Banos')
+        .doc(bano.id)
+        .set(bano.toMap());
+  }
+
+  Future<void> deleteBano(
+    String familiaID,
+    String mascotaID,
+    String banoId,
+  ) async {
+    await _modHigieneDoc(familiaID, mascotaID)
+        .collection('Banos')
+        .doc(banoId)
         .delete();
   }
 }

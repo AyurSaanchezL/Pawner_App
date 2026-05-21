@@ -23,6 +23,7 @@ dependencies:
   flutter_dotenv: ^6.0.1
   http: ^1.1.0
   image_picker: ^1.0.4
+  table_calendar: ^3.0.9
   intl: ^0.18.1
   url_launcher: ^6.2.1
   flutter_local_notifications: ^17.0.0
@@ -49,7 +50,6 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
-    - assets/firebase_credentials.json
     - assets/images/
     - assets/images/fotos_perfil/
     - assets/fonts/
