@@ -230,8 +230,7 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
                               if (val == 'Otro') {
                                 _selectedRaza = 'Otro';
                               } else {
-                                _selectedRaza =
-                                    null; // Reset raza when especie changes
+                                _selectedRaza = null;
                               }
                             });
                           },

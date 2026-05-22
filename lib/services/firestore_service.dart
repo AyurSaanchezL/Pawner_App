@@ -67,12 +67,12 @@ class FirestoreService {
   }
 
   // ELIMINAR MASCOTA — cascade: borra todas las subcolecciones y recordatorios vinculados.
-  // Devuelve los IDs de notificación local que el caller debe cancelar.
+  // Devuelve los IDs de notificación local que el llamador debe cancelar.
   Future<List<int>> eliminarMascota(String familiaID, String mascotaID) async {
     final notifIds = <int>[];
     final batch = _db.batch();
 
-    // Citas veterinarias (notificaciones one-time)
+    // Citas veterinarias (notificaciones de una sola vez)
     final citasSnap = await _modVetDoc(
       familiaID,
       mascotaID,
@@ -1047,8 +1047,10 @@ class FirestoreService {
     String mascotaID,
     ModuloHigieneConfig config,
   ) async {
-    await _modHigieneDoc(familiaID, mascotaID)
-        .set(config.toMap(), SetOptions(merge: true));
+    await _modHigieneDoc(
+      familiaID,
+      mascotaID,
+    ).set(config.toMap(), SetOptions(merge: true));
   }
 
   Future<ModuloHigieneConfig?> getModuloHigieneConfig(
@@ -1070,17 +1072,16 @@ class FirestoreService {
     });
   }
 
-  Stream<List<RegistroBano>> streamBanos(
-    String familiaID,
-    String mascotaID,
-  ) {
+  Stream<List<RegistroBano>> streamBanos(String familiaID, String mascotaID) {
     return _modHigieneDoc(familiaID, mascotaID)
         .collection('Banos')
         .orderBy('fecha', descending: true)
         .snapshots()
-        .map((snap) => snap.docs
-            .map((d) => RegistroBano.fromMap(d.data(), d.id))
-            .toList());
+        .map(
+          (snap) => snap.docs
+              .map((d) => RegistroBano.fromMap(d.data(), d.id))
+              .toList(),
+        );
   }
 
   Future<void> addBano(
@@ -1099,10 +1100,10 @@ class FirestoreService {
     String mascotaID,
     RegistroBano bano,
   ) async {
-    await _modHigieneDoc(familiaID, mascotaID)
-        .collection('Banos')
-        .doc(bano.id)
-        .set(bano.toMap());
+    await _modHigieneDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Banos').doc(bano.id).set(bano.toMap());
   }
 
   Future<void> deleteBano(
@@ -1110,9 +1111,9 @@ class FirestoreService {
     String mascotaID,
     String banoId,
   ) async {
-    await _modHigieneDoc(familiaID, mascotaID)
-        .collection('Banos')
-        .doc(banoId)
-        .delete();
+    await _modHigieneDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Banos').doc(banoId).delete();
   }
 }

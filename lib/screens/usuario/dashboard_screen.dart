@@ -9,7 +9,7 @@ import 'package:pawner_app/core/model/mascota.dart';
 import 'package:pawner_app/core/model/recordatorio.dart';
 import 'package:pawner_app/screens/mascota/detalle_mascota.dart';
 import 'package:pawner_app/screens/usuario/perfil_screen.dart';
-import 'package:pawner_app/screens/mascota/nueva_mascota_screen.dart'; // Keep this for the FAB logic if needed
+import 'package:pawner_app/screens/mascota/nueva_mascota_screen.dart';
 import 'package:pawner_app/screens/usuario/ajustes_screen.dart'; // For settings navigation
 import 'package:pawner_app/services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -95,7 +95,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _recordatoriosStream = fs.streamRecordatoriosFamilia(
               usuario.familiaID!,
             );
-            _sincronizarNotificaciones(usuario.familiaID!); // fire-and-forget
+            _sincronizarNotificaciones(usuario.familiaID!);
           }
         });
       }
@@ -213,9 +213,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    const double verySmallScreenWidth =
-        375.0; // Threshold for very small screens
-    const double smallScreenWidth = 450.0; // Threshold for small screens
+    const double verySmallScreenWidth = 375.0;
+    const double smallScreenWidth = 450.0;
 
     final bool isVerySmallScreen = screenWidth < verySmallScreenWidth;
     final bool isSmallScreen = screenWidth < smallScreenWidth;
@@ -342,31 +341,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 40), // Spacer before footer
+            const SizedBox(height: 40),
           ],
         ),
       ),
-      // Footer
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(
-          bottom: 20.0,
-        ), // Adjust padding as needed
+        padding: const EdgeInsets.only(bottom: 20.0),
         child: FutureBuilder<String>(
-          future: FirestoreService()
-              .obtenerNombreFamilia(), // Call the async function here
+          future: FirestoreService().obtenerNombreFamilia(),
           builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Text(
                 'Loading family name...',
                 textAlign: TextAlign.center,
-              ); // Placeholder while loading
+              );
             } else if (snapshot.hasError) {
               return Text(
                 'Error: ${snapshot.error}',
                 textAlign: TextAlign.center,
-              ); // Show error if any
+              );
             } else {
-              // Display the family name once loaded
               return Text(
                 snapshot.data ?? "Sin nombre",
                 textAlign: TextAlign.center,

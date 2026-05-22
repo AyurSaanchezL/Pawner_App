@@ -32,13 +32,10 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
     int months = today.month - birthDate.month;
     int days = today.day - birthDate.day;
 
-    // Adjust for negative days (borrow from months)
     if (days < 0) {
       months--;
-      // Calculate days in the previous month
       days = DateTime(today.year, today.month, 0).day + days;
     }
-    // Adjust for negative months (borrow from years)
     if (months < 0) {
       years--;
       months += 12;
@@ -49,7 +46,6 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
     } else if (months > 0) {
       return "$months ${months == 1 ? 'mes' : 'meses'}";
     } else {
-      // Ensure at least 1 day is shown if difference is 0 days
       return "${days == 0 ? 1 : days} ${days == 0 || days == 1 ? 'día' : 'días'}";
     }
   }
@@ -279,7 +275,6 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
 
                         const Spacer(),
 
-                        // Footer (IGUAL al de perfil_screen, pegado al final y extremos)
                         const BottomLogo(),
                       ],
                     ),

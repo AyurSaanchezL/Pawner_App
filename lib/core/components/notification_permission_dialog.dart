@@ -6,7 +6,6 @@ import 'package:pawner_app/services/notification_service.dart';
 
 class NotificationPermissionDialog {
   /// Comprueba el permiso y muestra el diálogo solo si no está concedido.
-  /// [feature] describe la funcionalidad bloqueada, p.ej. "las citas veterinarias".
   static Future<void> checkAndShow(
     BuildContext context, {
     required String feature,
@@ -46,9 +45,7 @@ class _NotificationPermissionDialogWidget extends StatelessWidget {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 28),
-            decoration: const BoxDecoration(
-              color: AppColors.lightSecondary,
-            ),
+            decoration: const BoxDecoration(color: AppColors.lightSecondary),
             child: Column(
               children: [
                 Stack(
@@ -62,7 +59,11 @@ class _NotificationPermissionDialogWidget extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                     ),
-                    const Icon(LucideIcons.bellOff, size: 40, color: AppColors.secondary),
+                    const Icon(
+                      LucideIcons.bellOff,
+                      size: 40,
+                      color: AppColors.secondary,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -106,9 +107,15 @@ class _NotificationPermissionDialogWidget extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () {
                       Navigator.pop(dialogContext);
-                      AppSettings.openAppSettings(type: AppSettingsType.notification);
+                      AppSettings.openAppSettings(
+                        type: AppSettingsType.notification,
+                      );
                     },
-                    icon: const Icon(LucideIcons.settings, size: 18, color: Colors.white),
+                    icon: const Icon(
+                      LucideIcons.settings,
+                      size: 18,
+                      color: Colors.white,
+                    ),
                     label: const Text(
                       'Activar notificaciones',
                       style: TextStyle(
@@ -120,7 +127,9 @@ class _NotificationPermissionDialogWidget extends StatelessWidget {
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.secondary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       elevation: 0,
                     ),
                   ),
