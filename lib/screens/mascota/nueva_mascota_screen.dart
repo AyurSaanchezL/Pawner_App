@@ -390,6 +390,9 @@ class _NuevaMascotaScreenState extends State<NuevaMascotaScreen> {
     bool isOptional = false,
     int? maxLength,
   }) {
+    if (hint.contains('chip')) {
+      maxLength = 15;
+    }
     return TextFormField(
       controller: controller,
       keyboardType: isNumber

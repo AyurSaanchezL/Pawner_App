@@ -9,13 +9,9 @@ import 'package:pawner_app/core/constants.dart';
 import 'package:pawner_app/core/model/mascota.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/screens/mascota/editar_mascota.dart';
-import 'package:pawner_app/screens/modulos/paseo/paseo_screen.dart';
-import 'package:pawner_app/screens/modulos/veterinario/veterinario_screen.dart';
 import 'package:pawner_app/services/cloudinary_service.dart';
 import 'package:pawner_app/services/firestore_service.dart';
 import 'package:pawner_app/services/notification_service.dart';
-
-import '../modulos/comida/dashboard_comida_screen.dart';
 
 class PetProfileScreen extends StatefulWidget {
   final Mascota mascota;
@@ -84,10 +80,15 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
           );
         }
 
-        if (!snapshot.hasData) {
+        if (!snapshot.hasData || snapshot.data == null) {
           return const Scaffold(
             backgroundColor: AppColors.background,
-            body: Center(child: Text('Mascota no encontrada')),
+            body: Center(
+              child: Text(
+                'Mascota no encontrada o eliminada',
+                style: TextStyle(fontFamily: 'Nunito'),
+              ),
+            ),
           );
         }
 
@@ -546,23 +547,32 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context); // Cerrar diálogo
+              final familiaId = mascota.familiaID;
+              final mascotaId = mascota.mascotaID;
+              final nombreMascota = mascota.nombre;
+
+              Navigator.pop(context); // Cierra el diálogo
+              Navigator.pop(context);
+
+              // Borrado en segundo plano
               final notifIds = await FirestoreService().eliminarMascota(
-                mascota.familiaID,
-                mascota.mascotaID,
+                familiaId,
+                mascotaId,
               );
+
               final ns = NotificationService();
               for (final id in notifIds) {
                 ns.cancel(id);
               }
+
+              // SnackBar
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text("${mascota.nombre} ha sido eliminado"),
+                    content: Text("$nombreMascota ha sido eliminado"),
                     backgroundColor: Colors.red,
                   ),
                 );
-                Navigator.pop(context); // Volver a la pantalla anterior
               }
             },
             child: const Text(
@@ -1268,7 +1278,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                       Text(
                         "Chip: \n${mascota.chip}",
                         style: const TextStyle(
-                          fontSize: 13,
+                          fontSize: 12,
                           color: Colors.grey,
                           fontWeight: FontWeight.w600,
                         ),

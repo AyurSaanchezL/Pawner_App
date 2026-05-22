@@ -53,6 +53,7 @@ flutter:
     - assets/images/
     - assets/images/fotos_perfil/
     - assets/fonts/
+    - assets/firebase_credentials.json
     - .env
   fonts:
     - family: Nunito
