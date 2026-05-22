@@ -1,11 +1,7 @@
-import 'dart:convert';
 import 'dart:developer';
 
-import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:googleapis_auth/auth_io.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:time_zone_plus/time_zone_plus.dart';
@@ -79,10 +75,10 @@ class NotificationService {
     });
   }
 
-  // === NUEVO: Método para inicializar el servicio y suscribir al usuario ===
-  Future<void> inicializarParaUsuario(String familiaID) async {
-    await setupFlutterNotifications();
-    await _requestPermission(familiaID);
+  // === Inicialización del servicio y suscripción de notificaciones ===
+  Future<void> initializeForFamily(String familiaID) async {
+    await _setupFlutterNotifications();
+    await _requestPermissionAndSubscribe(familiaID);
   }
 
   NotificationDetails _getNotificationDetails() {
@@ -107,7 +103,7 @@ class NotificationService {
 
   // MÉTODOS DE NOTIFICACIONES PUSH
 
-  Future<void> _requestPermission(String familiaID) async {
+  Future<void> _requestPermissionAndSubscribe(String familiaID) async {
     final settings = await _messaging.requestPermission(
       alert: true,
       badge: true,
@@ -125,7 +121,7 @@ class NotificationService {
     }
   }
 
-  Future<void> setupFlutterNotifications() async {
+  Future<void> _setupFlutterNotifications() async {
     if (_isFlutterLocalNotificationsInitialized) {
       return;
     }
@@ -143,6 +139,8 @@ class NotificationService {
           AndroidFlutterLocalNotificationsPlugin
         >()
         ?.createNotificationChannel(channel);
+
+    _isFlutterLocalNotificationsInitialized = true;
   }
 
   // --- MÉTODOS DE PRODUCCIÓN ---
@@ -254,7 +252,7 @@ class NotificationService {
     await _notificationsPlugin.zonedSchedule(
       _habitatReminderId,
       '¡Toca limpieza! 🧼',
-      'Es hora de limpiar el ($tipoHabitat) de $mascotaNombre.',
+      'Es hora de limpiar el $tipoHabitat de $mascotaNombre.',
       scheduledTime,
       _getNotificationDetails(),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,

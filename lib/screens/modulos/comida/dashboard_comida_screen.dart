@@ -6,43 +6,55 @@ import 'package:pawner_app/core/model/modulo_comida/plato_model.dart';
 import 'package:pawner_app/screens/modulos/comida/add_plato_screen.dart';
 import 'package:pawner_app/screens/modulos/comida/detalle_plato_sheet.dart';
 import 'package:pawner_app/screens/modulos/comida/horarios_screen.dart';
-import 'package:pawner_app/services/comida_service.dart';
+import 'package:pawner_app/services/firestore_service.dart';
 
 class DashboardComidaScreen extends StatefulWidget {
   final Mascota mascota;
 
-  const DashboardComidaScreen({
-    super.key,
-    required this.mascota,
-  });
+  const DashboardComidaScreen({super.key, required this.mascota});
 
   @override
   State<DashboardComidaScreen> createState() => _DashboardComidaScreenState();
 }
 
 class _DashboardComidaScreenState extends State<DashboardComidaScreen> {
-  final ComidaService _comidaService = ComidaService();
+  final FirestoreService _firestoreService = FirestoreService();
   final Set<String> _filtros = {};
 
-  static const List<String> _categorias = ['Seca', 'Húmeda', 'Natural', 'Suplemento'];
+  static const List<String> _categorias = [
+    'Seca',
+    'Húmeda',
+    'Natural',
+    'Suplemento',
+  ];
 
   Color _colorParaTipo(String tipo) {
     switch (tipo) {
-      case 'Seca':       return Colors.amber.shade600;
-      case 'Húmeda':     return Colors.blue.shade400;
-      case 'Natural':    return Colors.green.shade500;
-      case 'Suplemento': return AppColors.secondary;
-      default:           return Colors.grey;
+      case 'Seca':
+        return Colors.amber.shade600;
+      case 'Húmeda':
+        return Colors.blue.shade400;
+      case 'Natural':
+        return Colors.green.shade500;
+      case 'Suplemento':
+        return AppColors.secondary;
+      default:
+        return Colors.grey;
     }
   }
 
   IconData _iconParaTipo(String tipo) {
     switch (tipo) {
-      case 'Seca':       return LucideIcons.box;
-      case 'Húmeda':     return LucideIcons.droplets;
-      case 'Natural':    return LucideIcons.leaf;
-      case 'Suplemento': return LucideIcons.pill;
-      default:           return LucideIcons.utensils;
+      case 'Seca':
+        return LucideIcons.box;
+      case 'Húmeda':
+        return LucideIcons.droplets;
+      case 'Natural':
+        return LucideIcons.leaf;
+      case 'Suplemento':
+        return LucideIcons.pill;
+      default:
+        return LucideIcons.utensils;
     }
   }
 
@@ -68,7 +80,11 @@ class _DashboardComidaScreenState extends State<DashboardComidaScreen> {
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       leading: IconButton(
-        icon: const Icon(LucideIcons.chevronLeft, color: Colors.black, size: 30),
+        icon: const Icon(
+          LucideIcons.chevronLeft,
+          color: Colors.black,
+          size: 30,
+        ),
         onPressed: () => Navigator.pop(context),
       ),
       title: Row(
@@ -80,7 +96,11 @@ class _DashboardComidaScreenState extends State<DashboardComidaScreen> {
               color: AppColors.lightSecondary.withAlpha(70),
               shape: BoxShape.circle,
             ),
-            child: const Icon(LucideIcons.utensils, size: 16, color: AppColors.secondary),
+            child: const Icon(
+              LucideIcons.utensils,
+              size: 16,
+              color: AppColors.secondary,
+            ),
           ),
           const SizedBox(width: 10),
           Text(
@@ -110,7 +130,11 @@ class _DashboardComidaScreenState extends State<DashboardComidaScreen> {
                 color: AppColors.lightSecondary.withAlpha(70),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(LucideIcons.clock, size: 18, color: AppColors.secondary),
+              child: const Icon(
+                LucideIcons.clock,
+                size: 18,
+                color: AppColors.secondary,
+              ),
             ),
           ),
         ),
@@ -139,7 +163,10 @@ class _DashboardComidaScreenState extends State<DashboardComidaScreen> {
                 }),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: isSelected ? color.withAlpha(30) : Colors.white,
                     borderRadius: BorderRadius.circular(20),
@@ -171,7 +198,9 @@ class _DashboardComidaScreenState extends State<DashboardComidaScreen> {
                         style: TextStyle(
                           fontFamily: 'Nunito',
                           fontSize: 13,
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
                           color: isSelected ? color : Colors.grey.shade600,
                         ),
                       ),
@@ -202,7 +231,11 @@ class _DashboardComidaScreenState extends State<DashboardComidaScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(LucideIcons.plusCircle, color: AppColors.secondary, size: 28),
+            icon: const Icon(
+              LucideIcons.plusCircle,
+              color: AppColors.secondary,
+              size: 28,
+            ),
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -221,7 +254,7 @@ class _DashboardComidaScreenState extends State<DashboardComidaScreen> {
 
   Widget _buildCatalogo() {
     return StreamBuilder<List<Plato>>(
-      stream: _comidaService.getPlatos(
+      stream: _firestoreService.streamPlatos(
         widget.mascota.familiaID,
         widget.mascota.mascotaID,
       ),
@@ -322,90 +355,96 @@ class _DashboardComidaScreenState extends State<DashboardComidaScreen> {
     return GestureDetector(
       onTap: () => _abrirDetalle(context, plato),
       child: Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(13),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            flex: 3,
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-              child: hasImage
-                  ? Image.network(
-                      plato.fotoUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, _) => _buildColorHeader(color),
-                    )
-                  : _buildColorHeader(color),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(13),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    plato.nombre,
-                    style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: color.withAlpha(30),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          plato.tipo,
-                          style: TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: color,
-                          ),
-                        ),
-                      ),
-                      if (plato.ingredientes.isNotEmpty) ...[
-                        const Spacer(),
-                        Text(
-                          '${plato.ingredientes.length} ing.',
-                          style: const TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 10,
-                            color: Colors.black38,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              flex: 3,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
+                child: hasImage
+                    ? Image.network(
+                        plato.fotoUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, _) =>
+                            _buildColorHeader(color),
+                      )
+                    : _buildColorHeader(color),
               ),
             ),
-          ),
-        ],
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      plato.nombre,
+                      style: const TextStyle(
+                        fontFamily: 'Nunito',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: color.withAlpha(30),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            plato.tipo,
+                            style: TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: color,
+                            ),
+                          ),
+                        ),
+                        if (plato.ingredientes.isNotEmpty) ...[
+                          const Spacer(),
+                          Text(
+                            '${plato.ingredientes.length} ing.',
+                            style: const TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 10,
+                              color: Colors.black38,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 
@@ -413,11 +452,7 @@ class _DashboardComidaScreenState extends State<DashboardComidaScreen> {
     return Container(
       color: color.withAlpha(30),
       child: Center(
-        child: Icon(
-          LucideIcons.chefHat,
-          size: 36,
-          color: color.withAlpha(180),
-        ),
+        child: Icon(LucideIcons.chefHat, size: 36, color: color.withAlpha(180)),
       ),
     );
   }

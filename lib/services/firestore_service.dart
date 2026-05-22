@@ -19,6 +19,7 @@ import 'package:pawner_app/core/model/modulo_vet/evento_salud.dart';
 import 'package:pawner_app/core/model/modulo_vet/modulo_vet_config.dart';
 import 'package:pawner_app/core/model/recordatorio.dart';
 import 'package:pawner_app/firebase_options.dart';
+import 'package:pawner_app/services/notification_service.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db;
@@ -90,19 +91,19 @@ class FirestoreService {
     }
 
     // Platos (sin notificación)
-    final platosSnap = await _db
-        .doc(_modComidaPath(familiaID, mascotaID))
-        .collection('Platos')
-        .get();
+    final platosSnap = await _modComidaDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Platos').get();
     for (final doc in platosSnap.docs) {
       batch.delete(doc.reference);
     }
 
     // Horarios de comida (notificaciones recurrentes)
-    final horariosSnap = await _db
-        .doc(_modComidaPath(familiaID, mascotaID))
-        .collection('Horarios')
-        .get();
+    final horariosSnap = await _modComidaDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Horarios').get();
     for (final doc in horariosSnap.docs) {
       final horario = HorarioComida.fromMap(doc.data(), doc.id);
       notifIds.add(horario.idNotificacion);
@@ -414,13 +415,24 @@ class FirestoreService {
 
   // --- MÓDULO COMIDA ---
 
-  String _modComidaPath(String familiaID, String mascotaID) =>
-      'Familias/$familiaID/Mascotas/$mascotaID/Modulos/mod_comida';
+  DocumentReference _moduleDoc(
+    String familiaID,
+    String mascotaID,
+    String moduloID,
+  ) => _db
+      .collection('Familias')
+      .doc(familiaID)
+      .collection('Mascotas')
+      .doc(mascotaID)
+      .collection('Modulos')
+      .doc(moduloID);
+
+  DocumentReference _modComidaDoc(String familiaID, String mascotaID) =>
+      _moduleDoc(familiaID, mascotaID, 'mod_comida');
 
   // Stream de platos
   Stream<List<Plato>> streamPlatos(String familiaID, String mascotaID) {
-    return _db
-        .doc(_modComidaPath(familiaID, mascotaID))
+    return _modComidaDoc(familiaID, mascotaID)
         .collection('Platos')
         .snapshots()
         .map(
@@ -432,10 +444,7 @@ class FirestoreService {
 
   // Añadir plato
   Future<void> addPlato(String familiaID, String mascotaID, Plato plato) async {
-    final doc = _db
-        .doc(_modComidaPath(familiaID, mascotaID))
-        .collection('Platos')
-        .doc();
+    final doc = _modComidaDoc(familiaID, mascotaID).collection('Platos').doc();
     plato.id = doc.id;
     await doc.set(plato.toMap());
   }
@@ -446,11 +455,10 @@ class FirestoreService {
     String mascotaID,
     String platoId,
   ) async {
-    await _db
-        .doc(_modComidaPath(familiaID, mascotaID))
-        .collection('Platos')
-        .doc(platoId)
-        .delete();
+    await _modComidaDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Platos').doc(platoId).delete();
   }
 
   // Actualizar plato
@@ -459,11 +467,10 @@ class FirestoreService {
     String mascotaID,
     Plato plato,
   ) async {
-    await _db
-        .doc(_modComidaPath(familiaID, mascotaID))
-        .collection('Platos')
-        .doc(plato.id)
-        .update(plato.toMap());
+    await _modComidaDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Platos').doc(plato.id).update(plato.toMap());
   }
 
   // One-shot horarios (usado en sync de notificaciones del dashboard)
@@ -471,10 +478,10 @@ class FirestoreService {
     String familiaID,
     String mascotaID,
   ) async {
-    final snap = await _db
-        .doc(_modComidaPath(familiaID, mascotaID))
-        .collection('Horarios')
-        .get();
+    final snap = await _modComidaDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Horarios').get();
     return snap.docs
         .map((doc) => HorarioComida.fromMap(doc.data(), doc.id))
         .toList();
@@ -485,8 +492,7 @@ class FirestoreService {
     String familiaID,
     String mascotaID,
   ) {
-    return _db
-        .doc(_modComidaPath(familiaID, mascotaID))
+    return _modComidaDoc(familiaID, mascotaID)
         .collection('Horarios')
         .snapshots()
         .map(
@@ -503,11 +509,10 @@ class FirestoreService {
     String horarioId,
     bool activo,
   ) async {
-    await _db
-        .doc(_modComidaPath(familiaID, mascotaID))
-        .collection('Horarios')
-        .doc(horarioId)
-        .update({'activo': activo});
+    await _modComidaDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Horarios').doc(horarioId).update({'activo': activo});
   }
 
   // Crear o actualizar horario
@@ -516,11 +521,70 @@ class FirestoreService {
     String mascotaID,
     HorarioComida horario,
   ) async {
-    final doc = _db
-        .doc(_modComidaPath(familiaID, mascotaID))
-        .collection('Horarios')
-        .doc(horario.id);
+    final doc = _modComidaDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Horarios').doc(horario.id);
     await doc.set(horario.toMap());
+  }
+
+  Future<void> addHorario(
+    String familiaId,
+    String mascotaId,
+    HorarioComida horario, {
+    required String mascotaNombre,
+  }) async {
+    final docRef = _modComidaDoc(
+      familiaId,
+      mascotaId,
+    ).collection('Horarios').doc();
+    horario.id = docRef.id;
+    await docRef.set(horario.toMap());
+
+    if (horario.activo) {
+      final partes = horario.hora.split(':');
+      if (partes.length == 2) {
+        final hour = int.parse(partes[0]);
+        final minute = int.parse(partes[1]);
+        await NotificationService().scheduleFixedTimeNotification(
+          id: horario.idNotificacion,
+          hour: hour,
+          minute: minute,
+          mascotaNombre: mascotaNombre,
+        );
+      }
+    }
+  }
+
+  // Toggle horario
+  Future<void> toggleHorario(
+    String familiaId,
+    String mascotaId,
+    HorarioComida horario, {
+    required String mascotaNombre,
+  }) async {
+    horario.activo = !horario.activo;
+
+    await _modComidaDoc(
+      familiaId,
+      mascotaId,
+    ).collection('Horarios').doc(horario.id).update({'activo': horario.activo});
+
+    if (horario.activo) {
+      final partes = horario.hora.split(':');
+      if (partes.length == 2) {
+        final hour = int.parse(partes[0]);
+        final minute = int.parse(partes[1]);
+        await NotificationService().scheduleFixedTimeNotification(
+          id: horario.idNotificacion,
+          hour: hour,
+          minute: minute,
+          mascotaNombre: mascotaNombre,
+        );
+      }
+    } else {
+      await NotificationService().cancel(horario.idNotificacion);
+    }
   }
 
   // Eliminar horario
@@ -529,11 +593,10 @@ class FirestoreService {
     String mascotaID,
     String horarioId,
   ) async {
-    await _db
-        .doc(_modComidaPath(familiaID, mascotaID))
-        .collection('Horarios')
-        .doc(horarioId)
-        .delete();
+    await _modComidaDoc(
+      familiaID,
+      mascotaID,
+    ).collection('Horarios').doc(horarioId).delete();
   }
 
   // Guardar configuración del módulo comida
@@ -542,7 +605,7 @@ class FirestoreService {
     String mascotaID,
     ModuloComidaConfig config,
   ) async {
-    await _db.doc(_modComidaPath(familiaID, mascotaID)).set(config.toMap());
+    await _modComidaDoc(familiaID, mascotaID).set(config.toMap());
   }
 
   // Obtener configuración del módulo comida
@@ -550,20 +613,15 @@ class FirestoreService {
     String familiaID,
     String mascotaID,
   ) async {
-    final doc = await _db.doc(_modComidaPath(familiaID, mascotaID)).get();
+    final doc = await _modComidaDoc(familiaID, mascotaID).get();
     if (!doc.exists) return null;
-    return ModuloComidaConfig.fromMap(doc.data()!);
+    return ModuloComidaConfig.fromMap(doc.data()! as Map<String, dynamic>);
   }
 
   // --- MÓDULO VETERINARIO ---
 
-  DocumentReference _modVetDoc(String familiaID, String mascotaID) => _db
-      .collection('Familias')
-      .doc(familiaID)
-      .collection('Mascotas')
-      .doc(mascotaID)
-      .collection('Modulos')
-      .doc('mod_vet');
+  DocumentReference _modVetDoc(String familiaID, String mascotaID) =>
+      _moduleDoc(familiaID, mascotaID, 'mod_vet');
 
   // Guardar configuración del módulo veterinario (Perfil Médico)
   Future<void> saveModuloVetConfig(
@@ -795,13 +853,8 @@ class FirestoreService {
 
   // --- MÓDULO PASEOS ---
 
-  DocumentReference _modPaseoDoc(String familiaID, String mascotaID) => _db
-      .collection('Familias')
-      .doc(familiaID)
-      .collection('Mascotas')
-      .doc(mascotaID)
-      .collection('Modulos')
-      .doc('mod_paseo');
+  DocumentReference _modPaseoDoc(String familiaID, String mascotaID) =>
+      _moduleDoc(familiaID, mascotaID, 'mod_paseo');
 
   // Guarda la configuración de paseos (objetivo diario e intervalo de recordatorios) con merge:true
   Future<void> saveModulePaseosConfig(
@@ -896,13 +949,8 @@ class FirestoreService {
 
   // --- MÓDULO HÁBITATS ---
 
-  DocumentReference _modHabitatDoc(String familiaID, String mascotaID) => _db
-      .collection('Familias')
-      .doc(familiaID)
-      .collection('Mascotas')
-      .doc(mascotaID)
-      .collection('Modulos')
-      .doc('mod_habitat');
+  DocumentReference _modHabitatDoc(String familiaID, String mascotaID) =>
+      _moduleDoc(familiaID, mascotaID, 'mod_habitat');
 
   // Guarda la configuración de paseos (objetivo diario e intervalo de recordatorios) con merge:true
   Future<void> saveModuleHabitatConfig(

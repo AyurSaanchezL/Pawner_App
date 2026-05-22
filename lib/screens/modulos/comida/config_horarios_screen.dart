@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/core/model/modulo_comida/horario_model.dart';
-import 'package:pawner_app/services/comida_service.dart';
+import 'package:pawner_app/services/firestore_service.dart';
 
 class ConfigHorariosScreen extends StatelessWidget {
   final String familiaId;
@@ -22,16 +22,24 @@ class ConfigHorariosScreen extends StatelessWidget {
     );
 
     if (time != null) {
-      final String horaStr = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-      
+      final String horaStr =
+          '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+
       final nuevoHorario = HorarioComida(
         id: '',
         hora: horaStr,
-        idNotificacion: DateTime.now().millisecondsSinceEpoch.remainder(100000), // Generación simple para prueba
+        idNotificacion: DateTime.now().millisecondsSinceEpoch.remainder(
+          100000,
+        ), // Generación simple para prueba
         activo: true,
       );
 
-      await ComidaService().addHorario(familiaId, mascotaId, nuevoHorario, mascotaNombre: mascotaNombre);
+      await FirestoreService().addHorario(
+        familiaId,
+        mascotaId,
+        nuevoHorario,
+        mascotaNombre: mascotaNombre,
+      );
     }
   }
 
@@ -45,7 +53,7 @@ class ConfigHorariosScreen extends StatelessWidget {
         foregroundColor: AppColors.dark,
       ),
       body: StreamBuilder<List<HorarioComida>>(
-        stream: ComidaService().getHorarios(familiaId, mascotaId),
+        stream: FirestoreService().streamHorarios(familiaId, mascotaId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -68,16 +76,27 @@ class ConfigHorariosScreen extends StatelessWidget {
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ListTile(
-                  leading: const Icon(Icons.access_time, color: AppColors.secondary),
+                  leading: const Icon(
+                    Icons.access_time,
+                    color: AppColors.secondary,
+                  ),
                   title: Text(
                     horario.hora,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   trailing: Switch(
                     value: horario.activo,
-                    activeColor: AppColors.secondary,
+                    activeThumbColor: AppColors.secondary,
                     onChanged: (val) {
-                      ComidaService().toggleHorario(familiaId, mascotaId, horario, mascotaNombre: mascotaNombre);
+                      FirestoreService().toggleHorario(
+                        familiaId,
+                        mascotaId,
+                        horario,
+                        mascotaNombre: mascotaNombre,
+                      );
                     },
                   ),
                 ),
@@ -90,7 +109,10 @@ class ConfigHorariosScreen extends StatelessWidget {
         onPressed: () => _addHorarioManual(context),
         backgroundColor: AppColors.secondary,
         icon: const Icon(Icons.add, color: AppColors.primary),
-        label: const Text('Añadir Horario', style: TextStyle(color: AppColors.primary)),
+        label: const Text(
+          'Añadir Horario',
+          style: TextStyle(color: AppColors.primary),
+        ),
       ),
     );
   }

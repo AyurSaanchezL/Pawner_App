@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
@@ -5,7 +6,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:numberpicker/numberpicker.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/core/components/number_picker.dart';
 import 'package:pawner_app/core/model/mascota.dart';
@@ -26,13 +26,14 @@ class PaseoScreen extends StatefulWidget {
 }
 
 class _PaseoScreenState extends State<PaseoScreen> {
-  List<Paseo> paseos = [];
+  StreamSubscription<List<Paseo>>? _paseosSubscription;
   String titulo = "";
 
   @override
   void initState() {
     super.initState();
     _syncPaseoNotifications();
+    _listenForOldPaseos();
   }
 
   Future<void> _syncPaseoNotifications() async {
@@ -93,28 +94,15 @@ class _PaseoScreenState extends State<PaseoScreen> {
               return _cargando();
             }
 
-            paseos = snapshot.data ?? [];
-            List<Paseo> paseosAyer = [];
-            for (Paseo p in paseos) {
-              if (p.fechaHora.toDate().day != DateTime.now().day) {
-                paseosAyer.add(p);
-              }
-            }
-
-            if (paseosAyer.isNotEmpty) {
-              _deletePaseos(widget.m, paseosAyer);
-              for (Paseo p in paseosAyer) {
-                paseos.remove(p);
-              }
-            }
-
+            final allPaseos = snapshot.data ?? [];
             final hoy = DateTime.now();
-            final paseosHoy = paseos.where((p) {
+            final paseosHoyList = allPaseos.where((p) {
               final fecha = p.fechaHora.toDate();
               return fecha.year == hoy.year &&
                   fecha.month == hoy.month &&
                   fecha.day == hoy.day;
-            }).length;
+            }).toList();
+            final paseosHoy = paseosHoyList.length;
 
             String tituloDinamico = "Paseos de ${widget.m.nombre}";
             if (config != null) {
@@ -165,13 +153,13 @@ class _PaseoScreenState extends State<PaseoScreen> {
                 backgroundColor: AppColors.accent,
                 child: const Icon(LucideIcons.plus, color: AppColors.cardWhite),
               ),
-              body: paseos.isEmpty
+              body: paseosHoyList.isEmpty
                   ? Center(
                       child: Text(
                         "Hoy ${widget.m.nombre} no ha dado ningún paseo...",
                       ),
                     )
-                  : _buildPage(), // Tu función de siempre
+                  : _buildPage(paseosHoyList),
             );
           },
         );
@@ -179,7 +167,7 @@ class _PaseoScreenState extends State<PaseoScreen> {
     );
   }
 
-  Widget _buildPage() {
+  Widget _buildPage(List<Paseo> paseos) {
     paseos.sort((a, b) => b.fechaHora.compareTo(a.fechaHora));
 
     return ListView.builder(
@@ -303,8 +291,37 @@ class _PaseoScreenState extends State<PaseoScreen> {
         await FirestoreService().deletePaseo(m.familiaID, m.mascotaID, p);
       }
     } catch (e) {
-      log("No fue posible eliminar todos los paseos de ayer");
+      log("No fue posible eliminar todos los paseos de ayer: $e");
     }
+  }
+
+  void _listenForOldPaseos() {
+    _paseosSubscription = FirestoreService()
+        .readPaseos(widget.m.familiaID, widget.m.mascotaID)
+        .listen(
+          (paseos) {
+            final today = DateTime.now();
+            final paseosAyer = paseos.where((p) {
+              final fecha = p.fechaHora.toDate();
+              return fecha.year != today.year ||
+                  fecha.month != today.month ||
+                  fecha.day != today.day;
+            }).toList();
+
+            if (paseosAyer.isNotEmpty) {
+              _deletePaseos(widget.m, paseosAyer);
+            }
+          },
+          onError: (error) {
+            log('Error al escuchar paseos antiguos: $error');
+          },
+        );
+  }
+
+  @override
+  void dispose() {
+    _paseosSubscription?.cancel();
+    super.dispose();
   }
 
   String _formatearTiempo(int totalMinutos) {

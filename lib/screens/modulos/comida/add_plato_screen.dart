@@ -4,7 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:pawner_app/core/app_colors.dart';
 import 'package:pawner_app/core/model/modulo_comida/plato_model.dart';
 import 'package:pawner_app/services/cloudinary_service.dart';
-import 'package:pawner_app/services/comida_service.dart';
+import 'package:pawner_app/services/firestore_service.dart';
 
 class AddPlatoScreen extends StatefulWidget {
   final String familiaId;
@@ -85,7 +85,11 @@ class _AddPlatoScreenState extends State<AddPlatoScreen> {
       esSugerencia: false,
     );
 
-    await ComidaService().addPlato(widget.familiaId, widget.mascotaId, plato);
+    await FirestoreService().addPlato(
+      widget.familiaId,
+      widget.mascotaId,
+      plato,
+    );
 
     setState(() {
       _isLoading = false;
@@ -155,7 +159,7 @@ class _AddPlatoScreenState extends State<AddPlatoScreen> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: _tipoSeleccionado,
+                      initialValue: _tipoSeleccionado,
                       decoration: const InputDecoration(
                         labelText: 'Tipo de Comida',
                         border: OutlineInputBorder(),
