@@ -126,32 +126,6 @@ class _LogInScreenState extends State<LogInScreen> {
                         ),
                       ),
                     ),
-                    // =============== SIN CONTRASEÑA ==============
-                    Container(
-                      margin: .only(left: 50, top: 5),
-                      width: double.infinity,
-                      child: Align(
-                        alignment: .topLeft,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(color: AppColors.dark),
-                            ),
-                          ),
-                          child: RichText(
-                            text: TextSpan(
-                              text: "No recuerdo la contraseña",
-                              style: TextStyle(
-                                color: AppColors.dark,
-                                fontWeight: .w400,
-                                fontSize: 15,
-                              ),
-                              recognizer: TapGestureRecognizer()..onTap = () {},
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
 
                     SizedBox(height: 125),
                     // =============== BOTÓN ==============
