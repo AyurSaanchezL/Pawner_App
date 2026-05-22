@@ -225,20 +225,20 @@ class FirestoreService {
     return null; // Éxito
   }
 
-  // READ
+  // LECTURA
   Future<Usuario> getCurrentUser(User u) async {
     final doc = await _db.collection('Usuarios').doc(u.uid).get();
     return Usuario.fromJson(doc.data()!, doc.id);
   }
 
-  // CREATE
+  // CREAR
   Future<void> addUsuario(Usuario u, String uid) async {
     final docUsuario = _db.collection('Usuarios').doc(uid);
     final json = u.toJson(uid);
     await docUsuario.set(json);
   }
 
-  // READ
+  // LECTURA
   Stream<List<Usuario>> readUsuarios() => _db
       .collection('Usuarios')
       .snapshots()
@@ -248,20 +248,20 @@ class FirestoreService {
             .toList(),
       );
 
-  // UPDATE
+  // ACTUALIZAR
   Future<void> updateUsuario(Usuario u) async {
     final docUsuario = _db.collection('Usuarios').doc(u.usuarioID);
     dev.log(u.toJson(u.usuarioID).toString());
     await docUsuario.update(u.toJson(u.usuarioID));
   }
 
-  // UPDATE - Solo email (para sync después de confirmación)
+  // ACTUALIZAR - Solo email (para sincronización después de confirmación)
   Future<void> updateEmailOnly(String uid, String newEmail) async {
     final docUsuario = _db.collection('Usuarios').doc(uid);
     await docUsuario.update({'email': newEmail});
   }
 
-  // DELETE
+  // ELIMINAR
   Future<void> deleteUsuario(Usuario u) async {
     final docUsuario = _db.collection('Usuarios').doc(u.usuarioID);
     await docUsuario.delete();

@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/app_colors.dart';
-import 'package:pawner_app/core/constants.dart'; // Assuming Constants might have styles or enums
+import 'package:pawner_app/core/constants.dart';
 import 'package:pawner_app/core/model/mascota.dart';
 import 'package:pawner_app/core/model/recordatorio.dart';
 import 'package:pawner_app/screens/mascota/detalle_mascota.dart';
 import 'package:pawner_app/screens/usuario/perfil_screen.dart';
 import 'package:pawner_app/screens/mascota/nueva_mascota_screen.dart';
-import 'package:pawner_app/screens/usuario/ajustes_screen.dart'; // For settings navigation
+import 'package:pawner_app/screens/usuario/ajustes_screen.dart';
 import 'package:pawner_app/services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/model/usuario.dart' show Usuario;
