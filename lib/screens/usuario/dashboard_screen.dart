@@ -637,17 +637,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white,
-                image: DecorationImage(
-                  image: mascota.fotoUrl.isEmpty
-                      ? AssetImage(
-                          _getDefaultAssetForMascota(mascota.mascotaID),
-                        )
-                      : mascota.fotoUrl.startsWith('http')
-                      ? NetworkImage(mascota.fotoUrl) as ImageProvider
-                      : AssetImage(mascota.fotoUrl),
-                  fit: BoxFit.cover,
-                ),
                 border: Border.all(color: AppColors.darkBlue, width: 2),
+              ),
+              child: ClipOval(
+                child: mascota.fotoUrl.isNotEmpty &&
+                        mascota.fotoUrl.startsWith('http')
+                    ? Image.network(
+                        mascota.fotoUrl,
+                        fit: BoxFit.cover,
+                        width: 70,
+                        height: 70,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return Container(
+                            color: AppColors.inputBackground,
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.secondary,
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) =>
+                            Container(
+                          color: AppColors.inputBackground,
+                          child: Center(
+                            child: Icon(
+                              Icons.pets,
+                              color: Colors.grey.shade400,
+                              size: 32,
+                            ),
+                          ),
+                        ),
+                      )
+                    : Image(
+                        image: AssetImage(
+                          mascota.fotoUrl.isEmpty
+                              ? _getDefaultAssetForMascota(mascota.mascotaID)
+                              : mascota.fotoUrl,
+                        ),
+                        fit: BoxFit.cover,
+                        width: 70,
+                        height: 70,
+                      ),
               ),
             ),
             const SizedBox(height: 8),

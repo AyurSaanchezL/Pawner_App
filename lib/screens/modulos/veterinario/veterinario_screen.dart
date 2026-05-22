@@ -875,6 +875,48 @@ class _VeterinarioScreenState extends State<VeterinarioScreen>
                               height: 100,
                               width: double.infinity,
                               fit: BoxFit.cover,
+                              loadingBuilder: (context, child, progress) {
+                                if (progress == null) return child;
+                                return Container(
+                                  width: double.infinity,
+                                  height: 100,
+                                  color: AppColors.inputBackground,
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                      color: AppColors.secondary,
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                width: double.infinity,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  color: AppColors.inputBackground,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      LucideIcons.wifiOff,
+                                      color: Colors.grey.shade400,
+                                      size: 28,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'Sin conexión',
+                                      style: TextStyle(
+                                        fontFamily: 'Nunito',
+                                        fontSize: 12,
+                                        color: Colors.grey.shade400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ],

@@ -130,7 +130,53 @@ class _DetallePlatoSheetState extends State<DetallePlatoSheet> {
                 height: 160,
                 width: double.infinity,
                 child: hasImage
-                    ? Image.network(_plato.fotoUrl!, fit: BoxFit.cover)
+                    ? Image.network(
+                        _plato.fotoUrl!,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: 160,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return Container(
+                            width: double.infinity,
+                            height: 160,
+                            color: AppColors.inputBackground,
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.secondary,
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          width: double.infinity,
+                          height: 160,
+                          decoration: BoxDecoration(
+                            color: AppColors.inputBackground,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                LucideIcons.wifiOff,
+                                color: Colors.grey.shade400,
+                                size: 32,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Sin conexión',
+                                style: TextStyle(
+                                  fontFamily: 'Nunito',
+                                  fontSize: 13,
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
                     : Container(
                         color: color.withAlpha(30),
                         child: Center(
