@@ -8,6 +8,7 @@ class Plato {
   String? fotoUrl;
   bool esSugerencia;
 
+
   Plato({
     required this.id,
     required this.nombre,

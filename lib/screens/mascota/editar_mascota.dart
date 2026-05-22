@@ -546,7 +546,7 @@ class _EditarMascotaScreenState extends State<EditarMascotaScreen> {
             decoration: BoxDecoration(
               color: isSelected
                   ? color
-                  : AppColors.inputBackground, // todo -> revisar
+                  : AppColors.inputBackground,
               shape: BoxShape.circle,
               border: isSelected
                   ? Border.all(color: Colors.white, width: 2)

@@ -72,7 +72,6 @@ class _ConfigHabitatScreenState extends State<ConfigHabitatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 3. Pegamos aquí todo tu método _buildStartForm original
     return SingleChildScrollView(
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -193,7 +192,6 @@ class _ConfigHabitatScreenState extends State<ConfigHabitatScreen> {
     );
   }
 
-  // Conservas tus métodos auxiliares idénticos dentro de este State:
   Widget _buildParametrosIdealesSection() {
     return Column(
       children: [

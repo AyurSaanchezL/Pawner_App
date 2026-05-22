@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:pawner_app/core/model/mascota.dart';
 import 'package:pawner_app/screens/modulos/comida/dashboard_comida_screen.dart';
 import 'package:pawner_app/screens/modulos/habitat/habitat_screen.dart';
+import 'package:pawner_app/screens/modulos/higiene/higiene_screen.dart';
 import 'package:pawner_app/screens/modulos/paseo/paseo_screen.dart';
 import 'package:pawner_app/screens/modulos/veterinario/veterinario_screen.dart';
 import 'package:pawner_app/screens/usuario/dashboard_screen.dart';
@@ -143,7 +144,8 @@ enum AppModules {
   paseos,
   veterinario,
   comida,
-  habitat;
+  habitat,
+  higiene;
 
   static String getName(String mod) {
     switch (mod) {
@@ -155,6 +157,8 @@ enum AppModules {
         return 'Comida';
       case 'habitat':
         return 'Habitat';
+      case 'higiene':
+        return 'Higiene';
       default:
         return mod;
     }
@@ -199,6 +203,18 @@ enum AppModules {
           LucideIcons.home,
           () => MaterialPageRoute(
             builder: (context) => HabitatScreen(m: mascota),
+          ),
+        ];
+      case 'Higiene':
+        return [
+          'Higiene',
+          'Baño y limpieza',
+          LucideIcons.sparkles,
+          () => MaterialPageRoute(
+            builder: (context) => HigieneScreen(
+              mascota: mascota,
+              familiaID: mascota.familiaID,
+            ),
           ),
         ];
       default:
