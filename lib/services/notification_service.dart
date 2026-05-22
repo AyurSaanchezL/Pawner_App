@@ -145,7 +145,7 @@ class NotificationService {
         ?.createNotificationChannel(channel);
   }
 
-  // --- MÉTODOS DE PRODUCCIÓN ---
+  //  MÉTODOS DE PRODUCCIÓN
 
   Future<void> scheduleIntervalNotification({required int hours}) async {
     if (hours == 1) {
@@ -223,7 +223,7 @@ class NotificationService {
     }
   }
 
-  // --- MÉTODOS DE HABITAT ---
+  //  MÉTODOS DE HABITAT
   static const int _habitatReminderId = 2000;
 
   /// Programa la próxima alerta de limpieza basándose en el intervalo de días.
@@ -308,7 +308,7 @@ class NotificationService {
           UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
-  // --- MÉTODOS DE DIAGNÓSTICO ---
+  //  MÉTODOS DE DIAGNÓSTICO
 
   Future<void> showImmediateNotification() async {
     debugPrint("--- PRUEBA INSTANTÁNEA ---");

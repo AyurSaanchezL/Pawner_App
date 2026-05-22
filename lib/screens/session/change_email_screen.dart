@@ -64,7 +64,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
     });
 
     try {
-      // Llamar al método de AuthService
+      // Llamada al método de AuthService
       await AuthService().changeEmail(
         newEmail: _newEmailController.text.trim(),
         userPassword: _passwordController.text,
