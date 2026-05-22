@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:developer' as dev;
 
 import 'package:flutter/material.dart';
@@ -88,11 +87,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       dev.log(
         "Usuario: ${usuario.email} y Usuario de FirebaseAuth: ${u.email!}",
       );
-      if (usuario.email != u.email!) {
-        dev.log("Los correos no coinciden. Cambiando...");
-        usuario.email = u.email!;
-        await FirestoreService().updateUsuario(usuario);
-      }
       if (mounted) {
         setState(() {
           _usuarioActual = usuario;
@@ -105,9 +99,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           }
         });
       }
-      await NotificationService().inicializarParaUsuario(
-        _usuarioActual!.familiaID!,
-      );
+      if (_usuarioActual?.familiaID != null) {
+        await NotificationService().initializeForFamily(
+          _usuarioActual!.familiaID!,
+        );
+      }
     }
   }
 
@@ -213,14 +209,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // sync nunca debe bloquear ni crashear el dashboard
     }
   }
-
-  // Placeholder data for reminders
-  final List<Map<String, dynamic>> _remindersPlaceholder = [
-    {'date': '21/10/25', 'name': 'Veterinario Perro 1'},
-    {'date': '23/10/25', 'name': 'Vacuna Gato 1'},
-    {'date': '25/10/25', 'name': 'Peluquería Perro 2'},
-    {'date': '28/10/25', 'name': 'Cita Anual Perro 1'},
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -665,97 +653,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 8),
             Text(
               (mascota.nombre.length > 15
-                  ? mascota.nombre.substring(0, 12) + '...'
+                  ? '${mascota.nombre.substring(0, 12)}...'
                   : mascota.nombre),
               style: TextStyle(
                 fontFamily: 'Nunito',
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textColorPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNewPetButton() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const NuevaMascotaScreen()),
-        );
-      },
-      child: SizedBox(
-        width: 80, // Slightly larger to accommodate text below
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 70,
-              height: 70,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26, // Sombra más oscura
-                    blurRadius: 8, // Sombra más difuminada
-                    spreadRadius: 2, // Sombra más extendida
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.add, size: 40, color: Colors.black),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              "Nuevo integrante",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textColorPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReminderCard(Map<String, dynamic> reminder) {
-    return Card(
-      color: AppColors.accent,
-      margin: const EdgeInsets.only(bottom: 15.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25.0)),
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: Text(
-                reminder['date'],
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textColorPrimary,
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 3,
-              child: Text(
-                reminder['name'],
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textColorPrimary,
-                ),
               ),
             ),
           ],
