@@ -32,12 +32,12 @@ void main() async {
   FirebaseCrashlytics? crashlytics;
 
   try {
-    // 3. ENCIENDE FIREBASE PRIMERO ◄── Aquí se soluciona tu error
+    // 3. Se inicia Firebase
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
-    // 4. Ahora que Firebase existe, ya podemos instanciar Crashlytics de forma segura
+    // 4. Ahora que Firebase existe, se instala Crashlytics de forma segura
     crashlytics = FirebaseCrashlytics.instance;
     FlutterError.onError = crashlytics.recordFlutterFatalError;
     firebaseController = CrashManager(crashlytics);
@@ -46,10 +46,10 @@ void main() async {
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
     await NotificationService().init();
 
-    // 6. Listener para sincronizar email (Metido dentro para que no salte si falla Firebase)
+    // 6. Listener para sincronizar email
     _setupEmailSyncListener();
   } catch (e) {
-    // Si crashlytics ya se pudo inicializar bien antes del fallo, reportamos el crash
+    // Si crashlytics se pudo inicializar bien antes del fallo, reportamos el crash
     if (crashlytics != null) {
       CrashManager(crashlytics).reportCrash(e);
     } else {
@@ -75,7 +75,7 @@ void _setupEmailSyncListener() {
   });
 }
 
-/// Sincroniza el email del usuario en Firestore con el de Auth
+// Sincroniza el email del usuario en Firestore con el de Auth
 Future<void> _syncEmailWithFirestore(String uid, String authEmail) async {
   try {
     final docSnapshot = await FirebaseFirestore.instance

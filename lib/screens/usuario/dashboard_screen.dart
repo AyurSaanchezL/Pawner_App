@@ -188,6 +188,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
             await ns.cancelPaseoReminders().catchError((_) {});
           }
         }
+
+        // Higiene
+        final higieneConfig = await fs.getModuloHigieneConfig(
+          mascota.familiaID,
+          mascota.mascotaID,
+        );
+        if (higieneConfig != null &&
+            higieneConfig.notificacionActiva &&
+            higieneConfig.idNotificacion != null &&
+            higieneConfig.proximoAviso != null &&
+            higieneConfig.proximoAviso!.isAfter(now)) {
+          await ns
+              .scheduleOneTimeNotification(
+                id: higieneConfig.idNotificacion!,
+                scheduledFor: higieneConfig.proximoAviso!,
+                title: '🛁 Hora del baño: ${mascota.nombre}',
+                body: 'Según tu rutina, hoy toca bañar a ${mascota.nombre}.',
+              )
+              .catchError((_) {});
+        }
       }
     } catch (_) {
       // sync nunca debe bloquear ni crashear el dashboard
