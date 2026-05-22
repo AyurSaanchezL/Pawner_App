@@ -15,34 +15,50 @@ class ChatBubbleClipper extends CustomClipper<Path> {
     if (isRight) {
       path.moveTo(radius, 0);
       path.lineTo(size.width - radius, 0);
-      path.arcToPoint(Offset(size.width, radius), radius: Radius.circular(radius));
+      path.arcToPoint(
+        Offset(size.width, radius),
+        radius: Radius.circular(radius),
+      );
       path.lineTo(size.width, size.height - tailHeight - radius);
-      path.arcToPoint(Offset(size.width - radius, size.height - tailHeight), radius: Radius.circular(radius));
-      
-      // Tail on the right
+      path.arcToPoint(
+        Offset(size.width - radius, size.height - tailHeight),
+        radius: Radius.circular(radius),
+      );
+
       path.lineTo(size.width - radius - 5, size.height - tailHeight);
       path.lineTo(size.width - radius + 5, size.height);
       path.lineTo(size.width - radius - 20, size.height - tailHeight);
-      
+
       path.lineTo(radius, size.height - tailHeight);
-      path.arcToPoint(Offset(0, size.height - tailHeight - radius), radius: Radius.circular(radius));
+      path.arcToPoint(
+        Offset(0, size.height - tailHeight - radius),
+        radius: Radius.circular(radius),
+      );
       path.lineTo(0, radius);
       path.arcToPoint(Offset(radius, 0), radius: Radius.circular(radius));
     } else {
       path.moveTo(radius, 0);
       path.lineTo(size.width - radius, 0);
-      path.arcToPoint(Offset(size.width, radius), radius: Radius.circular(radius));
+      path.arcToPoint(
+        Offset(size.width, radius),
+        radius: Radius.circular(radius),
+      );
       path.lineTo(size.width, size.height - tailHeight - radius);
-      path.arcToPoint(Offset(size.width - radius, size.height - tailHeight), radius: Radius.circular(radius));
+      path.arcToPoint(
+        Offset(size.width - radius, size.height - tailHeight),
+        radius: Radius.circular(radius),
+      );
       path.lineTo(radius + tailWidth, size.height - tailHeight);
-      
-      // Tail on the left
+
       path.lineTo(radius + 15, size.height - tailHeight);
       path.lineTo(radius - 5, size.height);
       path.lineTo(radius + 5, size.height - tailHeight);
-      
+
       path.lineTo(radius, size.height - tailHeight);
-      path.arcToPoint(Offset(0, size.height - tailHeight - radius), radius: Radius.circular(radius));
+      path.arcToPoint(
+        Offset(0, size.height - tailHeight - radius),
+        radius: Radius.circular(radius),
+      );
       path.lineTo(0, radius);
       path.arcToPoint(Offset(radius, 0), radius: Radius.circular(radius));
     }
@@ -68,10 +84,16 @@ class SimpleChatBubbleClipper extends CustomClipper<Path> {
 
     path.moveTo(radius, 0);
     path.lineTo(size.width - radius, 0);
-    path.arcToPoint(Offset(size.width, radius), radius: Radius.circular(radius));
+    path.arcToPoint(
+      Offset(size.width, radius),
+      radius: Radius.circular(radius),
+    );
     path.lineTo(size.width, size.height - tailHeight - radius);
-    path.arcToPoint(Offset(size.width - radius, size.height - tailHeight), radius: Radius.circular(radius));
-    
+    path.arcToPoint(
+      Offset(size.width - radius, size.height - tailHeight),
+      radius: Radius.circular(radius),
+    );
+
     if (isRight) {
       path.lineTo(size.width * 0.8, size.height - tailHeight);
       path.lineTo(size.width * 0.85, size.height);
@@ -83,7 +105,10 @@ class SimpleChatBubbleClipper extends CustomClipper<Path> {
     }
 
     path.lineTo(radius, size.height - tailHeight);
-    path.arcToPoint(Offset(0, size.height - tailHeight - radius), radius: Radius.circular(radius));
+    path.arcToPoint(
+      Offset(0, size.height - tailHeight - radius),
+      radius: Radius.circular(radius),
+    );
     path.lineTo(0, radius);
     path.arcToPoint(Offset(radius, 0), radius: Radius.circular(radius));
 

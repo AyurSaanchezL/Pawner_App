@@ -15,10 +15,7 @@ class ElegirFamiliaLayout extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset(
-              "assets/images/background_01.png",
-              fit: BoxFit.cover,
-            ),
+            Image.asset("assets/images/background_01.png", fit: BoxFit.cover),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30.0),
               child: Column(
@@ -110,16 +107,13 @@ class ElegirFamiliaLayout extends StatelessWidget {
         );
       },
       child: Card(
-        elevation: 8, // Soft shadow
+        elevation: 8,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
         color: backgroundColor,
-        margin: EdgeInsets
-            .zero, // Remove default Card margin if using Container padding
+        margin: EdgeInsets.zero,
         child: Container(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(25),
-          ),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(25)),
           child: Row(
             children: [
               Icon(icon, color: iconColor, size: 30),
