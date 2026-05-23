@@ -314,13 +314,13 @@ class _ContactFormSheetState extends State<_ContactFormSheet> {
       scheme: 'mailto',
       path: _supportEmail,
       query:
-          'subject=${Uri.encodeQueryComponent(asunto)}'
-          '&body=${Uri.encodeQueryComponent(mensaje)}',
+          'subject=${Uri.encodeComponent(asunto)}'
+          '&body=${Uri.encodeComponent(mensaje)}',
     );
 
     try {
       if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
         if (mounted) Navigator.pop(context);
       } else {
         if (mounted) {
